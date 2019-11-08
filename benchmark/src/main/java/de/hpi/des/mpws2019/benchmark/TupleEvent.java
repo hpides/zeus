@@ -1,20 +1,15 @@
 package de.hpi.des.mpws2019.benchmark;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Value;
 
-@AllArgsConstructor
-@Getter
-@Setter
+@Value
 public class TupleEvent implements Event {
 
-    private long key;
-    private int value;
+    private final long key;
+    private final int value;
 
     @Override
     public long getKey() {
         return key;
     }
-
 }
