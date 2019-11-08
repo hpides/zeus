@@ -10,13 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DataGenerator {
 
-    private int sleepTime;
+    private int sleepTimePerLoop;
     private int eventsPerSecond;
     private long idCounter = 0;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public DataGenerator(int sleepTime, int eventsPerSecond) {
-        sleepTime = sleepTime;
+    public DataGenerator(int sleepTimePerLoop, int eventsPerSecond) {
+        sleepTimePerLoop = sleepTimePerLoop;
         eventsPerSecond = eventsPerSecond;
     }
 
@@ -29,7 +29,7 @@ public class DataGenerator {
 
     private void sleepFor(int ms) {
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep(sleepTimePerLoop);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -46,7 +46,7 @@ public class DataGenerator {
     private Integer sendEventsSimple(int numberOfEvents, Queue<TupleEvent> queue) {
         int sendEvents = 0;
         while(sendEvents < numberOfEvents) {
-            sleepFor(sleepTime);
+            sleepFor(sleepTimePerLoop);
             queue.add(generateRandomIntTuple());
             sendEvents++;
         }
@@ -58,7 +58,7 @@ public class DataGenerator {
         int sendEvents = 0;
         long startTime = System.nanoTime();
         while(sendEvents < numberOfEvents) {
-            sleepFor(this.sleepTime);
+            sleepFor(this.sleepTimePerLoop);
             long timeNow = System.nanoTime();
             long difference = (timeNow - startTime) / (1^9);
             int eventsToBeSent = (int) difference * eventsPerSecond;
