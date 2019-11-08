@@ -8,4 +8,20 @@
     <artifactId>benchmark</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <parent>
+        <groupId>de.hpi.des.mpws2019</groupId>
+        <artifactId>mpws2019-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.9</version>
+        </dependency>
+
+    </dependencies>
+
 </project>
