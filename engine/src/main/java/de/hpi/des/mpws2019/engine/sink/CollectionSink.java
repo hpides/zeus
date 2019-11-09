@@ -5,11 +5,12 @@ import java.util.Collection;
 import lombok.Getter;
 
 public class CollectionSink<V> implements Sink<V> {
-    @Getter
-    private final Collection<V> collection = new ArrayList<>();
 
-    @Override
-    public void write(final V input) {
-        this.collection.add(input);
-    }
+  @Getter
+  private final Collection<V> collection = new ArrayList<>();
+
+  @Override
+  public void write(final V input) {
+    this.collection.add(input);
+  }
 }
