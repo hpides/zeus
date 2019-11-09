@@ -5,8 +5,7 @@
 
 An experimental garbage collector setting that does no garbage collection. Good to increase the reliabiliy of benchmarks.
 However, if max. heap space is reached your program crashes.
-Therefore inc. the max. memory as high as possible:
-`-Xmx8G`
+Therefore inc. the max. memory as much as possible with: `-Xmx8G`
 
 
 ### JIT
