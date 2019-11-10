@@ -3,7 +3,6 @@ package de.hpi.des.mpws2019.engine;
 import de.hpi.des.mpws2019.engine.sink.Sink;
 import de.hpi.des.mpws2019.engine.source.Source;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +13,7 @@ public class Engine<K> {
   private final Source<K> source;
   private final Sink<K> sink;
   private final Function<K, K> map;
-  private final ExecutorService executor = Executors.newFixedThreadPool(1);
+  private final ExecutorService executor;
 
   public void start() {
     this.executor.submit(this::pollAndProcess);

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import de.hpi.des.mpws2019.engine.sink.CollectionSink;
 import de.hpi.des.mpws2019.engine.source.CollectionSource;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import org.jooq.lambda.Seq;
 import org.junit.jupiter.api.Test;
@@ -19,8 +20,12 @@ class EngineTest {
         .map(mapper)
         .toList();
     final CollectionSink<Integer> sink = new CollectionSink<>();
-    final Engine<Integer> engine =
-        new Engine<>(new CollectionSource<>(input), sink, mapper);
+    final Engine<Integer> engine = new Engine<>(
+        new CollectionSource<>(input),
+        sink,
+        mapper,
+        Executors.newSingleThreadExecutor()
+    );
     engine.start();
     while (true) {
       if (sink.getCollection().size() == expectedOutput.size()) {

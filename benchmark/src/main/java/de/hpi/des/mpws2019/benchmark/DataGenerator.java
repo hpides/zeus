@@ -2,9 +2,8 @@ package de.hpi.des.mpws2019.benchmark;
 
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.LongStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +15,7 @@ public class DataGenerator {
   private final int eventsPerSecond;
   private final int numberOfEvents;
   private final Queue<TupleEvent> queue;
-  private final ExecutorService executor = Executors.newSingleThreadExecutor();
+  private final ExecutorService executor;
   private final Random random = new Random();
   private long lastKey = 0;
 
@@ -26,8 +25,8 @@ public class DataGenerator {
     return event;
   }
 
-  public Future<Long> generateDataTimeAware() {
-    return this.executor.submit(this::sendEventsTimeAware);
+  public CompletableFuture<Long> generate() {
+    return CompletableFuture.supplyAsync(this::sendEventsTimeAware, executor);
   }
 
   private Long sendEventsTimeAware() {
