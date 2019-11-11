@@ -7,8 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class Benchmark {
   private final DataGenerator dataGenerator;
@@ -20,13 +23,24 @@ public class Benchmark {
     final CompletableFuture<Long> isFinished = dataGenerator.generate();
     engine.start();
 
-    isFinished.thenRun(() -> {
+    try {
+      isFinished.get();
+
       final Map<Long, Long> keyToEventTimeLatency = this.calculateEventTimeLatencies(
           timedSource.getKeyToEventTime(),
           timedSink.getKeyToEventTime()
       );
+
       printEventTimeMetrics(keyToEventTimeLatency);
-    }).thenRun(engine::shutdown);
+    } catch (ExecutionException | InterruptedException e) {
+      log.error(e.getMessage());
+    } finally {
+      engine.shutdown();
+    }
+
+
+
+
   }
 
   /**
