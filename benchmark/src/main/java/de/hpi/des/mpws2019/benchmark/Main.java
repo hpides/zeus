@@ -1,5 +1,7 @@
 package de.hpi.des.mpws2019.benchmark;
 
+import de.hpi.des.mpws2019.benchmark.generator.Generator;
+import de.hpi.des.mpws2019.benchmark.generator.UniformGenerator;
 import de.hpi.des.mpws2019.engine.Engine;
 import de.hpi.des.mpws2019.engine.sink.QueueSink;
 import de.hpi.des.mpws2019.engine.source.QueueSource;
@@ -10,11 +12,11 @@ import java.util.function.Function;
 
 public class Main {
 
-  public static void main(final String[] args) throws InterruptedException, ExecutionException {
+  public static void main(final String[] args) {
 
     final int eventsPerSecond = 10000;
-    final int seconds = 10;
-    final int numberOfEvents = eventsPerSecond * seconds;
+    final int timeInSeconds = 10;
+    final int numberOfEvents = eventsPerSecond * timeInSeconds;
 
     final ExecutorService executor =  Executors.newFixedThreadPool(4);
 
@@ -25,10 +27,9 @@ public class Main {
     final TimedConcurrentBlockingQueue<TupleEvent> timedSink = new TimedConcurrentBlockingQueue<>(
         numberOfEvents);
 
-    final DataGenerator dataGenerator = new DataGenerator(
+    final Generator generator = new UniformGenerator(
         eventsPerSecond,
-        numberOfEvents,
-        timedSource,
+        timeInSeconds,
         executor
     );
 
@@ -45,7 +46,7 @@ public class Main {
         executor
     );
 
-    final Benchmark benchmark = new Benchmark(dataGenerator, engine, timedSource, timedSink);
+    final Benchmark benchmark = new Benchmark(generator, engine, timedSource, timedSink);
     benchmark.run();
   }
 

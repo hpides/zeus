@@ -1,5 +1,6 @@
-package de.hpi.des.mpws2019.benchmark;
+package de.hpi.des.mpws2019.benchmark.generator;
 
+import de.hpi.des.mpws2019.benchmark.TupleEvent;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -10,13 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class DataGenerator {
+public class UniformGenerator implements Generator<TupleEvent> {
 
   private final int eventsPerSecond;
-  private final int numberOfEvents;
-  private final Queue<TupleEvent> queue;
+  private final int timeInSeconds;
   private final ExecutorService executor;
   private final Random random = new Random();
+
   private long lastKey = 0;
 
   private TupleEvent generateRandomIntTuple() {
@@ -25,15 +26,16 @@ public class DataGenerator {
     return event;
   }
 
-  public CompletableFuture<Long> generate() {
-    return CompletableFuture.supplyAsync(this::sendEventsTimeAware, executor);
+  public CompletableFuture<Boolean> generate(final Queue<TupleEvent> queue) {
+    return CompletableFuture.supplyAsync(() -> this.sendEventsTimeAware(queue), executor);
   }
 
-  private Long sendEventsTimeAware() {
+  private Boolean sendEventsTimeAware(final Queue<TupleEvent> queue) {
     long sentEvents = 0;
+    final int totalEvents = eventsPerSecond * timeInSeconds;
     final long startTime = System.nanoTime();
 
-    while (sentEvents < this.numberOfEvents) {
+    while (sentEvents < totalEvents) {
       final long timeNow = System.nanoTime();
       final long nanoDifference = timeNow - startTime;
 
@@ -41,20 +43,20 @@ public class DataGenerator {
       final long missingEvents = currentEventTarget - sentEvents;
 
       // Ensures that we don't sent too many events
-      final long eventsToBeSent = Math.min(this.numberOfEvents - sentEvents, missingEvents);
+      final long eventsToBeSent = Math.min(totalEvents - sentEvents, missingEvents);
 
       // Send the events
       LongStream.range(0, eventsToBeSent).forEach(i -> {
-        this.queue.add(this.generateRandomIntTuple());
+        queue.add(this.generateRandomIntTuple());
       });
 
-      log.info("Sent events: {}", sentEvents);
+      log.debug("Sent events: {}", sentEvents);
+      log.debug("Missing events: {}", missingEvents);
       sentEvents += eventsToBeSent;
     }
 
     log.info("Finished generating events.");
-    this.executor.shutdown();
-    return sentEvents;
+    return true;
   }
 
 }

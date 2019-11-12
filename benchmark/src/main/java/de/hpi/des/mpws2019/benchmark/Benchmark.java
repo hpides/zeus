@@ -2,6 +2,7 @@ package de.hpi.des.mpws2019.benchmark;
 
 import static org.jooq.lambda.Seq.seq;
 
+import de.hpi.des.mpws2019.benchmark.generator.Generator;
 import de.hpi.des.mpws2019.engine.Engine;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,6 @@ public class Benchmark {
             printLatencyMetrics(keyToEventTimeLatency);
             System.out.println("---- Processing Time Latency ----");
             printLatencyMetrics(keyToProcessingTimeLatency);
-
         } catch (ExecutionException | InterruptedException e) {
             log.error(e.getMessage());
         } finally {
