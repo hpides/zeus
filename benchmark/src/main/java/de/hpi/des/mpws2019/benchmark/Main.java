@@ -47,7 +47,9 @@ public class Main {
     );
 
     final Benchmark benchmark = new Benchmark(generator, engine, timedSource, timedSink);
-    benchmark.run();
+    BenchmarkResult benchmarkResult = benchmark.run();
+    MetricsManager metricsManager = new MetricsManager();
+    MetricsResult metricsResult = metricsManager.evaluate(benchmarkResult);
+    metricsManager.printMetrics(metricsResult);
   }
-
 }
