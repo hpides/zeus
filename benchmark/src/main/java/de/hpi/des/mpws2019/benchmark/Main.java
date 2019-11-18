@@ -5,7 +5,6 @@ import de.hpi.des.mpws2019.benchmark.generator.UniformGenerator;
 import de.hpi.des.mpws2019.engine.Engine;
 import de.hpi.des.mpws2019.engine.sink.QueueSink;
 import de.hpi.des.mpws2019.engine.source.QueueSource;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -14,17 +13,18 @@ public class Main {
 
   public static void main(final String[] args) {
 
-    final int eventsPerSecond = 100000;
-    final int timeInSeconds = 10;
+    final int eventsPerSecond = 1000000;
+    final int maxDelayInSeconds = 5;
+    final int timeInSeconds = 30;
     final int numberOfEvents = eventsPerSecond * timeInSeconds;
 
     final ExecutorService executor =  Executors.newFixedThreadPool(8);
 
-    final TimedConcurrentBlockingQueue<TupleEvent> timedSource = new TimedConcurrentBlockingQueue<>(
-        eventsPerSecond,
+    final TimedBlockingQueue<TupleEvent> timedSource = new TimedBlockingQueue<>(
+        maxDelayInSeconds * eventsPerSecond,
         numberOfEvents
     );
-    final TimedConcurrentBlockingQueue<TupleEvent> timedSink = new TimedConcurrentBlockingQueue<>(
+    final TimedBlockingQueue<TupleEvent> timedSink = new TimedBlockingQueue<>(
         numberOfEvents);
 
     final Generator generator = new UniformGenerator(

@@ -7,7 +7,7 @@ import lombok.Value;
 public final class BenchmarkResult {
 
     private final Generator usedGenerator;
-    private final TimedConcurrentBlockingQueue timedSource;
-    private final TimedConcurrentBlockingQueue timedSink;
+    private final TimedBlockingQueue timedSource;
+    private final TimedBlockingQueue timedSink;
 
 }

@@ -3,7 +3,7 @@ package de.hpi.des.mpws2019.benchmark.generator;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.jooq.lambda.Seq.seq;
 
-import de.hpi.des.mpws2019.benchmark.TimedConcurrentBlockingQueue;
+import de.hpi.des.mpws2019.benchmark.TimedBlockingQueue;
 import de.hpi.des.mpws2019.benchmark.TupleEvent;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,8 +28,8 @@ class UniformGeneratorTest {
         Executors.newSingleThreadExecutor()
     );
 
-    final TimedConcurrentBlockingQueue<TupleEvent> timedQueue =
-        new TimedConcurrentBlockingQueue<>(totalEvents);
+    final TimedBlockingQueue<TupleEvent> timedQueue =
+        new TimedBlockingQueue<>(totalEvents);
 
     CompletableFuture<Boolean> successFuture = generator.generate(timedQueue);
 

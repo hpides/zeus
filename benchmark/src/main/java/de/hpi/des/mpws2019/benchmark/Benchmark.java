@@ -3,11 +3,7 @@ package de.hpi.des.mpws2019.benchmark;
 import static org.jooq.lambda.Seq.seq;
 
 import de.hpi.des.mpws2019.benchmark.generator.Generator;
-import de.hpi.des.mpws2019.benchmark.generator.UniformGenerator;
 import de.hpi.des.mpws2019.engine.Engine;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 public class Benchmark {
     private final Generator dataGenerator;
     private final Engine engine;
-    private final TimedConcurrentBlockingQueue timedSource;
-    private final TimedConcurrentBlockingQueue timedSink;
+    private final TimedBlockingQueue timedSource;
+    private final TimedBlockingQueue timedSink;
 
     public BenchmarkResult run() {
         engine.start();
