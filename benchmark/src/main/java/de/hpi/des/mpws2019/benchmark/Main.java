@@ -14,7 +14,7 @@ public class Main {
 
   public static void main(final String[] args) {
 
-    final int eventsPerSecond = 10000;
+    final int eventsPerSecond = 100000;
     final int timeInSeconds = 10;
     final int numberOfEvents = eventsPerSecond * timeInSeconds;
 

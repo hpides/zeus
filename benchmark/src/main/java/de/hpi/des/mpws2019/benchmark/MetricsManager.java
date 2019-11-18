@@ -70,14 +70,14 @@ public class MetricsManager {
         System.out.println("Total Events: " + metricsResult.getTotalEvents());
         System.out.println();
         System.out.println("---- Event Time Latency ----");
-        System.out.println("Average latency: " + metricsResult.getAverageEventTimeLatency() + " ms");
-        System.out.println("Max. latency: " + metricsResult.getMaxEventTimeLatency() + " ms");
-        System.out.println("Min. latency: " + metricsResult.getMinEventTimeLatency() + " ms");
+        System.out.println("Avg: " + metricsResult.getAverageEventTimeLatency() + " ms");
+        System.out.println("Max: " + metricsResult.getMaxEventTimeLatency() + " ms");
+        System.out.println("Min: " + metricsResult.getMinEventTimeLatency() + " ms");
         System.out.println();
         System.out.println("---- Processing Time Latency ----");
-        System.out.println("Average latency: " + metricsResult.getAverageProcessingTimeLatency() + " ms");
-        System.out.println("Max. latency: " + metricsResult.getMaxProcessingTimeLatency() + " ms");
-        System.out.println("Min. latency: " + metricsResult.getMinProcessingTimeLatency() + " ms");
+        System.out.println("Avg: " + metricsResult.getAverageProcessingTimeLatency() + " ms");
+        System.out.println("Max: " + metricsResult.getMaxProcessingTimeLatency() + " ms");
+        System.out.println("Min: " + metricsResult.getMinProcessingTimeLatency() + " ms");
         System.out.println();
     }
 }
