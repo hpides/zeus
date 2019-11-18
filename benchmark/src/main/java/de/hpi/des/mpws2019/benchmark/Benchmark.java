@@ -3,6 +3,7 @@ package de.hpi.des.mpws2019.benchmark;
 import static org.jooq.lambda.Seq.seq;
 
 import de.hpi.des.mpws2019.benchmark.generator.Generator;
+import de.hpi.des.mpws2019.benchmark.generator.UniformGenerator;
 import de.hpi.des.mpws2019.engine.Engine;
 import java.util.HashMap;
 import java.util.List;
@@ -15,14 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class Benchmark {
-    private final DataGenerator dataGenerator;
+    private final Generator dataGenerator;
     private final Engine engine;
     private final TimedConcurrentBlockingQueue timedSource;
     private final TimedConcurrentBlockingQueue timedSink;
 
     public void run() {
         engine.start();
-        final CompletableFuture<Long> isFinished = dataGenerator.generate();
+        final CompletableFuture<Boolean> isFinished = dataGenerator.generate(timedSource);
 
         try {
             isFinished.get();
