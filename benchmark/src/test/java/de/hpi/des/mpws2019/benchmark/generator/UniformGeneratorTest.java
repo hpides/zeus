@@ -37,7 +37,7 @@ class UniformGeneratorTest {
     successFuture.get();
     assertThat(timedQueue.size() == totalEvents);
 
-    final List<Long> times = seq(timedQueue.getKeyToEventTime())
+    final List<Long> times = seq(timedQueue.getKeyToAddTime())
         .map(e -> e.v2)
         .toList();
 

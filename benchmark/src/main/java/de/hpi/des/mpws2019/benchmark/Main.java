@@ -18,7 +18,7 @@ public class Main {
     final int timeInSeconds = 10;
     final int numberOfEvents = eventsPerSecond * timeInSeconds;
 
-    final ExecutorService executor =  Executors.newFixedThreadPool(4);
+    final ExecutorService executor =  Executors.newFixedThreadPool(8);
 
     final TimedConcurrentBlockingQueue<TupleEvent> timedSource = new TimedConcurrentBlockingQueue<>(
         eventsPerSecond,
@@ -37,7 +37,7 @@ public class Main {
     final QueueSink<TupleEvent> queueSink = new QueueSink<>(timedSink);
 
     final Function<TupleEvent, TupleEvent> mapping =
-        event -> new TupleEvent(event.getKey(), event.getValue() + 1);
+        event -> new TupleEvent(event.getKey(), event.getValue() / 10 + 50);
 
     final Engine<TupleEvent> engine = new Engine<>(
         queueSource,
