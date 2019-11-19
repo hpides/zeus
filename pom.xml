@@ -20,7 +20,7 @@
         <junit.version>5.5.2</junit.version>
         <jool.version>0.9.13</jool.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <log4j2.version>2.7</log4j2.version>
+        <log4j2.version>2.12.1</log4j2.version>
     </properties>
 
     <dependencies>

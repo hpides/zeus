@@ -13,4 +13,6 @@ public interface Generator<E extends Event> {
    */
   CompletableFuture<Boolean> generate(Queue<E> queue);
 
+  Long getTotalEvents();
+
 }

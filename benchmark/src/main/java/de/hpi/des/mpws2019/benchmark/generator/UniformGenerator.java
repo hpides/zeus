@@ -30,6 +30,11 @@ public class UniformGenerator implements Generator<TupleEvent> {
     return CompletableFuture.supplyAsync(() -> this.sendEventsTimeAware(queue), executor);
   }
 
+  @Override
+  public Long getTotalEvents() {
+    return Integer.toUnsignedLong(eventsPerSecond * timeInSeconds);
+  }
+
   private Boolean sendEventsTimeAware(final Queue<TupleEvent> queue) {
     long sentEvents = 0;
     final int totalEvents = eventsPerSecond * timeInSeconds;

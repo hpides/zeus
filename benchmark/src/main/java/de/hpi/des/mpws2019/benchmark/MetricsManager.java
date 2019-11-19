@@ -6,18 +6,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @NoArgsConstructor
 public class MetricsManager {
 
     public MetricsResult evaluate(BenchmarkResult benchmarkResult) {
+        log.info("Processing Benchmark Results");
         final Map<Long, Long> keyToEventTimeLatency = this.calculateLatencies(
                 benchmarkResult.getTimedSource().getKeyToAddTime(),
                 benchmarkResult.getTimedSink().getKeyToAddTime()
         );
 
         final Map<Long, Long> keyToProcessingTimeLatency = this.calculateLatencies(
-                benchmarkResult.getTimedSource().getKeyToRemoveTimeHashMap(),
+                benchmarkResult.getTimedSource().getKeyToRemoveTime(),
                 benchmarkResult.getTimedSink().getKeyToAddTime()
         );
 
@@ -52,6 +55,11 @@ public class MetricsManager {
         final HashMap<Long, Long> keyToEventTimeLatency = new HashMap<>();
 
         for (final long key : sourceTimestamps.keySet()) {
+            if(!sinkTimestamps.containsKey(key)) {
+                System.out.println(key);
+                System.out.println(sourceTimestamps.keySet().size());
+                System.out.println(sinkTimestamps.keySet().size());
+            }
             final long sourceTimestamp = sourceTimestamps.get(key);
             final long sinkTimestamp = sinkTimestamps.get(key);
             final long latency = sinkTimestamp - sourceTimestamp;

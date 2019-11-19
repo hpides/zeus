@@ -1,6 +1,6 @@
 package de.hpi.des.mpws2019.benchmark;
 
-import static org.jooq.lambda.Seq.seq;
+import static java.lang.System.exit;
 
 import de.hpi.des.mpws2019.benchmark.generator.Generator;
 import de.hpi.des.mpws2019.engine.Engine;
@@ -18,18 +18,34 @@ public class Benchmark {
     private final TimedBlockingQueue timedSink;
 
     public BenchmarkResult run() {
+        log.info("Starting Engine");
         engine.start();
+        log.info("Starting Generator");
         final CompletableFuture<Boolean> isFinished = dataGenerator.generate(timedSource);
         BenchmarkResult benchmarkResult = null;
 
         try {
             isFinished.get();
-            benchmarkResult = new BenchmarkResult(dataGenerator, timedSource, timedSink);
-
         } catch (ExecutionException | InterruptedException e) {
+            if(e.getCause().getClass().equals(IllegalStateException.class)) {
+                log.error("Buffer overflowed, the engine was not able to handle the input EPS. Exiting");
+                log.error("Missed Planned Elements: " + (dataGenerator.getTotalEvents()-timedSink.size()));
+                exit(-1);
+            }
             log.error(e.getMessage());
-        } finally {
+            e.printStackTrace();
+        }
+        finally {
+            log.info("Waiting for Engine to finish, missing events: " + (dataGenerator.getTotalEvents()-timedSink.size()));
+            while(timedSink.size() != dataGenerator.getTotalEvents()) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             engine.shutdown();
+            benchmarkResult = new BenchmarkResult(dataGenerator, timedSource, timedSink);
         }
         return benchmarkResult;
     }
