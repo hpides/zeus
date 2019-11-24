@@ -1,0 +1,42 @@
+package de.hpi.des.mpws2019.engine.stream;
+
+import de.hpi.des.mpws2019.engine.function.Join;
+import de.hpi.des.mpws2019.engine.function.Mapper;
+import de.hpi.des.mpws2019.engine.graph.BinaryOperationNode;
+import de.hpi.des.mpws2019.engine.graph.Node;
+import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
+import de.hpi.des.mpws2019.engine.graph.UnaryOperationNode;
+import de.hpi.des.mpws2019.engine.operation.Sink;
+import de.hpi.des.mpws2019.engine.operation.StreamJoin;
+import de.hpi.des.mpws2019.engine.operation.StreamMap;
+import java.util.function.BiPredicate;
+
+public class AStream<In> extends AbstractAStream<In> {
+
+  public AStream(final TopologyBuilder builder, final Node node) {
+    super(builder, node);
+  }
+
+  public <Out> AStream<Out> map(final Mapper<In, Out> mapper) {
+    final UnaryOperationNode<In, Out> child = new UnaryOperationNode<>(new StreamMap<>(mapper));
+    this.builder.addGraphNode(this.node, child);
+    return new AStream<>(this.builder, child);
+  }
+
+  public <Other, Out> AStream<Out> join(final AStream<Other> other,
+                                        final Join<In, Other, Out> join,
+                                        final BiPredicate<In, Other> predicate) {
+    final BinaryOperationNode<In, Other, Out> child = new BinaryOperationNode<>(
+        new StreamJoin<>(join, predicate));
+    this.builder.addGraphNode(this.node, child);
+    this.builder.addGraphNode(other.getNode(), child);
+    return new AStream<>(this.builder, child);
+  }
+
+  public void to(final Sink<In> sink) {
+    final UnaryOperationNode<In, Void> sinkNode = new UnaryOperationNode<>(sink);
+    this.builder.addGraphNode(this.node, sinkNode);
+  }
+
+
+}
