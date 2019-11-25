@@ -1,5 +1,6 @@
 package de.hpi.des.mpws2019.engine.stream;
 
+import de.hpi.des.mpws2019.engine.function.FlatMapper;
 import de.hpi.des.mpws2019.engine.function.Join;
 import de.hpi.des.mpws2019.engine.function.Mapper;
 import de.hpi.des.mpws2019.engine.graph.BinaryOperationNode;
@@ -7,6 +8,7 @@ import de.hpi.des.mpws2019.engine.graph.Node;
 import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
 import de.hpi.des.mpws2019.engine.graph.UnaryOperationNode;
 import de.hpi.des.mpws2019.engine.operation.Sink;
+import de.hpi.des.mpws2019.engine.operation.StreamFlatMap;
 import de.hpi.des.mpws2019.engine.operation.StreamJoin;
 import de.hpi.des.mpws2019.engine.operation.StreamMap;
 import java.util.function.BiPredicate;
@@ -15,6 +17,12 @@ public class AStream<In> extends AbstractAStream<In> {
 
   public AStream(final TopologyBuilder builder, final Node node) {
     super(builder, node);
+  }
+
+  public <Out> AStream<Out> flatMap(final FlatMapper<? super In, Out> mapper) {
+    final UnaryOperationNode<In, Out> child = new UnaryOperationNode<>(new StreamFlatMap<>(mapper));
+    this.builder.addGraphNode(this.node, child);
+    return new AStream<>(this.builder, child);
   }
 
   public <Out> AStream<Out> map(final Mapper<In, Out> mapper) {
