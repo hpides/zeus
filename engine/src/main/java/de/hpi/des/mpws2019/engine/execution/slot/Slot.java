@@ -1,6 +1,16 @@
 package de.hpi.des.mpws2019.engine.execution.slot;
 
-public interface Slot {
+public abstract class Slot {
 
-  public void run();
+  public abstract void run();
+
+  public Runnable makeRunnable() {
+    return () -> {
+      while (true) {
+        Slot.this.run();
+      }
+    };
+
+  }
+
 }

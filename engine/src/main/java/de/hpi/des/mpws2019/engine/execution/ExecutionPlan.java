@@ -10,16 +10,17 @@ import de.hpi.des.mpws2019.engine.execution.slot.TwoInputSlot;
 import de.hpi.des.mpws2019.engine.graph.BinaryOperationNode;
 import de.hpi.des.mpws2019.engine.graph.Node;
 import de.hpi.des.mpws2019.engine.graph.SourceNode;
+import de.hpi.des.mpws2019.engine.graph.Topology;
 import de.hpi.des.mpws2019.engine.graph.UnaryOperationNode;
 import de.hpi.des.mpws2019.engine.operation.BinaryOperator;
 import de.hpi.des.mpws2019.engine.operation.OneInputOperator;
-import de.hpi.des.mpws2019.engine.graph.Topology;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Getter;
 
 public class ExecutionPlan {
@@ -31,6 +32,9 @@ public class ExecutionPlan {
     this.slotList = slotList;
   }
 
+  public List<Runnable> getSlotListRunnables() {
+    return this.slotList.stream().map(Slot::makeRunnable).collect(Collectors.toList());
+  }
 
   public static ExecutionPlan from(final Topology topology) {
     final List<Slot> slotList = new ArrayList<>();

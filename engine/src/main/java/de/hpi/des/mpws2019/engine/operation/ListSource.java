@@ -17,4 +17,11 @@ public class ListSource<OUT> extends AbstractSource<OUT> implements Source<OUT> 
       this.collector.collect(this.list.get(this.i++));
     }
   }
+
+  public boolean isDone() {
+    // This is not really thread-safe, as read() might potentially modify i while isDone() is
+    // called, however, this is not a major problem and will be changed later when we decide on a
+    // setup for tests
+    return this.i == this.list.size();
+  }
 }

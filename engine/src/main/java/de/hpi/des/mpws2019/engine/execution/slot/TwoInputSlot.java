@@ -3,7 +3,7 @@ package de.hpi.des.mpws2019.engine.execution.slot;
 import de.hpi.des.mpws2019.engine.operation.BinaryOperator;
 import de.hpi.des.mpws2019.engine.operation.Output;
 
-public class TwoInputSlot<In1, In2, Out> implements Slot {
+public class TwoInputSlot<In1, In2, Out> extends Slot {
 
   private final BinaryOperator<In1, In2, Out> operator;
   private final Input<In1> input1;

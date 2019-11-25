@@ -3,7 +3,7 @@ package de.hpi.des.mpws2019.engine.execution.slot;
 import de.hpi.des.mpws2019.engine.operation.Output;
 import de.hpi.des.mpws2019.engine.operation.Source;
 
-public class SourceSlot<OUT> implements Slot {
+public class SourceSlot<OUT> extends Slot {
 
   private final Source<OUT> source;
 

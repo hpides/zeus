@@ -3,7 +3,7 @@ package de.hpi.des.mpws2019.engine.execution.slot;
 import de.hpi.des.mpws2019.engine.operation.OneInputOperator;
 import de.hpi.des.mpws2019.engine.operation.Output;
 
-public class OneInputSlot<In, Out> implements Slot {
+public class OneInputSlot<In, Out> extends Slot {
 
   private final OneInputOperator<In, Out> operator;
   private final Input<In> input;
