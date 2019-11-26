@@ -1,9 +1,9 @@
 package de.hpi.des.mpws2019.engine.execution;
 
-
-import de.hpi.des.mpws2019.engine.execution.slot.Input;
+import de.hpi.des.mpws2019.engine.execution.slot.InputBuffer;
 import de.hpi.des.mpws2019.engine.execution.slot.OneInputSlot;
 import de.hpi.des.mpws2019.engine.execution.slot.QueueBuffer;
+import de.hpi.des.mpws2019.engine.execution.slot.QueueConnector;
 import de.hpi.des.mpws2019.engine.execution.slot.Slot;
 import de.hpi.des.mpws2019.engine.execution.slot.SourceSlot;
 import de.hpi.des.mpws2019.engine.execution.slot.TwoInputSlot;
@@ -38,10 +38,13 @@ public class ExecutionPlan {
 
   public static ExecutionPlan from(final Topology topology) {
     final List<Slot> slotList = new ArrayList<>();
-    final HashMap<BinaryOperationNode<?, ?, ?>, Input<?>> unfinishedNodes = new HashMap<>();
+    final HashMap<BinaryOperationNode<?, ?, ?>, InputBuffer<?>> unfinishedNodes = new HashMap<>();
+
     for (final SourceNode<?> sourceNode : topology.getSourceNodes()) {
-      final QueueBuffer queueBuffer = new QueueBuffer<>();
-      slotList.add(new SourceSlot<>(sourceNode.getSource(), queueBuffer));
+      final QueueConnector<?> queueConnector = new QueueConnector();
+      final QueueBuffer<?> queueBuffer = queueConnector.addQueueBuffer(sourceNode.getNodeId());
+
+      slotList.add(new SourceSlot(sourceNode.getSource(), queueConnector));
       for (final Node node : sourceNode.getChildren()) {
         traverseUntilBlock(node, queueBuffer, unfinishedNodes, slotList);
       }
@@ -82,8 +85,8 @@ public class ExecutionPlan {
    * @param unfinishedNodes current nodes that miss a second input
    * @param slotList all slots
    */
-  private static void traverseUntilBlock(final Node node, final Input<?> inputFromParent,
-                                         final Map<BinaryOperationNode<?, ?, ?>, Input<?>> unfinishedNodes,
+  private static void traverseUntilBlock(final Node node, final InputBuffer<?> inputFromParent,
+                                         final Map<BinaryOperationNode<?, ?, ?>, InputBuffer<?>> unfinishedNodes,
                                          final List<Slot> slotList) {
     if (node instanceof BinaryOperationNode && !unfinishedNodes.containsKey(node)) {
       final BinaryOperationNode<?, ?, ?> node1 = (BinaryOperationNode<?, ?, ?>) node;
@@ -91,26 +94,27 @@ public class ExecutionPlan {
       return;
     }
 
-    final QueueBuffer objectQueueBuffer = new QueueBuffer<>();
+    final QueueConnector collector = new QueueConnector();
 
     Collection<Node> children = Collections.emptyList();
 
     if (node instanceof UnaryOperationNode) {
       final OneInputOperator operator = ((UnaryOperationNode) node).getOperator();
 
-      slotList.add(new OneInputSlot<>(operator, inputFromParent, objectQueueBuffer));
+      slotList.add(new OneInputSlot(operator, inputFromParent, collector));
       children = node.getChildren();
     } else if (node instanceof BinaryOperationNode) {
       final BinaryOperator operator = ((BinaryOperationNode) node).getOperator();
       slotList.add(
-          new TwoInputSlot<>(operator, unfinishedNodes.get(node), inputFromParent,
-              objectQueueBuffer));
+          new TwoInputSlot(operator, unfinishedNodes.get(node), inputFromParent,
+              collector));
       unfinishedNodes.remove(operator);
       children = node.getChildren();
     }
 
+    final QueueBuffer objectOutputBuffer = collector.addQueueBuffer(node.getNodeId());
     for (final Node node1 : children) {
-      traverseUntilBlock(node1, objectQueueBuffer, unfinishedNodes, slotList);
+      traverseUntilBlock(node1, objectOutputBuffer, unfinishedNodes, slotList);
     }
   }
 

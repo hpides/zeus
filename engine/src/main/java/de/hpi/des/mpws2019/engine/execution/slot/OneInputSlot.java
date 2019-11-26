@@ -1,15 +1,15 @@
 package de.hpi.des.mpws2019.engine.execution.slot;
 
 import de.hpi.des.mpws2019.engine.operation.OneInputOperator;
-import de.hpi.des.mpws2019.engine.operation.Output;
+import de.hpi.des.mpws2019.engine.operation.Collector;
 
 public class OneInputSlot<In, Out> extends Slot {
 
   private final OneInputOperator<In, Out> operator;
-  private final Input<In> input;
+  private final InputBuffer<In> input;
 
-  public OneInputSlot(final OneInputOperator<In, Out> operator, final Input<In> input,
-                      final Output<Out> output) {
+  public OneInputSlot(final OneInputOperator<In, Out> operator, final InputBuffer<In> input,
+                      final Collector<Out> output) {
     this.operator = operator;
     this.input = input;
     this.operator.init(output);

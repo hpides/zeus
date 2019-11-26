@@ -1,11 +1,11 @@
 package de.hpi.des.mpws2019.engine.graph;
 
-import de.hpi.des.mpws2019.engine.operation.Source;
+import de.hpi.des.mpws2019.engine.operation.Sink;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class SourceNode<OUT> extends Node {
-  private final Source<OUT> source;
+public class SinkNode<IN> extends Node {
+  private final Sink sink;
 }
