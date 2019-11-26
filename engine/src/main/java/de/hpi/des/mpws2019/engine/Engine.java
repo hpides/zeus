@@ -24,4 +24,8 @@ public class Engine {
     }
   }
 
+  public void shutdown() {
+    this.executor.shutdownNow();
+  }
+
 }

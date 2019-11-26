@@ -1,8 +1,8 @@
 package de.hpi.des.mpws2019.engine.execution.slot;
 
 import de.hpi.des.mpws2019.engine.operation.Output;
-import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.Getter;
 
 public class QueueBuffer<VAL> implements Output<VAL>, Input<VAL> {
@@ -11,7 +11,7 @@ public class QueueBuffer<VAL> implements Output<VAL>, Input<VAL> {
   private final Queue<VAL> queue;
 
   public QueueBuffer() {
-    this.queue = new LinkedList<>();
+    this.queue = new ConcurrentLinkedQueue<>();
   }
 
   public QueueBuffer(final Queue<VAL> queue) {

@@ -15,13 +15,13 @@ public class MetricsManager {
     public MetricsResult evaluate(BenchmarkResult benchmarkResult) {
         log.info("Processing Benchmark Results");
         final Map<Long, Long> keyToEventTimeLatency = this.calculateLatencies(
-                benchmarkResult.getTimedSource().getKeyToAddTime(),
-                benchmarkResult.getTimedSink().getKeyToAddTime()
+                benchmarkResult.getTimedSource().getBenchmarkCheckpointToAddTime(),
+                benchmarkResult.getTimedSink().getBenchmarkCheckpointToAddTime()
         );
 
         final Map<Long, Long> keyToProcessingTimeLatency = this.calculateLatencies(
-                benchmarkResult.getTimedSource().getKeyToRemoveTime(),
-                benchmarkResult.getTimedSink().getKeyToAddTime()
+                benchmarkResult.getTimedSource().getBenchmarkCheckpointToRemoveTime(),
+                benchmarkResult.getTimedSink().getBenchmarkCheckpointToAddTime()
         );
 
         final List<Long> eventTimeLatencies = seq(keyToEventTimeLatency).map(t -> t.v2).toList();
