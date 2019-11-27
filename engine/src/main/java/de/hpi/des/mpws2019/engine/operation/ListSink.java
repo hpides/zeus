@@ -4,13 +4,23 @@ import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Getter
-public class ListSink<IN> extends AbstractOperation<Void> implements Sink<IN> {
-  private final List<IN> list;
+public class ListSink<IN> implements Sink<IN> {
+
+  private Collector<IN> collector;
+
+  // TODO: Change interfaces. The user has to set the collector for the sink.
+  @Override
+  public void init(Collector<IN> collector) {
+
+  }
+
+  public ListSink(List<IN> list) {
+    this.collector = list::add;
+  }
 
   @Override
   public void process(final IN in) {
-    this.list.add(in);
+    this.collector.collect(in);
   }
 }

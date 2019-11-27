@@ -12,6 +12,8 @@ public abstract class Node {
   private final Collection<Node> parents = new LinkedHashSet<>();
   private final UUID nodeId = UUID.randomUUID();
 
+  public abstract void accept(NodeVisitor visitor);
+
   public void addChild(final Node node) {
     this.children.add(node);
     node.parents.add(this);

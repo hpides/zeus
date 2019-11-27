@@ -4,6 +4,11 @@ import de.hpi.des.mpws2019.engine.operation.BinaryOperator;
 
 public class BinaryOperationNode<IN1, IN2, OUT> extends Node {
 
+  @Override
+  public void accept(NodeVisitor visitor) {
+    visitor.visit(this);
+  }
+
   private final BinaryOperator<IN1, IN2, OUT> operator;
 
   public BinaryOperationNode(

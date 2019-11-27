@@ -7,9 +7,11 @@ import de.hpi.des.mpws2019.engine.graph.Topology;
 import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
 import de.hpi.des.mpws2019.engine.operation.ListSink;
 import de.hpi.des.mpws2019.engine.operation.ListSource;
+import de.hpi.des.mpws2019.engine.operation.Sink;
 import de.hpi.des.mpws2019.engine.operation.Source;
 import de.hpi.des.mpws2019.engine.stream.AStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +24,8 @@ class ExecutionPlanTest {
     final Source<String> stringSource = new ListSource<>(
         List.of("2", "5", "4", "3"));
 
-    final ListSink<String> sink = new ListSink<>(new ArrayList<>());
+    final List<String> result = new LinkedList<>();
+    final Sink<String> sink = new ListSink<>(result);
 
     final TopologyBuilder builder = new TopologyBuilder();
     final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
@@ -34,13 +37,13 @@ class ExecutionPlanTest {
 
     final ExecutionPlan plan = ExecutionPlan.from(topology);
     plan.getSlotList().forEach(Slot::run);
-    assertThat(sink.getList()).containsExactly("22");
+    assertThat(result).containsExactly("22");
     plan.getSlotList().forEach(Slot::run);
-    assertThat(sink.getList()).containsExactly("22");
+    assertThat(result).containsExactly("22");
     plan.getSlotList().forEach(Slot::run);
-    assertThat(sink.getList()).containsExactly("22", "44");
+    assertThat(result).containsExactly("22", "44");
     plan.getSlotList().forEach(Slot::run);
-    assertThat(sink.getList()).containsExactly("22", "44", "33");
+    assertThat(result).containsExactly("22", "44", "33");
   }
 
 }

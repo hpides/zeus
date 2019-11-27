@@ -9,6 +9,7 @@ import de.hpi.des.mpws2019.engine.operation.ListSource;
 import de.hpi.des.mpws2019.engine.stream.AStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,8 @@ class EngineTest {
     final ListSource<String> stringSource = new ListSource<>(
         List.of("2", "5", "4", "3"));
 
-    final ListSink<String> sink = new ListSink<>(new ArrayList<>());
+    final List<String> result = new LinkedList<>();
+    final ListSink<String> sink = new ListSink<>(result);
 
     final TopologyBuilder builder = new TopologyBuilder();
     final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
@@ -32,16 +34,16 @@ class EngineTest {
 
     var engine = new Engine(builder);
     engine.run();
-    while (!source.isDone() || !stringSource.isDone() || !(sink.getList().size() == 3)) {
+    while (!source.isDone() || !stringSource.isDone() || !(result.size() == 3)) {
       sleep(100);
     }
-    assertThat(sink.getList()).containsExactly("22", "44", "33");
+    assertThat(result).containsExactly("22", "44", "33");
   }
 
   @Test
   void testLongQuery() throws InterruptedException {
     final var list = new ArrayList<Integer>();
-    for (int i = 0; i < 100_000; i++) {
+    for (int i = 0; i < 1000; i++) {
       list.add(i);
     }
     final var correctResult = List.copyOf(list).stream().map(i -> i + 1).filter(i -> i > 0)
@@ -49,7 +51,8 @@ class EngineTest {
         .collect(Collectors.toList());
 
     final var sourceInt = new ListSource<>(list);
-    final var sink = new ListSink<>(new ArrayList<Integer>());
+    final LinkedList<Integer> results = new LinkedList<>();
+    final var sink = new ListSink<>(results);
     final var builder = new TopologyBuilder();
 
     builder.streamOf(sourceInt).map(i -> i + 1).filter(i -> i > 0).map(i -> List.of(i, i, i))
@@ -57,12 +60,11 @@ class EngineTest {
 
     var engine = new Engine(builder);
     engine.run();
-    while (!sourceInt.isDone() || !(sink.getList().size() == correctResult.size())) {
+    while (!sourceInt.isDone() || !(results.size() == correctResult.size())) {
       sleep(100);
     }
 
-    System.out.println(sink.getList());
-    assertThat(sink.getList()).containsExactlyElementsOf(correctResult);
+    assertThat(results).containsExactlyElementsOf(correctResult);
 
 
   }

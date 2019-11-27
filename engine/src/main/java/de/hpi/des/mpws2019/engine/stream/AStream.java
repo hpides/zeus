@@ -6,6 +6,7 @@ import de.hpi.des.mpws2019.engine.function.Join;
 import de.hpi.des.mpws2019.engine.function.Mapper;
 import de.hpi.des.mpws2019.engine.graph.BinaryOperationNode;
 import de.hpi.des.mpws2019.engine.graph.Node;
+import de.hpi.des.mpws2019.engine.graph.SinkNode;
 import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
 import de.hpi.des.mpws2019.engine.graph.UnaryOperationNode;
 import de.hpi.des.mpws2019.engine.operation.Sink;
@@ -50,7 +51,7 @@ public class AStream<In> extends AbstractAStream<In> {
   }
 
   public void to(final Sink<In> sink) {
-    final UnaryOperationNode<In, Void> sinkNode = new UnaryOperationNode<>(sink);
+    final SinkNode<In> sinkNode = new SinkNode<>(sink);
     this.builder.addGraphNode(this.node, sinkNode);
   }
 
