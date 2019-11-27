@@ -18,6 +18,10 @@ public class TimedBlockingSource<E extends Event> extends AbstractSource<E> impl
         this.benchmarkCheckpointToAddTime = new HashMap<>();
     }
 
+    public TimedBlockingSource() {
+      this(Integer.MAX_VALUE);
+    }
+
     public void offer(E event) {
         if(event.isBenchmarkCheckpoint()) {
             final long timestamp = System.nanoTime();

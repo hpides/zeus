@@ -5,6 +5,7 @@ import static org.jooq.lambda.Seq.seq;
 
 import de.hpi.des.mpws2019.benchmark.TimedBlockingSource;
 import de.hpi.des.mpws2019.benchmark.TupleEvent;
+import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -28,10 +29,10 @@ class UniformGeneratorTest {
         Executors.newSingleThreadExecutor()
     );
 
-    final TimedBlockingSource<TupleEvent> timedQueue = new TimedBlockingSource<>(eventsPerSecond);
+    final TimedBlockingSource<TupleEvent> timedQueue = new TimedBlockingSource<>();
+
 
     CompletableFuture<Boolean> successFuture = generator.generate(timedQueue);
-
     // to block until generation finished
     successFuture.get();
     assertThat(timedQueue.getQueue().size() == totalEvents);
@@ -68,7 +69,7 @@ class UniformGeneratorTest {
      data generator is generating data uniformly over the time interval.
      */
     var chiSquare = new ChiSquareTest();
-    Boolean isRejected = chiSquare.chiSquareTest(expectedPerBin, countPerBin, 0.05);
+    boolean isRejected = chiSquare.chiSquareTest(expectedPerBin, countPerBin, 0.05);
     assertThat(!isRejected);
   }
 }
