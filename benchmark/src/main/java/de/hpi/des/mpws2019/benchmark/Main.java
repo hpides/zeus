@@ -35,10 +35,6 @@ public class Main implements Runnable {
         eventsPerSecond * maxDelayInSeconds);
     final TimedBlockingSink<TupleEvent> sink = new TimedBlockingSink<>();
 
-    final Function<TupleEvent, TupleEvent> mapping =
-        event -> new TupleEvent(event.getKey(), event.getValue() / 10 + 50,
-            event.isBenchmarkCheckpoint());
-
     final TopologyBuilder builder = new TopologyBuilder();
     final AStream<TupleEvent> stream = builder.streamOf(source)
         .map(e -> new TupleEvent(e.getKey(), e.getValue() + 1, e.isBenchmarkCheckpoint()));
