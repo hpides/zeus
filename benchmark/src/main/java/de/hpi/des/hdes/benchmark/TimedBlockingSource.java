@@ -5,7 +5,9 @@ import de.hpi.des.hdes.engine.operation.Source;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 @Getter
 public class TimedBlockingSource<E extends Event> extends AbstractInitializable<E> implements
     Source<E> {
@@ -20,7 +22,7 @@ public class TimedBlockingSource<E extends Event> extends AbstractInitializable<
     }
 
     public TimedBlockingSource() {
-      this(Integer.MAX_VALUE);
+        this(Integer.MAX_VALUE);
     }
 
     public void offer(E event) {
@@ -37,7 +39,7 @@ public class TimedBlockingSource<E extends Event> extends AbstractInitializable<
         try {
             event = queue.take();
         } catch (InterruptedException e) {
-            System.out.println(String.format("Polling from TimedBlockingSource containing %s was interrupted", this));
+            log.info("Polling from TimedBlockingSource containing {} was interrupted", this);
             Thread.currentThread().interrupt();
         }
         if (event != null && event.isBenchmarkCheckpoint()) {

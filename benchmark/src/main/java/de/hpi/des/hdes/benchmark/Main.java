@@ -7,22 +7,26 @@ import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.stream.AStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.extern.log4j.Log4j2;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
+@Log4j2
 public class Main implements Runnable {
 
-  @Option(names = "--eventsPerSecond", defaultValue = "4600000")
+  @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "4600000")
   private int eventsPerSecond;
-  @Option(names = "--maxDelayInSeconds", defaultValue = "1")
+  @Option(names = {"--maxDelayInSeconds", "-mds"}, defaultValue = "1")
   private int maxDelayInSeconds;
-  @Option(names = "--timeInSeconds", defaultValue = "5")
+  @Option(names = {"--timeInSeconds", "-tis"}, defaultValue = "5")
   private int timeInSeconds;
-  @Option(names = "--threads", defaultValue = "8")
+  @Option(names = {"--threads", "-t"}, defaultValue = "8")
   private int nThreads;
 
   @Override
   public void run() {
+    log.info("Running with {} EPS, {}s max delay for {}s",
+        eventsPerSecond, maxDelayInSeconds, timeInSeconds);
     final ExecutorService executor = Executors.newFixedThreadPool(this.nThreads);
     final Generator generator = new UniformGenerator(
         eventsPerSecond,
