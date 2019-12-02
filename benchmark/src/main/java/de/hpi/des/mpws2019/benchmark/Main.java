@@ -7,7 +7,6 @@ import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
 import de.hpi.des.mpws2019.engine.stream.AStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -41,11 +40,9 @@ public class Main implements Runnable {
     stream.to(sink);
 
     var engine = new Engine(builder);
-    final Benchmark benchmark = new Benchmark(generator, engine, source, sink);
-    BenchmarkResult benchmarkResult = benchmark.run();
-    MetricsManager metricsManager = new MetricsManager();
-    MetricsResult metricsResult = metricsManager.evaluate(benchmarkResult);
-    metricsManager.printMetrics(metricsResult);
+    final Benchmark benchmark = new Benchmark(generator, engine);
+    Metrics metrics = benchmark.run(source, sink);
+    metrics.print();
   }
 
   public static void main(final String[] args) {

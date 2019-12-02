@@ -15,15 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 public class Benchmark {
     private final Generator dataGenerator;
     private final Engine engine;
-    private final TimedBlockingSource timedSource;
-    private final TimedBlockingSink timedSink;
 
-    public BenchmarkResult run() {
+    public Metrics run(TimedBlockingSource timedSource, TimedBlockingSink timedSink) {
         log.info("Starting Engine");
         engine.run();
         log.info("Starting Generator");
         final CompletableFuture<Boolean> isFinished = dataGenerator.generate(timedSource);
-        BenchmarkResult benchmarkResult = null;
+        Metrics metrics = null;
 
         try {
             isFinished.get();
@@ -48,8 +46,8 @@ public class Benchmark {
             }
             log.info("Telling Engine to stop processing");
             engine.shutdown();
-            benchmarkResult = new BenchmarkResult(dataGenerator, timedSource, timedSink);
+            metrics = Metrics.from(dataGenerator, timedSource, timedSink);
         }
-        return benchmarkResult;
+        return metrics;
     }
 }

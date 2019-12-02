@@ -39,6 +39,7 @@ public class UniformGenerator implements Generator<TupleEvent> {
 
   private Boolean sendEventsTimeAware(final TimedBlockingSource<TupleEvent> timedBlockingSource) {
     long sentEvents = 0;
+    this.lastKey = 0;
     final int totalEvents = eventsPerSecond * timeInSeconds;
     final long startTime = System.nanoTime();
     long benchmarkCheckpointCounter = 0;
