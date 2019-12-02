@@ -19,7 +19,6 @@ public class TimedBlockingSink<E extends Event> implements Sink<E> {
     public TimedBlockingSink() {
         this.benchmarkCheckpointToAddTime = new HashMap<>();
         this.sinkSize = 0;
-
         this.collector = this::process;
     }
 

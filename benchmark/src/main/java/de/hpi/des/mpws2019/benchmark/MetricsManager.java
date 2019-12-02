@@ -30,7 +30,7 @@ public class MetricsManager {
         final double totalProcessingLatency = transformNStoMS(seq(processingTimeLatencies).sum().get());
 
         MetricsResult metricsResult = new MetricsResult();
-        metricsResult.setTotalEvents(seq(eventTimeLatencies).count());
+        metricsResult.setTotalEvents(benchmarkResult.getTimedSink().getSinkSize());
 
         metricsResult.setAverageEventTimeLatency(totalEventTimeLatency / metricsResult.getTotalEvents());
         metricsResult.setMaxEventTimeLatency(transformNStoMS(seq(eventTimeLatencies).max().get()));
@@ -55,11 +55,6 @@ public class MetricsManager {
         final HashMap<Long, Long> keyToEventTimeLatency = new HashMap<>();
 
         for (final long key : sourceTimestamps.keySet()) {
-            if(!sinkTimestamps.containsKey(key)) {
-                System.out.println(key);
-                System.out.println(sourceTimestamps.keySet().size());
-                System.out.println(sinkTimestamps.keySet().size());
-            }
             final long sourceTimestamp = sourceTimestamps.get(key);
             final long sinkTimestamp = sinkTimestamps.get(key);
             final long latency = sinkTimestamp - sourceTimestamp;
@@ -75,7 +70,7 @@ public class MetricsManager {
 
     public void printMetrics(MetricsResult metricsResult) {
         System.out.println("---- General Metrics ----");
-        System.out.println("Total Events: " + metricsResult.getTotalEvents());
+        System.out.format("Processed Events: %,d%n", metricsResult.getTotalEvents());
         System.out.println();
         System.out.println("---- Event Time Latency ----");
         System.out.println("Avg: " + metricsResult.getAverageEventTimeLatency() + " ms");
