@@ -1,4 +1,4 @@
-name: MPWS2019 CI
+name: HDES CI
 
 on: 
   pull_request:
