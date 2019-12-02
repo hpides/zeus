@@ -6,6 +6,8 @@ import de.hpi.des.mpws2019.engine.io.ListSource;
 import de.hpi.des.mpws2019.engine.operation.Source;
 import de.hpi.des.mpws2019.engine.operation.StreamJoin;
 import de.hpi.des.mpws2019.engine.operation.StreamMap;
+import de.hpi.des.mpws2019.engine.window.GlobalTimeWindow;
+import de.hpi.des.mpws2019.engine.window.assigner.GlobalWindow;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -13,11 +15,11 @@ class TopologyTest {
 
   @Test
   void shouldTopologicallySort() {
-    List inputTuples1 = List.of(1, 2, 3, 4, 5);
+    List<Integer> inputTuples1 = List.of(1, 2, 3, 4, 5);
     Source<Integer> source1 = new ListSource<>(inputTuples1);
     SourceNode<Integer> sourceNode1 = new SourceNode<>(source1);
 
-    List inputTuples2 = List.of(1, 2, 3, 4, 5);
+    List<Integer> inputTuples2 = List.of(1, 2, 3, 4, 5);
     Source<Integer> source2 = new ListSource<>(inputTuples2);
     SourceNode<Integer> sourceNode2 = new SourceNode<>(source2);
 
@@ -27,10 +29,11 @@ class TopologyTest {
     StreamMap<Integer, Integer> map2 = new StreamMap<>(x -> x + 2);
     UnaryOperationNode<Integer, Integer> mapNode2 = new UnaryOperationNode<>(map2);
 
-    StreamJoin<Integer, Integer, String> join = new StreamJoin<>(
+    StreamJoin<Integer, Integer, String, GlobalTimeWindow> join = new StreamJoin<>(
         (x, y) -> "Matches: " + x + y,
-        Integer::equals
-    );
+        Integer::equals,
+        GlobalWindow.create());
+
     BinaryOperationNode<Integer, Integer, String> joinNode = new BinaryOperationNode<>(join);
 
     /*

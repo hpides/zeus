@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PullExecutionPlanBuilder implements NodeVisitor {
 
-  private final Map<Node, QueueConnector> nodeOutputConnectors = new HashMap<>();
+  private final Map<Node, QueueConnector<?>> nodeOutputConnectors = new HashMap<>();
   @Getter
   private final List<Slot> slots = new LinkedList<>();
 
@@ -82,8 +82,10 @@ public class PullExecutionPlanBuilder implements NodeVisitor {
     Node parent1 = parents.next();
     Node parent2 = parents.next();
 
-    QueueBuffer parent1Input = nodeOutputConnectors.get(parent1).addQueueBuffer(binaryOperationNode);
-    QueueBuffer parent2Input = nodeOutputConnectors.get(parent2).addQueueBuffer(binaryOperationNode);
+    QueueBuffer parent1Input = nodeOutputConnectors.get(parent1)
+        .addQueueBuffer(binaryOperationNode);
+    QueueBuffer parent2Input = nodeOutputConnectors.get(parent2)
+        .addQueueBuffer(binaryOperationNode);
 
     Slot slot = new TwoInputSlot(operator, parent1Input, parent2Input, output);
     this.slots.add(slot);

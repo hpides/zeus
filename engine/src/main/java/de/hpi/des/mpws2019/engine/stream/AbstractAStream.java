@@ -8,7 +8,7 @@ public abstract class AbstractAStream<In> {
   protected TopologyBuilder builder;
   protected Node node;
 
-  public AbstractAStream(final TopologyBuilder builder, final Node node) {
+  protected AbstractAStream(final TopologyBuilder builder, final Node node) {
     this.builder = builder;
     this.node = node;
   }

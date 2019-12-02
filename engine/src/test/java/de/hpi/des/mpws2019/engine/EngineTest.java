@@ -7,17 +7,22 @@ import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
 import de.hpi.des.mpws2019.engine.io.ListSink;
 import de.hpi.des.mpws2019.engine.io.ListSource;
 import de.hpi.des.mpws2019.engine.stream.AStream;
+import de.hpi.des.mpws2019.engine.window.Time;
+import de.hpi.des.mpws2019.engine.window.assigner.GlobalWindow;
+import de.hpi.des.mpws2019.engine.window.assigner.TumblingProcessingTimeWindow;
+import de.hpi.des.mpws2019.engine.window.assigner.TumblingWindow;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class EngineTest {
 
   @Test
-  void testRun() throws InterruptedException {
+  void testTumblingProcessingWindowJoin() throws InterruptedException {
     final List<Integer> list = List.of(1, 2, 3);
     final ListSource<Integer> source = new ListSource<>(list);
     final ListSource<String> stringSource = new ListSource<>(
@@ -30,7 +35,33 @@ class EngineTest {
     final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
     final AStream<String> stringString = builder.streamOf(stringSource);
 
-    stream.join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
+    stream.window(TumblingWindow.ofProcessingTime(Time.seconds(5)))
+        .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
+
+    var engine = new Engine(builder);
+    engine.run();
+    while (!source.isDone() || !stringSource.isDone() || !(result.size() == 3)) {
+      sleep(100);
+    }
+    assertThat(result).containsExactlyInAnyOrder("22", "44", "33");
+  }
+
+  @Test
+  void testGlobalWindowJoin() throws InterruptedException {
+    final List<Integer> list = List.of(1, 2, 3);
+    final ListSource<Integer> source = new ListSource<>(list);
+    final ListSource<String> stringSource = new ListSource<>(
+        List.of("2", "5", "4", "3"));
+
+    final List<String> result = new LinkedList<>();
+    final ListSink<String> sink = new ListSink<>(result);
+
+    final TopologyBuilder builder = new TopologyBuilder();
+    final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
+    final AStream<String> stringString = builder.streamOf(stringSource);
+
+    stream.window(new GlobalWindow())
+        .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
 
     var engine = new Engine(builder);
     engine.run();

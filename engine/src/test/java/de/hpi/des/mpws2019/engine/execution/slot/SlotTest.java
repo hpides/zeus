@@ -6,8 +6,14 @@ import de.hpi.des.mpws2019.engine.execution.connector.QueueBuffer;
 import de.hpi.des.mpws2019.engine.execution.connector.QueueConnector;
 import de.hpi.des.mpws2019.engine.operation.StreamJoin;
 import de.hpi.des.mpws2019.engine.operation.StreamMap;
+import de.hpi.des.mpws2019.engine.window.GlobalTimeWindow;
+import de.hpi.des.mpws2019.engine.window.TimeWindow;
+import de.hpi.des.mpws2019.engine.window.Window;
+import de.hpi.des.mpws2019.engine.window.assigner.GlobalWindow;
+import de.hpi.des.mpws2019.engine.window.assigner.TumblingProcessingTimeWindow;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class SlotTest {
@@ -25,7 +31,8 @@ class SlotTest {
     final QueueConnector<Integer> out2 = new QueueConnector<>();
     final QueueBuffer out2buffer = out2.addQueueBuffer(new DummyNode());
 
-    final var join = new StreamJoin<Integer, Integer, Integer>((i, i2) -> i, Integer::equals);
+    final var join = new StreamJoin<Integer, Integer, Integer, GlobalTimeWindow>((i, i2) -> i, Integer::equals,
+        GlobalWindow.create());
     final var slot2 = new TwoInputSlot<>(
         join,
         out1buffer,
