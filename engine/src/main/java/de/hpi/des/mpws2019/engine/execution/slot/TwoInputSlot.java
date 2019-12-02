@@ -1,24 +1,25 @@
 package de.hpi.des.mpws2019.engine.execution.slot;
 
-import de.hpi.des.mpws2019.engine.operation.BinaryOperator;
+import de.hpi.des.mpws2019.engine.execution.connector.Buffer;
 import de.hpi.des.mpws2019.engine.operation.Collector;
+import de.hpi.des.mpws2019.engine.operation.TwoInputOperator;
 
 public class TwoInputSlot<IN1, IN2, OUT> extends Slot {
 
-  private final BinaryOperator<IN1, IN2, OUT> operator;
-  private final InputBuffer<IN1> input1;
-  private final InputBuffer<IN2> input2;
+  private final TwoInputOperator<IN1, IN2, OUT> operator;
+  private final Buffer<IN1> input1;
+  private final Buffer<IN2> input2;
 
 
-  public TwoInputSlot(final BinaryOperator<IN1, IN2, OUT> operator, final InputBuffer<IN1> input1,
-                      final InputBuffer<IN2> input2, final Collector<OUT> output) {
+  public TwoInputSlot(final TwoInputOperator<IN1, IN2, OUT> operator, final Buffer<IN1> input1,
+      final Buffer<IN2> input2, final Collector<OUT> output) {
     this.operator = operator;
     this.input1 = input1;
     this.input2 = input2;
     operator.init(output);
   }
 
-  public void run() {
+  public void runStep() {
     final IN1 in1 = this.input1.poll();
     if (in1 != null) {
       this.operator.processStream1(in1);

@@ -11,10 +11,6 @@ public class TimedBlockingSink<E extends Event> implements Sink<E> {
     private long sinkSize;
     private final Collector<E> collector;
 
-    @Override
-    public void init(Collector<E> collector) {
-
-    }
 
     public TimedBlockingSink() {
         this.benchmarkCheckpointToAddTime = new HashMap<>();

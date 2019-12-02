@@ -1,8 +1,8 @@
 package de.hpi.des.mpws2019.engine.operation;
 
-import de.hpi.des.mpws2019.engine.function.Filter;
+import de.hpi.des.mpws2019.engine.udf.Filter;
 
-public class StreamFilter<IN> extends AbstractOperation<IN>
+public class StreamFilter<IN> extends AbstractInitializable<IN>
     implements OneInputOperator<IN, IN> {
 
   private final Filter<? super IN> filter;

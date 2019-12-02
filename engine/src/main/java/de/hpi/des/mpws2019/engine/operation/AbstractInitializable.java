@@ -1,7 +1,7 @@
 package de.hpi.des.mpws2019.engine.operation;
 
 
-public abstract class AbstractOperation<OUT> implements Initializable<OUT> {
+public abstract class AbstractInitializable<OUT> implements Initializable<OUT> {
 
   protected Collector<OUT> collector = null;
 

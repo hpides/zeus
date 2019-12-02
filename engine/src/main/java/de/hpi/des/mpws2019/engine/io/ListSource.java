@@ -1,8 +1,10 @@
-package de.hpi.des.mpws2019.engine.operation;
+package de.hpi.des.mpws2019.engine.io;
 
+import de.hpi.des.mpws2019.engine.operation.AbstractInitializable;
+import de.hpi.des.mpws2019.engine.operation.Source;
 import java.util.List;
 
-public class ListSource<OUT> extends AbstractSource<OUT> implements Source<OUT> {
+public class ListSource<OUT> extends AbstractInitializable<OUT> implements Source<OUT> {
 
   private final List<OUT> list;
   private int i = 0;

@@ -1,6 +1,6 @@
 package de.hpi.des.mpws2019.engine;
 
-import de.hpi.des.mpws2019.engine.execution.ExecutionPlan;
+import de.hpi.des.mpws2019.engine.execution.plan.ExecutionPlan;
 import de.hpi.des.mpws2019.engine.graph.Topology;
 import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +19,7 @@ public class Engine {
   }
 
   public void run() {
-    for (var c : this.plan.getSlotListRunnables()) {
+    for (var c : this.plan.getSlots()) {
       this.executor.submit(c);
     }
   }

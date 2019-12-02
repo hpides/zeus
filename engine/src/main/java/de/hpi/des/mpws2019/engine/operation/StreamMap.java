@@ -1,8 +1,8 @@
 package de.hpi.des.mpws2019.engine.operation;
 
-import de.hpi.des.mpws2019.engine.function.Mapper;
+import de.hpi.des.mpws2019.engine.udf.Mapper;
 
-public class StreamMap<V, VR> extends AbstractOperation<VR> implements OneInputOperator<V, VR> {
+public class StreamMap<V, VR> extends AbstractInitializable<VR> implements OneInputOperator<V, VR> {
 
   private final Mapper<V, VR> mapper;
 

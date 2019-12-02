@@ -4,8 +4,8 @@ import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import de.hpi.des.mpws2019.engine.graph.TopologyBuilder;
-import de.hpi.des.mpws2019.engine.operation.ListSink;
-import de.hpi.des.mpws2019.engine.operation.ListSource;
+import de.hpi.des.mpws2019.engine.io.ListSink;
+import de.hpi.des.mpws2019.engine.io.ListSource;
 import de.hpi.des.mpws2019.engine.stream.AStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,7 +37,7 @@ class EngineTest {
     while (!source.isDone() || !stringSource.isDone() || !(result.size() == 3)) {
       sleep(100);
     }
-    assertThat(result).containsExactly("22", "44", "33");
+    assertThat(result).containsExactlyInAnyOrder("22", "44", "33");
   }
 
   @Test

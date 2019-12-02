@@ -2,7 +2,7 @@ package de.hpi.des.mpws2019.engine.graph;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import de.hpi.des.mpws2019.engine.operation.ListSource;
+import de.hpi.des.mpws2019.engine.io.ListSource;
 import de.hpi.des.mpws2019.engine.operation.Source;
 import de.hpi.des.mpws2019.engine.operation.StreamJoin;
 import de.hpi.des.mpws2019.engine.operation.StreamMap;
@@ -29,11 +29,11 @@ class TopologyTest {
 
     StreamJoin<Integer, Integer, String> join = new StreamJoin<>(
         (x, y) -> "Matches: " + x + y,
-        (x, y) -> x == y
+        Integer::equals
     );
     BinaryOperationNode<Integer, Integer, String> joinNode = new BinaryOperationNode<>(join);
 
-    /**
+    /*
      * sourceNode1 --> mapNode1
      *                           joinNode --> MapNode2
      * sourceNode2 ----------->

@@ -14,7 +14,7 @@ public class SourceSlot<OUT> extends Slot {
   }
 
   @Override
-  public void run() {
+  public void runStep() {
     this.source.read();
   }
 }

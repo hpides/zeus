@@ -1,9 +1,5 @@
 package de.hpi.des.mpws2019.engine.stream;
 
-import de.hpi.des.mpws2019.engine.function.Filter;
-import de.hpi.des.mpws2019.engine.function.FlatMapper;
-import de.hpi.des.mpws2019.engine.function.Join;
-import de.hpi.des.mpws2019.engine.function.Mapper;
 import de.hpi.des.mpws2019.engine.graph.BinaryOperationNode;
 import de.hpi.des.mpws2019.engine.graph.Node;
 import de.hpi.des.mpws2019.engine.graph.SinkNode;
@@ -14,6 +10,10 @@ import de.hpi.des.mpws2019.engine.operation.StreamFilter;
 import de.hpi.des.mpws2019.engine.operation.StreamFlatMap;
 import de.hpi.des.mpws2019.engine.operation.StreamJoin;
 import de.hpi.des.mpws2019.engine.operation.StreamMap;
+import de.hpi.des.mpws2019.engine.udf.Filter;
+import de.hpi.des.mpws2019.engine.udf.FlatMapper;
+import de.hpi.des.mpws2019.engine.udf.Join;
+import de.hpi.des.mpws2019.engine.udf.Mapper;
 import java.util.function.BiPredicate;
 
 public class AStream<In> extends AbstractAStream<In> {

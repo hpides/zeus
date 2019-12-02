@@ -1,10 +1,10 @@
-package de.hpi.des.mpws2019.engine.execution.slot;
+package de.hpi.des.mpws2019.engine.execution.connector;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.Getter;
 
-public class QueueBuffer<VAL> implements InputBuffer<VAL> {
+public class QueueBuffer<VAL> implements Buffer<VAL> {
 
   @Getter
   private final Queue<VAL> queue;
@@ -22,6 +22,7 @@ public class QueueBuffer<VAL> implements InputBuffer<VAL> {
     return this.queue.poll();
   }
 
+  @Override
   public void add(VAL val) {
     this.queue.add(val);
   }

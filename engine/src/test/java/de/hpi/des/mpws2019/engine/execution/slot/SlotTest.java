@@ -2,12 +2,12 @@ package de.hpi.des.mpws2019.engine.execution.slot;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import de.hpi.des.mpws2019.engine.graph.Node;
+import de.hpi.des.mpws2019.engine.execution.connector.QueueBuffer;
+import de.hpi.des.mpws2019.engine.execution.connector.QueueConnector;
 import de.hpi.des.mpws2019.engine.operation.StreamJoin;
 import de.hpi.des.mpws2019.engine.operation.StreamMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SlotTest {
@@ -45,7 +45,7 @@ class SlotTest {
 
   private void runAllSlots(final OneInputSlot<Integer, Integer> slot1,
                                   final TwoInputSlot<Integer, Integer, Integer> slot2) {
-    slot1.run();
-    slot2.run();
+    slot1.runStep();
+    slot2.runStep();
   }
 }

@@ -5,11 +5,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-// topology
 @RequiredArgsConstructor
 public class Topology {
 
@@ -54,7 +52,7 @@ public class Topology {
         return node;
       }
     }
-    throw new IllegalStateException("The graph probably has no topological ordering. Pass a DAG.");
+    throw new IllegalStateException("The graph has no topological ordering. Use a DAG.");
   }
 
   /**

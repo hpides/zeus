@@ -1,23 +1,20 @@
-package de.hpi.des.mpws2019.engine.execution;
+package de.hpi.des.mpws2019.engine.execution.plan;
 
 import de.hpi.des.mpws2019.engine.execution.slot.Slot;
 import de.hpi.des.mpws2019.engine.graph.Node;
 import de.hpi.des.mpws2019.engine.graph.Topology;
 import java.util.List;
-import java.util.stream.Collectors;
-import lombok.Getter;
 
 public class ExecutionPlan {
 
-  @Getter
-  private final List<Slot> slotList;
+  private final List<Slot> slots;
 
-  private ExecutionPlan(final List<Slot> slotList) {
-    this.slotList = slotList;
+  private ExecutionPlan(final List<Slot> slots) {
+    this.slots = slots;
   }
 
-  public List<Runnable> getSlotListRunnables() {
-    return this.slotList.stream().map(Slot::makeRunnable).collect(Collectors.toList());
+  public List<Slot> getSlots() {
+    return this.slots;
   }
 
   public static ExecutionPlan from(final Topology topology) {

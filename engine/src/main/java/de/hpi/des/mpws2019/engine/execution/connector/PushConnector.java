@@ -1,4 +1,4 @@
-package de.hpi.des.mpws2019.engine.execution.slot;
+package de.hpi.des.mpws2019.engine.execution.connector;
 
 import de.hpi.des.mpws2019.engine.graph.Node;
 import de.hpi.des.mpws2019.engine.operation.Collector;

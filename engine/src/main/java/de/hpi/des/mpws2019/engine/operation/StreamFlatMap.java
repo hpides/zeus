@@ -1,8 +1,8 @@
 package de.hpi.des.mpws2019.engine.operation;
 
-import de.hpi.des.mpws2019.engine.function.FlatMapper;
+import de.hpi.des.mpws2019.engine.udf.FlatMapper;
 
-public class StreamFlatMap<IN, OUT> extends AbstractOperation<OUT>
+public class StreamFlatMap<IN, OUT> extends AbstractInitializable<OUT>
     implements OneInputOperator<IN, OUT> {
 
   private final FlatMapper<? super IN, OUT> flatMapper;

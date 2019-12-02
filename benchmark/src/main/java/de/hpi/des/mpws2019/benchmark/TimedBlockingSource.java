@@ -1,13 +1,14 @@
 package de.hpi.des.mpws2019.benchmark;
 
-import de.hpi.des.mpws2019.engine.operation.AbstractSource;
+import de.hpi.des.mpws2019.engine.operation.AbstractInitializable;
 import de.hpi.des.mpws2019.engine.operation.Source;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.Getter;
 
 @Getter
-public class TimedBlockingSource<E extends Event> extends AbstractSource<E> implements Source<E> {
+public class TimedBlockingSource<E extends Event> extends AbstractInitializable<E> implements
+    Source<E> {
     private final HashMap<Long, Long> benchmarkCheckpointToRemoveTime;
     private final HashMap<Long, Long> benchmarkCheckpointToAddTime;
     private final LinkedBlockingQueue<E> queue;
