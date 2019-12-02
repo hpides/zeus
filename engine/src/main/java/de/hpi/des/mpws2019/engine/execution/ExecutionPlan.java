@@ -22,7 +22,7 @@ public class ExecutionPlan {
 
   public static ExecutionPlan from(final Topology topology) {
     final List<Node> sortedNodes = topology.getTopologicalOrdering();
-    final ExecutionPlanVisitor visitor = new ExecutionPlanVisitor();
+    final PushExecutionPlanBuilder visitor = new PushExecutionPlanBuilder();
 
     for (Node node: sortedNodes) {
       node.accept(visitor);

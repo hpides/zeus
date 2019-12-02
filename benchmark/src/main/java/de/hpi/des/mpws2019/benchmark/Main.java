@@ -13,12 +13,12 @@ import picocli.CommandLine.Option;
 
 public class Main implements Runnable {
 
-  @Option(names = "--eventsPerSecond", defaultValue = "2000000")
-  private int eventsPerSecond = 2_000_000;
+  @Option(names = "--eventsPerSecond", defaultValue = "4600000")
+  private int eventsPerSecond;
   @Option(names = "--maxDelayInSeconds", defaultValue = "1")
-  private int maxDelayInSeconds = 1;
+  private int maxDelayInSeconds;
   @Option(names = "--timeInSeconds", defaultValue = "5")
-  private int timeInSeconds = 5;
+  private int timeInSeconds;
   @Option(names = "--threads", defaultValue = "8")
   private int nThreads;
 

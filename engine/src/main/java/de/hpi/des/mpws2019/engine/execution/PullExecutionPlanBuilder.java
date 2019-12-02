@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExecutionPlanVisitor implements NodeVisitor {
+public class PullExecutionPlanBuilder implements NodeVisitor {
 
   private final Map<Node, QueueConnector> nodeOutputConnectors = new HashMap<>();
   @Getter
