@@ -46,6 +46,7 @@ public class Benchmark {
             }
             log.info("Telling Engine to stop processing");
             engine.shutdown();
+            dataGenerator.shutdown();
             metrics = Metrics.from(dataGenerator, timedSource, timedSink);
         }
         return metrics;

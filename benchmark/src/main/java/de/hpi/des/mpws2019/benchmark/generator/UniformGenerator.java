@@ -37,6 +37,11 @@ public class UniformGenerator implements Generator<TupleEvent> {
     return Integer.toUnsignedLong(eventsPerSecond) * Integer.toUnsignedLong(timeInSeconds);
   }
 
+  @Override
+  public void shutdown() {
+    executor.shutdownNow();
+  }
+
   private Boolean sendEventsTimeAware(final TimedBlockingSource<TupleEvent> timedBlockingSource) {
     long sentEvents = 0;
     this.lastKey = 0;

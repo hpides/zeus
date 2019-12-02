@@ -17,4 +17,6 @@ public interface Generator<E extends Event> {
 
   Long getTotalEvents();
 
+  void shutdown();
+
 }
