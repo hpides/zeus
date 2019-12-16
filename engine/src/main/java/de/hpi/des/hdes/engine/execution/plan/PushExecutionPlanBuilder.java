@@ -1,6 +1,8 @@
 package de.hpi.des.hdes.engine.execution.plan;
 
-import de.hpi.des.hdes.engine.execution.connector.PushConnector;
+import de.hpi.des.hdes.engine.execution.connector.Buffer;
+import de.hpi.des.hdes.engine.execution.connector.Connector;
+import de.hpi.des.hdes.engine.execution.slot.TwoInputSlot;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
@@ -23,15 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PushExecutionPlanBuilder implements NodeVisitor {
 
-  private final Map<Node, PushConnector> nodeOutputConnectors = new HashMap<>();
+  private final Map<Node, Connector> connectors = new HashMap<>();
   @Getter
   private final List<Slot> slots = new LinkedList<>();
 
   @Override
   public void visit(SourceNode sourceNode) {
     Source source = sourceNode.getSource();
-    PushConnector output = new PushConnector();
-    nodeOutputConnectors.put(sourceNode, output);
+    Connector output = new Connector();
+    connectors.put(sourceNode, output);
 
     Slot slot = new SourceSlot<>(source, output);
     this.slots.add(slot);
@@ -41,7 +43,7 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
   public void visit(SinkNode sinkNode) {
     // Look for cleaner solution with visitor pattern.
     final Node parent = sinkNode.getParents().iterator().next();
-    final PushConnector parentConnector = nodeOutputConnectors.get(parent);
+    final Connector parentConnector = connectors.get(parent);
     parentConnector.addFunction(sinkNode, sinkNode.getSink()::process);
   }
 
@@ -49,13 +51,13 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
   public void visit(UnaryOperationNode unaryOperationNode) {
     OneInputOperator operator = unaryOperationNode.getOperator();
 
-    PushConnector output = new PushConnector();
+    Connector output = new Connector();
     operator.init(output);
-    nodeOutputConnectors.put(unaryOperationNode, output);
+    connectors.put(unaryOperationNode, output);
 
     // Look for cleaner solution with visitor pattern.
     final Node parent = unaryOperationNode.getParents().iterator().next();
-    final PushConnector parentConnector = nodeOutputConnectors.get(parent);
+    final Connector parentConnector = connectors.get(parent);
     parentConnector.addFunction(unaryOperationNode, operator::process);
   }
 
@@ -63,14 +65,17 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
   public void visit(BinaryOperationNode binaryOperationNode) {
     TwoInputOperator operator = binaryOperationNode.getOperator();
 
-    PushConnector output = new PushConnector();
+    Connector output = new Connector();
     operator.init(output);
-    nodeOutputConnectors.put(binaryOperationNode, output);
+    connectors.put(binaryOperationNode, output);
 
     Iterator<Node> parents = binaryOperationNode.getParents().iterator();
     Node parent1 = parents.next();
     Node parent2 = parents.next();
-    nodeOutputConnectors.get(parent1).addFunction(binaryOperationNode, operator::processStream1);
-    nodeOutputConnectors.get(parent2).addFunction(binaryOperationNode, operator::processStream2);
+    Buffer input1 = connectors.get(parent1).addBuffer(binaryOperationNode);
+    Buffer input2 = connectors.get(parent2).addBuffer(binaryOperationNode);
+
+    Slot slot = new TwoInputSlot<>(operator, input1, input2, output);
+    this.slots.add(slot);
   }
 }

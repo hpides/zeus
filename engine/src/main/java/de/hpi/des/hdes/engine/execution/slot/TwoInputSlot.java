@@ -16,7 +16,6 @@ public class TwoInputSlot<IN1, IN2, OUT> extends Slot {
     this.operator = operator;
     this.input1 = input1;
     this.input2 = input2;
-    operator.init(output);
   }
 
   public void runStep() {
