@@ -2,6 +2,9 @@ package de.hpi.des.hdes.engine.stream;
 
 import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
+import de.hpi.des.hdes.engine.operation.StreamAggregation;
+import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.udf.Join;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
@@ -26,6 +29,12 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
         new StreamJoin<>(join, predicate, this.windowAssigner));
     this.builder.addGraphNode(this.node, child);
     this.builder.addGraphNode(other.getNode(), child);
+    return new AStream<>(this.builder, child);
+  }
+
+  public <OUT, TYPE> AStream<OUT> aggregate(final Aggregator<In, TYPE, OUT> aggregator) {
+    final UnaryOperationNode<In, OUT> child = new UnaryOperationNode<>(new StreamAggregation<>(aggregator, this.windowAssigner));
+    this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
   }
 }

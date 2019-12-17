@@ -2,6 +2,7 @@ package de.hpi.des.hdes.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import de.hpi.des.hdes.engine.aggregators.SumAggregator;
 import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.graph.Topology;
@@ -50,4 +51,31 @@ class WindowTests {
     plan.getSlots().forEach(Slot::runStep);
     assertThat(result).containsExactly("22", "44");
   }
+
+  @Test
+  void testAggregation() throws InterruptedException {
+    final List<Integer> list = List.of(1, 2, 3, 4);
+    final Source<Integer> source = new ListSource<>(list);
+
+    final List<Integer> result = new LinkedList<>();
+    final Sink<Integer> sink = new ListSink<>(result);
+
+    final TopologyBuilder builder = new TopologyBuilder();
+    final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
+
+    stream.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
+            .aggregate(new SumAggregator()).to(sink);
+
+    final Topology topology = builder.build();
+
+    final ExecutionPlan plan = ExecutionPlan.from(topology);
+    plan.getSlots().forEach(Slot::runStep);
+    plan.getSlots().forEach(Slot::runStep);
+    plan.getSlots().forEach(Slot::runStep);
+    Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+    plan.getSlots().forEach(Slot::runStep);
+    assertThat(result).containsExactly(9);
+  }
+
+
 }
