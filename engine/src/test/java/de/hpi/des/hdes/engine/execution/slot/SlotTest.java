@@ -13,6 +13,7 @@ import de.hpi.des.hdes.engine.window.GlobalTimeWindow;
 import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SlotTest {
@@ -28,7 +29,7 @@ class SlotTest {
     final Connector outMap1 = new Connector<Integer>();
     final Buffer outMap1Buffer = outMap1.addBuffer(new DummyNode());
     map1.init(outMap1);
-    final Slot slot1 = new SourceSlot<>(source, outSource1);
+    final Slot slot1 = new SourceSlot<>(source, outSource1, UUID.randomUUID(), outSource1);
 
     final Connector<Integer> out2 = new Connector<>();
     final QueueBuffer out2buffer = (QueueBuffer) out2.addBuffer(new DummyNode());
@@ -40,7 +41,8 @@ class SlotTest {
             join,
             outMap1Buffer,
             new QueueBuffer(new LinkedList<>(List.of(1, 2, 5, 6, 7))),
-            out2);
+            out2,
+            UUID.randomUUID());
 
     runAllSlots(slot1, slot2);
     runAllSlots(slot1, slot2);

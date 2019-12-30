@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,13 +30,26 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
   @Getter
   private final List<Slot> slots = new LinkedList<>();
 
+  private final Map<UUID, SourceSlot> sourceSlotMap;
+
+  public PushExecutionPlanBuilder(Map<UUID, SourceSlot> sourceSlotMap) {
+    this.sourceSlotMap = sourceSlotMap;
+  }
+
   @Override
   public void visit(SourceNode sourceNode) {
-    Source source = sourceNode.getSource();
-    Connector output = new Connector();
-    connectors.put(sourceNode, output);
-
-    Slot slot = new SourceSlot<>(source, output);
+    SourceSlot slot;
+    if(sourceSlotMap.containsKey(sourceNode.getNodeId())) {
+      slot = sourceSlotMap.get(sourceNode.getNodeId());
+      connectors.put(sourceNode, slot.getConnector());
+      slot.setAlreadyRunning(true);
+    }
+    else {
+      Source source = sourceNode.getSource();
+      Connector output = new Connector();
+      connectors.put(sourceNode, output);
+      slot = new SourceSlot<>(source, output, sourceNode.getNodeId(), output);
+    }
     this.slots.add(slot);
   }
 
@@ -75,7 +89,7 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
     Buffer input1 = connectors.get(parent1).addBuffer(binaryOperationNode);
     Buffer input2 = connectors.get(parent2).addBuffer(binaryOperationNode);
 
-    Slot slot = new TwoInputSlot<>(operator, input1, input2, output);
+    Slot slot = new TwoInputSlot<>(operator, input1, input2, output, binaryOperationNode.getNodeId());
     this.slots.add(slot);
   }
 }

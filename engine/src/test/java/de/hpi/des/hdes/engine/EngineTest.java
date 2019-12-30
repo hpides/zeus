@@ -94,8 +94,96 @@ class EngineTest {
     }
 
     assertThat(results).containsExactlyElementsOf(correctResult);
-
-
   }
 
+  @Test
+  void testAddingSecondQuery() throws InterruptedException {
+    final var list = new ArrayList<Integer>();
+    for (int i = 0; i < 1000; i++) {
+      list.add(i);
+    }
+
+    final var correctResult = List.copyOf(list).stream()
+            .map(i -> i + 1)
+            .filter(i -> i > 0)
+            .collect(Collectors.toList());
+
+    final var sourceIntQ1 = new ListSource<>(list);
+    final LinkedList<Integer> resultsQ1 = new LinkedList<>();
+    final var sinkQ1 = new ListSink<>(resultsQ1);
+    final var builderQ1 = new TopologyBuilder();
+
+    builderQ1.streamOf(sourceIntQ1)
+            .map(i -> i + 1)
+            .to(sinkQ1);
+
+    var engine = new Engine(builderQ1);
+    engine.run();
+    Thread.sleep(1000);
+
+    final var sourceIntQ2 = new ListSource<>(list);
+    final LinkedList<Integer> resultsQ2 = new LinkedList<>();
+    final var sinkQ2 = new ListSink<>(resultsQ2);
+    final var builderQ2 = new TopologyBuilder();
+    builderQ2.streamOf(sourceIntQ2)
+            .map(i -> i + 1)
+            .to(sinkQ2);
+
+    engine.addQuery(builderQ2);
+    while ((!sourceIntQ1.isDone() && !sourceIntQ2.isDone()) ||
+            !(resultsQ1.size() == correctResult.size()) && !(resultsQ2.size() == correctResult.size())) {
+      sleep(100);
+      System.out.println("Results Q1: "+resultsQ1.size());
+      System.out.println("Results Q2: "+resultsQ2.size());
+    }
+
+    assertThat(resultsQ1).containsExactlyElementsOf(correctResult);
+    assertThat(resultsQ2).containsExactlyElementsOf(correctResult);
+  }
+
+  @Test
+  void testAddingSecondQueryToSameSource() throws InterruptedException {
+    final var list = new ArrayList<Integer>();
+    for (int i = 0; i < 300000; i++) {
+      list.add(i);
+    }
+
+    final var correctResult = List.copyOf(list).stream()
+            .map(i -> i + 1)
+            .collect(Collectors.toList());
+
+    final var sourceIntQ1 = new ListSource<>(list);
+    final LinkedList<Integer> resultsQ1 = new LinkedList<>();
+    final var sinkQ1 = new ListSink<>(resultsQ1);
+    final var builderQ1 = new TopologyBuilder();
+
+    builderQ1.streamOf(sourceIntQ1)
+            .map(i -> i + 1)
+            .filter(i -> i > 0)
+            .to(sinkQ1);
+
+    var engine = new Engine(builderQ1);
+    engine.run();
+    Thread.sleep(10);
+
+    final LinkedList<Integer> resultsQ2 = new LinkedList<>();
+    final var sinkQ2 = new ListSink<>(resultsQ2);
+    final var builderQ2 = new TopologyBuilder();
+    builderQ2.streamOf(sourceIntQ1)
+            .map(i -> i + 1)
+            .map(i -> i * 2)
+            .to(sinkQ2);
+
+    engine.addQuery(builderQ2);
+    while ((!sourceIntQ1.isDone()) || !(resultsQ1.size() == correctResult.size())) {
+      System.out.println("Is Done: " + sourceIntQ1.isDone());
+      System.out.println("Results Q1: " + resultsQ1.size());
+      System.out.println("Results Q2: " + resultsQ2.size());
+      sleep(100);
+    }
+
+    assertThat(resultsQ1.size() == correctResult.size());
+    System.out.println("Results Q1: " + resultsQ1.size());
+    System.out.println("Results Q2: " + resultsQ2.size());
+  }
 }

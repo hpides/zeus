@@ -3,6 +3,7 @@ package de.hpi.des.hdes.engine.execution.slot;
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import de.hpi.des.hdes.engine.operation.Collector;
+import java.util.UUID;
 
 public class TwoInputSlot<IN1, IN2, OUT> extends Slot {
 
@@ -11,11 +12,16 @@ public class TwoInputSlot<IN1, IN2, OUT> extends Slot {
   private final Buffer<IN2> input2;
 
 
-  public TwoInputSlot(final TwoInputOperator<IN1, IN2, OUT> operator, final Buffer<IN1> input1,
-      final Buffer<IN2> input2, final Collector<OUT> output) {
+  public TwoInputSlot(final TwoInputOperator<IN1, IN2, OUT> operator,
+                      final Buffer<IN1> input1,
+                      final Buffer<IN2> input2,
+                      final Collector<OUT> output,
+                      final UUID topologyNodeId) {
+    super(topologyNodeId);
     this.operator = operator;
     this.input1 = input1;
     this.input2 = input2;
+    operator.init(output);
   }
 
   public void runStep() {
