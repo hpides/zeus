@@ -2,8 +2,8 @@ package de.hpi.des.hdes.engine.execution.slot;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import de.hpi.des.hdes.engine.execution.connector.Buffer;
-import de.hpi.des.hdes.engine.execution.connector.Connector;
+import de.hpi.des.hdes.engine.TestUtil;
+import de.hpi.des.hdes.engine.execution.connector.ListConnector;
 import de.hpi.des.hdes.engine.execution.connector.QueueBuffer;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Source;
@@ -20,19 +20,19 @@ class SlotTest {
 
   @Test
   void shouldExecuteOperatorsCorrectly() {
-    final Source<Integer> source = new ListSource(new LinkedList<>(List.of(0, 1, 3, 4)));
+    final Source<Integer> source = new ListSource<>(new LinkedList<>(List.of(0, 1, 3, 4)));
 
     final StreamMap<Integer, Integer> map1 = new StreamMap<>(a -> a + 1);
-    final Connector<Integer> outSource1 = new Connector();
+    final ListConnector<Integer> outSource1 =  ListConnector.create();
     outSource1.addFunction(new DummyNode(), map1::process);
     source.init(outSource1);
-    final Connector outMap1 = new Connector<Integer>();
-    final Buffer outMap1Buffer = outMap1.addBuffer(new DummyNode());
+    final ListConnector<Integer> outMap1 = ListConnector.create();
+    final var outMap1Buffer = outMap1.addBuffer(new DummyNode());
     map1.init(outMap1);
-    final Slot slot1 = new SourceSlot<>(source, outSource1, UUID.randomUUID(), outSource1);
+    final var slot1 = new SourceSlot<>(source, UUID.randomUUID(), outSource1);
 
-    final Connector<Integer> out2 = new Connector<>();
-    final QueueBuffer out2buffer = (QueueBuffer) out2.addBuffer(new DummyNode());
+    final ListConnector<Integer> out2 = ListConnector.create();
+    final var out2buffer =  out2.addBuffer(new DummyNode());
 
     final var join = new StreamJoin<Integer, Integer, Integer, GlobalTimeWindow>((i, i2) -> i, Integer::equals,
         GlobalWindow.create());
@@ -40,21 +40,19 @@ class SlotTest {
     final var slot2 = new TwoInputSlot<>(
             join,
             outMap1Buffer,
-            new QueueBuffer(new LinkedList<>(List.of(1, 2, 5, 6, 7))),
+            new QueueBuffer<>(new LinkedList<>(List.of(1, 2, 5, 6, 7))),
             out2,
             UUID.randomUUID());
 
-    runAllSlots(slot1, slot2);
-    runAllSlots(slot1, slot2);
-    runAllSlots(slot1, slot2);
-    runAllSlots(slot1, slot2);
-    runAllSlots(slot1, slot2);
-    assertThat(out2buffer.getQueue()).containsExactlyElementsOf(List.of(1, 2, 5));
+    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
+    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
+    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
+    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
+    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
+    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
+
+    assertThat(out2buffer.unsafePollAll()).containsExactlyElementsOf(List.of(1, 2, 5));
   }
 
-  private void runAllSlots(final Slot slot1,
-                                  final Slot slot2) {
-    slot1.runStep();
-    slot2.runStep();
-  }
+
 }

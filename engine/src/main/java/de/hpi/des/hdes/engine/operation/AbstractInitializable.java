@@ -9,4 +9,8 @@ public abstract class AbstractInitializable<OUT> implements Initializable<OUT> {
   public void init(final Collector<OUT> collector) {
     this.collector = collector;
   }
+
+  public void tick() {
+    this.collector.tick();
+  }
 }

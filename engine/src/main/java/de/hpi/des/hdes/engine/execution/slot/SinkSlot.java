@@ -24,4 +24,9 @@ public class SinkSlot<IN> extends Slot {
       this.sink.process(in);
     }
   }
+
+  @Override
+  public void tick() {
+    //noop
+  }
 }

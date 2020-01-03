@@ -2,24 +2,25 @@ package de.hpi.des.hdes.engine.execution;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import de.hpi.des.hdes.engine.TestUtil;
+import de.hpi.des.hdes.engine.execution.ExecutionConfig.ShortTimeoutConfig;
 import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
-import de.hpi.des.hdes.engine.execution.slot.Slot;
-import de.hpi.des.hdes.engine.io.ListSink;
-import de.hpi.des.hdes.engine.io.ListSource;
-import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.graph.Topology;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
+import de.hpi.des.hdes.engine.io.ListSink;
+import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.Source;
+import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class ExecutionPlanTest {
+class ExecutionPlanTest extends ShortTimeoutConfig {
 
   @Test
-  void shouldCreateExecutablePlanFromTopology() {
+  void shouldCreateExecutablePlanFromTopology() throws InterruptedException {
     final List<Integer> list = List.of(1, 2, 3);
     final Source<Integer> source = new ListSource<>(list);
     final Source<String> stringSource = new ListSource<>(
@@ -37,15 +38,17 @@ class ExecutionPlanTest {
 
     final Topology topology = builder.build();
 
-    final ExecutionPlan plan = ExecutionPlan.from(topology);
-    plan.getSlots().forEach(Slot::runStep);
+    var slots = ExecutionPlan.from(topology).getSlots();
+
+    TestUtil.stepSleepAndTick(slots);
     assertThat(result).containsExactly("22");
-    plan.getSlots().forEach(Slot::runStep);
+    TestUtil.stepSleepAndTick(slots);
     assertThat(result).containsExactly("22");
-    plan.getSlots().forEach(Slot::runStep);
+    TestUtil.stepSleepAndTick(slots);
     assertThat(result).containsExactly("22", "44");
-    plan.getSlots().forEach(Slot::runStep);
+    TestUtil.stepSleepAndTick(slots);
     assertThat(result).containsExactly("22", "44", "33");
   }
+
 
 }

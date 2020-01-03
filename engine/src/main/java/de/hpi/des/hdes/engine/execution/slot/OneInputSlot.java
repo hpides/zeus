@@ -21,9 +21,15 @@ public class OneInputSlot<IN, OUT> extends Slot {
   }
 
   public void runStep() {
+    this.operator.tick();
     final IN in = this.input.poll();
     if (in != null) {
       this.operator.process(in);
     }
+  }
+
+  @Override
+  public void tick() {
+    this.operator.tick();
   }
 }

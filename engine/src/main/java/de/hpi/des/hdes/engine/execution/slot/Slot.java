@@ -16,12 +16,17 @@ public abstract class Slot implements Runnable {
   @Setter
   private boolean alreadyRunning = false;
 
+  /**
+   * runStep should never block indefinitely. As outgoing buffers might not have been flushed yet.
+   */
   public abstract void runStep();
+  public abstract void tick();
 
   @Override
   public void run() {
     while (!Thread.currentThread().isInterrupted()) {
       this.runStep();
+      this.tick();
     }
   }
 

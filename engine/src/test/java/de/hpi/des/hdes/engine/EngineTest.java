@@ -3,18 +3,20 @@ package de.hpi.des.hdes.engine;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import de.hpi.des.hdes.engine.execution.ExecutionConfig;
+import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
-import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
-import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.window.Time;
 import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
+import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class EngineTest {
@@ -41,6 +43,7 @@ class EngineTest {
     while (!source.isDone() || !stringSource.isDone() || !(result.size() == 3)) {
       sleep(100);
     }
+
     assertThat(result).containsExactlyInAnyOrder("22", "44", "33");
   }
 
@@ -174,6 +177,7 @@ class EngineTest {
             .map(i -> i * 2)
             .to(sinkQ2);
 
+    final var minDiff = resultsQ1.size();
     engine.addQuery(builderQ2);
     while ((!sourceIntQ1.isDone()) || !(resultsQ1.size() == correctResult.size())) {
       System.out.println("Is Done: " + sourceIntQ1.isDone());
@@ -182,8 +186,15 @@ class EngineTest {
       sleep(100);
     }
 
-    assertThat(resultsQ1.size() == correctResult.size());
+    assertThat(resultsQ1.size()).isEqualTo(correctResult.size());
+    assertThat(resultsQ1.size() - resultsQ2.size()).isGreaterThanOrEqualTo(minDiff);
+    assertThat( resultsQ2.size() - resultsQ1.size()).isLessThanOrEqualTo(0);
     System.out.println("Results Q1: " + resultsQ1.size());
     System.out.println("Results Q2: " + resultsQ2.size());
+  }
+
+  @BeforeAll
+  static void beforeAll() {
+    ExecutionConfig.makeShortTimoutConfig();
   }
 }

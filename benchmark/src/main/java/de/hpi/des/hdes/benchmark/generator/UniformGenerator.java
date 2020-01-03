@@ -63,6 +63,7 @@ public class UniformGenerator implements Generator<TupleEvent> {
       for(int i = 0; i < eventsToBeSent; i++) {
         if(benchmarkCheckpointCounter % benchmarkCheckpointInterval == 0) {
           timedBlockingSource.offer(this.generateRandomIntTuple(true));
+          log.info("Current Queue Size {}", timedBlockingSource.getQueue().size());
         }
         else {
           timedBlockingSource.offer(this.generateRandomIntTuple(false));

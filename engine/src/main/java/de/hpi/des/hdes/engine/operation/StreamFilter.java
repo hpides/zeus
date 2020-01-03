@@ -1,6 +1,7 @@
 package de.hpi.des.hdes.engine.operation;
 
 import de.hpi.des.hdes.engine.udf.Filter;
+import org.jetbrains.annotations.NotNull;
 
 public class StreamFilter<IN> extends AbstractInitializable<IN>
     implements OneInputOperator<IN, IN> {
@@ -12,7 +13,7 @@ public class StreamFilter<IN> extends AbstractInitializable<IN>
   }
 
   @Override
-  public void process(final IN in) {
+  public void process(@NotNull final IN in) {
     if (this.filter.filter(in)) {
       this.collector.collect(in);
     }

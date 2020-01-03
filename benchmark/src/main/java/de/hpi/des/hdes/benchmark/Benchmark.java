@@ -38,6 +38,7 @@ public class Benchmark {
 
             while(timedSink.size() != dataGenerator.getTotalEvents()) {
                 log.info("Waiting for Engine to finish, missing events: " + (dataGenerator.getTotalEvents()-timedSink.size()));
+                timedSource.getQueue().flush();
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {

@@ -35,5 +35,10 @@ public class TwoInputSlot<IN1, IN2, OUT> extends Slot {
     }
   }
 
+  @Override
+  public void tick() {
+    this.operator.tick();
+  }
+
 
 }

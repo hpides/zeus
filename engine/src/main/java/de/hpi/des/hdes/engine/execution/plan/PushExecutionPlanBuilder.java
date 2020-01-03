@@ -1,11 +1,10 @@
 package de.hpi.des.hdes.engine.execution.plan;
 
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
-import de.hpi.des.hdes.engine.execution.connector.Connector;
-import de.hpi.des.hdes.engine.execution.slot.TwoInputSlot;
-import de.hpi.des.hdes.engine.operation.TwoInputOperator;
+import de.hpi.des.hdes.engine.execution.connector.ListConnector;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
+import de.hpi.des.hdes.engine.execution.slot.TwoInputSlot;
 import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
@@ -14,6 +13,7 @@ import de.hpi.des.hdes.engine.graph.SourceNode;
 import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.operation.Source;
+import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -26,70 +26,70 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PushExecutionPlanBuilder implements NodeVisitor {
 
-  private final Map<Node, Connector> connectors = new HashMap<>();
+  private final Map<Node, ListConnector<?>> connectors = new HashMap<>();
   @Getter
   private final List<Slot> slots = new LinkedList<>();
 
-  private final Map<UUID, SourceSlot> sourceSlotMap;
+  private final Map<UUID, SourceSlot<?>> sourceSlotMap;
 
-  public PushExecutionPlanBuilder(Map<UUID, SourceSlot> sourceSlotMap) {
+  public PushExecutionPlanBuilder(Map<UUID, SourceSlot<?>> sourceSlotMap) {
     this.sourceSlotMap = sourceSlotMap;
   }
 
   @Override
-  public void visit(SourceNode sourceNode) {
-    SourceSlot slot;
+  public <OUT> void visit(SourceNode<OUT> sourceNode) {
+    SourceSlot<?> slot;
     if(sourceSlotMap.containsKey(sourceNode.getNodeId())) {
       slot = sourceSlotMap.get(sourceNode.getNodeId());
       connectors.put(sourceNode, slot.getConnector());
       slot.setAlreadyRunning(true);
     }
     else {
-      Source source = sourceNode.getSource();
-      Connector output = new Connector();
+      Source<OUT> source = sourceNode.getSource();
+      ListConnector<OUT> output = ListConnector.create();
       connectors.put(sourceNode, output);
-      slot = new SourceSlot<>(source, output, sourceNode.getNodeId(), output);
+      slot = new SourceSlot<>(source, sourceNode.getNodeId(), output);
     }
     this.slots.add(slot);
   }
 
   @Override
-  public void visit(SinkNode sinkNode) {
+  public <IN> void visit(SinkNode<IN> sinkNode) {
     // Look for cleaner solution with visitor pattern.
     final Node parent = sinkNode.getParents().iterator().next();
-    final Connector parentConnector = connectors.get(parent);
-    parentConnector.addFunction(sinkNode, sinkNode.getSink()::process);
+    final ListConnector<IN> parentConnector = (ListConnector<IN>) connectors.get(parent);
+    parentConnector.addFunction(sinkNode, sinkNode.getSink());
   }
 
   @Override
-  public void visit(UnaryOperationNode unaryOperationNode) {
-    OneInputOperator operator = unaryOperationNode.getOperator();
+  public <IN,OUT> void visit(UnaryOperationNode<IN,OUT> unaryOperationNode) {
+    OneInputOperator<IN,OUT> operator = unaryOperationNode.getOperator();
 
-    Connector output = new Connector();
+    ListConnector<OUT> output = ListConnector.create();
     operator.init(output);
     connectors.put(unaryOperationNode, output);
 
     // Look for cleaner solution with visitor pattern.
     final Node parent = unaryOperationNode.getParents().iterator().next();
-    final Connector parentConnector = connectors.get(parent);
-    parentConnector.addFunction(unaryOperationNode, operator::process);
+    final ListConnector<IN>  parentConnector = (ListConnector<IN>) connectors.get(parent);
+    parentConnector.addFunction(unaryOperationNode, operator);
   }
 
   @Override
-  public void visit(BinaryOperationNode binaryOperationNode) {
-    TwoInputOperator operator = binaryOperationNode.getOperator();
+  public <IN1,IN2,OUT> void visit(BinaryOperationNode<IN1,IN2,OUT> binaryOperationNode) {
+    TwoInputOperator<IN1,IN2,OUT> operator = binaryOperationNode.getOperator();
 
-    Connector output = new Connector();
+    ListConnector<OUT> output = ListConnector.create();
     operator.init(output);
     connectors.put(binaryOperationNode, output);
 
     Iterator<Node> parents = binaryOperationNode.getParents().iterator();
     Node parent1 = parents.next();
     Node parent2 = parents.next();
-    Buffer input1 = connectors.get(parent1).addBuffer(binaryOperationNode);
-    Buffer input2 = connectors.get(parent2).addBuffer(binaryOperationNode);
+    Buffer<IN1> input1 = (Buffer<IN1>) connectors.get(parent1).addBuffer(binaryOperationNode);
+    Buffer<IN2> input2 = (Buffer<IN2>) connectors.get(parent2).addBuffer(binaryOperationNode);
 
-    Slot slot = new TwoInputSlot<>(operator, input1, input2, output, binaryOperationNode.getNodeId());
+    Slot slot = new TwoInputSlot<IN1,IN2,OUT>(operator, input1, input2, output, binaryOperationNode.getNodeId());
     this.slots.add(slot);
   }
 }

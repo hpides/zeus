@@ -5,6 +5,7 @@ import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.HashMap;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 public class StreamAggregation<IN, TYPE, OUT, W extends Window> extends AbstractInitializable<OUT> implements OneInputOperator<IN, OUT> {
     private final Aggregator<IN, TYPE, OUT> aggregator;
@@ -31,7 +32,7 @@ public class StreamAggregation<IN, TYPE, OUT, W extends Window> extends Abstract
     }
 
     @Override
-    public void process(IN input) {
+    public void process(@NotNull IN input) {
         update();
         final List<W> assignedWindows = this.windowAssigner.assignWindows(System.currentTimeMillis());
 

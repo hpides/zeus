@@ -6,9 +6,7 @@ import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.Topology;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,11 +36,11 @@ public class Engine {
 
     // Check if we can share any sources
     // If yes, get the source slots and append them to a map
-    HashMap<UUID, SourceSlot> nodeIdToSourceSlotMap = new HashMap<>();
+    HashMap<UUID, SourceSlot<?>> nodeIdToSourceSlotMap = new HashMap<>();
     for(Node newSource : additionalTopology.getSourceNodes()) {
       if(this.topology.getSourceNodes().contains(newSource)) {
          // We found an identical source, meaning that we can share state
-         SourceSlot sourceSlot = (SourceSlot) this.plan.getSlotById(newSource.getNodeId());
+         SourceSlot<?> sourceSlot = (SourceSlot<?>) this.plan.getSlotById(newSource.getNodeId());
          nodeIdToSourceSlotMap.put(newSource.getNodeId(), sourceSlot);
       }
     }

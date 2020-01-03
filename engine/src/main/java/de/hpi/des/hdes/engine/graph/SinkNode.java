@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class SinkNode<IN> extends Node {
 
-  private final Sink sink;
+  private final Sink<IN> sink;
 
   @Override
   public void accept(NodeVisitor visitor) {

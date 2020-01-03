@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.benchmark;
 
+import de.hpi.des.hdes.engine.execution.connector.ChunkedBuffer;
+import de.hpi.des.hdes.engine.execution.connector.SizedChunkedBuffer;
 import de.hpi.des.hdes.engine.operation.AbstractInitializable;
 import de.hpi.des.hdes.engine.operation.Source;
 import java.util.HashMap;
@@ -13,10 +15,10 @@ public class TimedBlockingSource<E extends Event> extends AbstractInitializable<
     Source<E> {
     private final HashMap<Long, Long> benchmarkCheckpointToRemoveTime;
     private final HashMap<Long, Long> benchmarkCheckpointToAddTime;
-    private final LinkedBlockingQueue<E> queue;
+    private final SizedChunkedBuffer<E> queue;
 
     public TimedBlockingSource(int capacity) {
-        this.queue = new LinkedBlockingQueue<>(capacity);
+        this.queue = new SizedChunkedBuffer<>(capacity);
         this.benchmarkCheckpointToRemoveTime = new HashMap<>();
         this.benchmarkCheckpointToAddTime = new HashMap<>();
     }
@@ -36,16 +38,13 @@ public class TimedBlockingSource<E extends Event> extends AbstractInitializable<
     @Override
     public void read() {
         E event = null;
-        try {
-            event = queue.take();
-        } catch (InterruptedException e) {
-            log.info("Polling from TimedBlockingSource containing {} was interrupted", this);
-            Thread.currentThread().interrupt();
-        }
+        event = queue.poll();
         if (event != null && event.isBenchmarkCheckpoint()) {
             long timestamp = System.nanoTime();
             benchmarkCheckpointToRemoveTime.put(event.getKey(), timestamp);
         }
-        collector.collect(event);
+        if(event != null){
+            collector.collect(event);
+        }
     }
 }

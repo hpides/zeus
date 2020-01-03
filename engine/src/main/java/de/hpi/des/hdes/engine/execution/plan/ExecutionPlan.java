@@ -39,7 +39,7 @@ public class ExecutionPlan {
     }
 
     public static ExecutionPlan extend(final Topology topology,
-            final Map<UUID, SourceSlot> matchingUUIDtoSourceSlotMap) {
+            final Map<UUID, SourceSlot<?>> matchingUUIDtoSourceSlotMap) {
         final List<Node> sortedNodes = topology.getTopologicalOrdering();
         final PushExecutionPlanBuilder visitor = new PushExecutionPlanBuilder(matchingUUIDtoSourceSlotMap);
 

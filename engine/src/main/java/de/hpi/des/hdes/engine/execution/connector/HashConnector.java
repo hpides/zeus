@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import lombok.Getter;
 
 @Getter
-public class Connector<VAL> implements Collector<VAL> {
+public class HashConnector<VAL> implements Collector<VAL> {
 
   private final Map<UUID, Consumer> nodeIdToFunction = new ConcurrentHashMap<>();
   private final Map<UUID, Buffer<VAL>> nodeIdToBuffer = new ConcurrentHashMap<>();

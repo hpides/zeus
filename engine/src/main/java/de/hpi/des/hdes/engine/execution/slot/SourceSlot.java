@@ -1,6 +1,6 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
-import de.hpi.des.hdes.engine.execution.connector.Connector;
+import de.hpi.des.hdes.engine.execution.connector.ListConnector;
 import de.hpi.des.hdes.engine.operation.Collector;
 import de.hpi.des.hdes.engine.operation.Source;
 import java.util.UUID;
@@ -11,23 +11,24 @@ public class SourceSlot<OUT> extends Slot {
 
   private final Source<OUT> source;
   @Getter
-  private final Collector<OUT> collector;
-  @Getter
-  private final Connector connector;
+  private final ListConnector<OUT> connector;
 
   public SourceSlot(final Source<OUT> source,
-                    final Collector<OUT> outOutput,
                     final UUID topologyNodeId,
-                    final Connector connector) {
+                    final ListConnector<OUT> connector) {
     super(topologyNodeId);
     this.source = source;
-    this.collector = outOutput;
     this.connector = connector;
-    source.init(outOutput);
+    source.init(connector);
   }
 
   @Override
   public void runStep() {
     this.source.read();
+  }
+
+  @Override
+  public void tick() {
+    this.connector.tick();
   }
 }
