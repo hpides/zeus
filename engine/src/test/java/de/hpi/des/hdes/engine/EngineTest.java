@@ -2,6 +2,7 @@ package de.hpi.des.hdes.engine;
 
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Timeout;
 
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
@@ -16,9 +17,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@Slf4j
 class EngineTest {
 
   @Test
@@ -100,18 +105,16 @@ class EngineTest {
   }
 
   @Test
+  @Timeout(5)
   void testAddingSecondQuery() throws InterruptedException {
-    final var list = new ArrayList<Integer>();
-    for (int i = 0; i < 1000; i++) {
-      list.add(i);
-    }
-
-    final var correctResult = List.copyOf(list).stream()
+    final Integer sourceSize = 1000;
+    final List<Integer> sourceList = IntStream.rangeClosed(1, sourceSize).boxed()
+            .collect(Collectors.toList());
+    final List<Integer> resultList = IntStream.rangeClosed(1, sourceSize).boxed()
             .map(i -> i + 1)
-            .filter(i -> i > 0)
             .collect(Collectors.toList());
 
-    final var sourceIntQ1 = new ListSource<>(list);
+    final ListSource<Integer> sourceIntQ1 = new ListSource(List.copyOf(sourceList));
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
     final var builderQ1 = new TopologyBuilder();
@@ -122,9 +125,9 @@ class EngineTest {
 
     var engine = new Engine(builderQ1);
     engine.run();
-    Thread.sleep(1000);
+    Thread.sleep(100);
 
-    final var sourceIntQ2 = new ListSource<>(list);
+    final ListSource<Integer> sourceIntQ2 = new ListSource(List.copyOf(sourceList));
     final LinkedList<Integer> resultsQ2 = new LinkedList<>();
     final var sinkQ2 = new ListSink<>(resultsQ2);
     final var builderQ2 = new TopologyBuilder();
@@ -133,21 +136,21 @@ class EngineTest {
             .to(sinkQ2);
 
     engine.addQuery(builderQ2);
-    while ((!sourceIntQ1.isDone() && !sourceIntQ2.isDone()) ||
-            !(resultsQ1.size() == correctResult.size()) && !(resultsQ2.size() == correctResult.size())) {
-      sleep(100);
-      System.out.println("Results Q1: "+resultsQ1.size());
-      System.out.println("Results Q2: "+resultsQ2.size());
+    while (!(resultsQ1.size() == sourceSize) || !(resultsQ2.size() == sourceSize)) {
+      sleep(20);
+      log.trace("Results Q1: "+resultsQ1.size());
+      log.trace("Results Q2: "+resultsQ2.size());
     }
 
-    assertThat(resultsQ1).containsExactlyElementsOf(correctResult);
-    assertThat(resultsQ2).containsExactlyElementsOf(correctResult);
+    assertThat(resultsQ1).containsExactlyElementsOf(resultList);
+    assertThat(resultsQ2).containsExactlyElementsOf(resultList);
   }
 
   @Test
+  @Timeout(5)
   void testAddingSecondQueryToSameSource() throws InterruptedException {
     final var list = new ArrayList<Integer>();
-    for (int i = 0; i < 300000; i++) {
+    for (int i = 0; i < 30000; i++) {
       list.add(i);
     }
 
@@ -155,42 +158,42 @@ class EngineTest {
             .map(i -> i + 1)
             .collect(Collectors.toList());
 
-    final var sourceIntQ1 = new ListSource<>(list);
+    final var sourceQ1 = new ListSource<>(list);
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
     final var builderQ1 = new TopologyBuilder();
 
-    builderQ1.streamOf(sourceIntQ1)
+    builderQ1.streamOf(sourceQ1)
             .map(i -> i + 1)
             .filter(i -> i > 0)
             .to(sinkQ1);
 
     var engine = new Engine(builderQ1);
     engine.run();
-    Thread.sleep(10);
+    Thread.sleep(1);
 
     final LinkedList<Integer> resultsQ2 = new LinkedList<>();
     final var sinkQ2 = new ListSink<>(resultsQ2);
     final var builderQ2 = new TopologyBuilder();
-    builderQ2.streamOf(sourceIntQ1)
+    builderQ2.streamOf(sourceQ1)
             .map(i -> i + 1)
             .map(i -> i * 2)
             .to(sinkQ2);
 
     final var minDiff = resultsQ1.size();
     engine.addQuery(builderQ2);
-    while ((!sourceIntQ1.isDone()) || !(resultsQ1.size() == correctResult.size())) {
-      System.out.println("Is Done: " + sourceIntQ1.isDone());
-      System.out.println("Results Q1: " + resultsQ1.size());
-      System.out.println("Results Q2: " + resultsQ2.size());
-      sleep(100);
+    while (!(resultsQ1.size() == correctResult.size())) {
+      log.trace("Is Done: " + sourceQ1.isDone());
+      log.trace("Results Q1: " + resultsQ1.size());
+      log.trace("Results Q2: " + resultsQ2.size());
+      sleep(20);
     }
 
     assertThat(resultsQ1.size()).isEqualTo(correctResult.size());
     assertThat(resultsQ1.size() - resultsQ2.size()).isGreaterThanOrEqualTo(minDiff);
     assertThat( resultsQ2.size() - resultsQ1.size()).isLessThanOrEqualTo(0);
-    System.out.println("Results Q1: " + resultsQ1.size());
-    System.out.println("Results Q2: " + resultsQ2.size());
+    log.debug("Results Q1: " + resultsQ1.size());
+    log.debug("Results Q2: " + resultsQ2.size());
   }
 
   @BeforeAll

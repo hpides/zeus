@@ -25,9 +25,6 @@ public abstract class Node {
 
   @Override
   public boolean equals(Object obj) {
-      if(!this.getClass().equals(obj.getClass())) {
-          log.warn("Error: Comparing Objects which are not alike");
-      }
       Node nodeObj = (Node) obj;
       return this.getNodeId().equals(nodeObj.getNodeId());
   }
