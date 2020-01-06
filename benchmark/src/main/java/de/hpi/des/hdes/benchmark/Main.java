@@ -25,7 +25,8 @@ public class Main implements Runnable {
 
   @Override
   public void run() {
-    log.info("Running with {} EPS, {}s max delay for {}s",
+    long startTime = System.nanoTime();
+    log.info("Running with {} EPS, {}s max delay for {}s.",
         eventsPerSecond, maxDelayInSeconds, timeInSeconds);
     final ExecutorService executor = Executors.newFixedThreadPool(this.nThreads);
     final Generator generator = new UniformGenerator(
@@ -46,6 +47,8 @@ public class Main implements Runnable {
     var engine = new Engine(builder);
     final Benchmark benchmark = new Benchmark(generator, engine);
     Metrics metrics = benchmark.run(source, sink);
+    long endTime = System.nanoTime();
+    log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
     metrics.print();
   }
 
