@@ -1,0 +1,75 @@
+package de.hpi.des.hdes.engine;
+
+import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import de.hpi.des.hdes.engine.graph.TopologyBuilder;
+import de.hpi.des.hdes.engine.io.ListSink;
+import de.hpi.des.hdes.engine.io.ListSource;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Test;
+
+@Slf4j
+public class JobManagerTest {
+
+    @Test
+    void testJobManager() throws InterruptedException {
+        final var list = new ArrayList<Integer>();
+        for (int i = 0; i < 600000; i++) {
+            list.add(i);
+        }
+
+        // Query 1 Definition
+        final var sourceIntQ1 = new ListSource<>(list);
+        final LinkedList<Integer> resultsQ1 = new LinkedList<>();
+        final var sinkQ1 = new ListSink<>(resultsQ1);
+        final var builderQ1 = new TopologyBuilder();
+        builderQ1.streamOf(sourceIntQ1)
+                .map(i -> i + 1)
+                .to(sinkQ1);
+
+        // Query 2 Definition
+        final LinkedList<Integer> resultsQ2 = new LinkedList<>();
+        final var sinkQ2 = new ListSink<>(resultsQ2);
+        final var builderQ2 = new TopologyBuilder();
+        builderQ2.streamOf(sourceIntQ1)
+                .map(i -> i * 2)
+                .to(sinkQ2);
+
+        // Query 3 Definition
+        final LinkedList<Integer> resultsQ3 = new LinkedList<>();
+        final var sinkQ3 = new ListSink<>(resultsQ3);
+        final var builderQ3 = new TopologyBuilder();
+        builderQ3.streamOf(sourceIntQ1)
+                .map(i -> i * 10)
+                .to(sinkQ3);
+
+        // Run the Queries
+        JobManager jobManager = new JobManager();
+        jobManager.addQuery(builderQ1.build());
+        jobManager.runEngine();
+        jobManager.addQuery(builderQ2.build(), 5, ChronoUnit.MILLIS);
+        jobManager.addQuery(builderQ3.build(), 10, ChronoUnit.MILLIS);
+
+
+        final var minDiff = resultsQ1.size();
+        while ((!sourceIntQ1.isDone()) || !(resultsQ1.size() == list.size())) {
+            log.info("Is Done: " + sourceIntQ1.isDone());
+            log.info("Results Q1: " + resultsQ1.size());
+            log.info("Results Q2: " + resultsQ2.size());
+            log.info("Results Q3: " + resultsQ3.size());
+            sleep(100);
+        }
+
+        assertThat(resultsQ1.size()).isEqualTo(list.size());
+        assertThat(resultsQ1.size() - resultsQ2.size()).isGreaterThanOrEqualTo(minDiff);
+        assertThat( resultsQ2.size() - resultsQ1.size()).isLessThanOrEqualTo(0);
+        assertThat(resultsQ2.size() >= resultsQ3.size()).isTrue();
+        log.info("Results Q1: " + resultsQ1.size());
+        log.info("Results Q2: " + resultsQ2.size());
+        log.info("Results Q3: " + resultsQ3.size());
+    }
+}

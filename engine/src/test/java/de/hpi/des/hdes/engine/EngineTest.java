@@ -43,7 +43,8 @@ class EngineTest {
     stream.window(TumblingWindow.ofProcessingTime(Time.seconds(5)))
         .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
 
-    var engine = new Engine(builder);
+    var engine = new Engine();
+    engine.addQuery(builder.build());
     engine.run();
     while (!source.isDone() || !stringSource.isDone() || !(result.size() == 3)) {
       sleep(100);
@@ -69,7 +70,8 @@ class EngineTest {
     stream.window(new GlobalWindow())
         .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
 
-    var engine = new Engine(builder);
+    var engine = new Engine();
+    engine.addQuery(builder.build());
     engine.run();
     while (!source.isDone() || !stringSource.isDone() || !(result.size() == 3)) {
       sleep(100);
@@ -95,7 +97,8 @@ class EngineTest {
     builder.streamOf(sourceInt).map(i -> i + 1).filter(i -> i > 0).map(i -> List.of(i, i, i))
         .flatMap(i -> i).map(i -> i * 3).filter(i -> i > 10).to(sink);
 
-    var engine = new Engine(builder);
+    var engine = new Engine();
+    engine.addQuery(builder.build());
     engine.run();
     while (!sourceInt.isDone() || !(results.size() == correctResult.size())) {
       sleep(100);
@@ -123,7 +126,8 @@ class EngineTest {
             .map(i -> i + 1)
             .to(sinkQ1);
 
-    var engine = new Engine(builderQ1);
+    var engine = new Engine();
+    engine.addQuery(builderQ1.build());
     engine.run();
     Thread.sleep(100);
 
@@ -135,7 +139,7 @@ class EngineTest {
             .map(i -> i + 1)
             .to(sinkQ2);
 
-    engine.addQuery(builderQ2);
+    engine.addQuery(builderQ2.build());
     while (!(resultsQ1.size() == sourceSize) || !(resultsQ2.size() == sourceSize)) {
       sleep(20);
       log.trace("Results Q1: "+resultsQ1.size());
@@ -168,7 +172,8 @@ class EngineTest {
             .filter(i -> i > 0)
             .to(sinkQ1);
 
-    var engine = new Engine(builderQ1);
+    var engine = new Engine();
+    engine.addQuery(builderQ1.build());
     engine.run();
     Thread.sleep(1);
 
@@ -181,7 +186,7 @@ class EngineTest {
             .to(sinkQ2);
 
     final var minDiff = resultsQ1.size();
-    engine.addQuery(builderQ2);
+    engine.addQuery(builderQ2.build());
     while (!(resultsQ1.size() == correctResult.size())) {
       log.trace("Is Done: " + sourceQ1.isDone());
       log.trace("Results Q1: " + resultsQ1.size());

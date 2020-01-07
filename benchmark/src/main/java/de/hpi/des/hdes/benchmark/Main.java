@@ -44,7 +44,8 @@ public class Main implements Runnable {
         .map(e -> new TupleEvent(e.getKey(), e.getValue() + 1, e.isBenchmarkCheckpoint()));
     stream.to(sink);
 
-    var engine = new Engine(builder);
+    var engine = new Engine();
+    engine.addQuery(builder.build());
     final Benchmark benchmark = new Benchmark(generator, engine);
     Metrics metrics = benchmark.run(source, sink);
     long endTime = System.nanoTime();
