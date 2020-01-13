@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
-public class StreamJoin<IN1, IN2, OUT,  W extends Window> extends AbstractInitializable<OUT> implements
+public class StreamJoin<IN1, IN2, OUT,  W extends Window> extends AbstractTopologyElement<OUT> implements
     TwoInputOperator<IN1, IN2, OUT> {
 
   private final Join<IN1, IN2, OUT> join;

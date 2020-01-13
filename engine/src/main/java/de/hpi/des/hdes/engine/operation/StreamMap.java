@@ -3,7 +3,7 @@ package de.hpi.des.hdes.engine.operation;
 import de.hpi.des.hdes.engine.udf.Mapper;
 import org.jetbrains.annotations.NotNull;
 
-public class StreamMap<V, VR> extends AbstractInitializable<VR> implements OneInputOperator<V, VR> {
+public class StreamMap<V, VR> extends AbstractTopologyElement<VR> implements OneInputOperator<V, VR> {
 
   private final Mapper<V, VR> mapper;
 

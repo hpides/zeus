@@ -1,9 +1,9 @@
 package de.hpi.des.hdes.engine.execution.plan;
 
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.Topology;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +27,10 @@ public class ExecutionPlan {
         this.slots.add(slot);
     }
 
+    public void removeSlot(Slot slot) {
+        this.slots.remove(slot);
+    }
+
     public Slot getSlotById(UUID slotId) {
         return this.slots.stream()
                 .filter(slot -> slot.getTopologyNodeId().equals(slotId))
@@ -34,14 +38,14 @@ public class ExecutionPlan {
                 .orElseThrow(() -> new IllegalArgumentException("Couldn't find slot with given ID"));
     }
 
-    public static ExecutionPlan from(final Topology topology) {
-        return extend(topology, new HashMap<>());
+    public static ExecutionPlan from(final Query query) {
+        return extend(query, new HashMap<>());
     }
 
-    public static ExecutionPlan extend(final Topology topology,
+    public static ExecutionPlan extend(final Query query,
             final Map<UUID, SourceSlot<?>> matchingUUIDtoSourceSlotMap) {
-        final List<Node> sortedNodes = topology.getTopologicalOrdering();
-        final PushExecutionPlanBuilder visitor = new PushExecutionPlanBuilder(matchingUUIDtoSourceSlotMap);
+        final List<Node> sortedNodes = query.getTopology().getTopologicalOrdering();
+        final PushExecutionPlanBuilder visitor = new PushExecutionPlanBuilder(matchingUUIDtoSourceSlotMap, query);
 
         for (Node node : sortedNodes) {
             node.accept(visitor);

@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.execution.plan;
 
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
 import de.hpi.des.hdes.engine.execution.connector.ListConnector;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
@@ -31,9 +32,11 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
   private final List<Slot> slots = new LinkedList<>();
 
   private final Map<UUID, SourceSlot<?>> sourceSlotMap;
+  private final Query query;
 
-  public PushExecutionPlanBuilder(Map<UUID, SourceSlot<?>> sourceSlotMap) {
+  public PushExecutionPlanBuilder(Map<UUID, SourceSlot<?>> sourceSlotMap, Query query) {
     this.sourceSlotMap = sourceSlotMap;
+    this.query = query;
   }
 
   @Override
@@ -50,6 +53,7 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
       connectors.put(sourceNode, output);
       slot = new SourceSlot<>(source, sourceNode.getNodeId(), output);
     }
+    slot.addAssociatedQuery(query);
     this.slots.add(slot);
   }
 
@@ -72,7 +76,7 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
     // Look for cleaner solution with visitor pattern.
     final Node parent = unaryOperationNode.getParents().iterator().next();
     final ListConnector<IN>  parentConnector = (ListConnector<IN>) connectors.get(parent);
-    parentConnector.addFunction(unaryOperationNode, operator);
+    parentConnector.addFunction(unaryOperationNode, operator, query);
   }
 
   @Override
@@ -90,6 +94,7 @@ public class PushExecutionPlanBuilder implements NodeVisitor {
     Buffer<IN2> input2 = (Buffer<IN2>) connectors.get(parent2).addBuffer(binaryOperationNode);
 
     Slot slot = new TwoInputSlot<IN1,IN2,OUT>(operator, input1, input2, output, binaryOperationNode.getNodeId());
+    slot.addAssociatedQuery(query);
     this.slots.add(slot);
   }
 }

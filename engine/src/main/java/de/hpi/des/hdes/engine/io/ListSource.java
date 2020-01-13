@@ -1,10 +1,10 @@
 package de.hpi.des.hdes.engine.io;
 
-import de.hpi.des.hdes.engine.operation.AbstractInitializable;
+import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.Source;
 import java.util.List;
 
-public class ListSource<OUT> extends AbstractInitializable<OUT> implements Source<OUT> {
+public class ListSource<OUT> extends AbstractTopologyElement<OUT> implements Source<OUT> {
 
   private final List<OUT> list;
   private int i = 0;

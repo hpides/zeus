@@ -2,10 +2,10 @@ package de.hpi.des.hdes.engine.execution;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.TestUtil;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig.ShortTimeoutConfig;
 import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
-import de.hpi.des.hdes.engine.graph.Topology;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 class ExecutionPlanTest extends ShortTimeoutConfig {
 
   @Test
-  void shouldCreateExecutablePlanFromTopology() throws InterruptedException {
+  void shouldCreateExecutablePlanFromTopology() {
     final List<Integer> list = List.of(1, 2, 3);
     final Source<Integer> source = new ListSource<>(list);
     final Source<String> stringSource = new ListSource<>(
@@ -36,9 +36,9 @@ class ExecutionPlanTest extends ShortTimeoutConfig {
     stream.window(GlobalWindow.create())
         .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
 
-    final Topology topology = builder.build();
+    final Query query = new Query(builder.build());
 
-    var slots = ExecutionPlan.from(topology).getSlots();
+    var slots = ExecutionPlan.from(query).getSlots();
 
     TestUtil.stepSleepAndTick(slots);
     assertThat(result).containsExactly("22");

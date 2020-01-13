@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class AddQueryTimerTask extends TimerTask {
     private final Engine engine;
-    private final Topology query;
+    private final Query query;
 
     @Override
     public void run() {

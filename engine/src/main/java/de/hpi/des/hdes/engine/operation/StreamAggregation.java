@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
-public class StreamAggregation<IN, TYPE, OUT, W extends Window> extends AbstractInitializable<OUT> implements OneInputOperator<IN, OUT> {
+public class StreamAggregation<IN, TYPE, OUT, W extends Window> extends AbstractTopologyElement<OUT> implements OneInputOperator<IN, OUT> {
     private final Aggregator<IN, TYPE, OUT> aggregator;
     private final WindowAssigner<W> windowAssigner;
     private final HashMap<W, TYPE> windowToState;

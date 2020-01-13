@@ -1,11 +1,12 @@
 package de.hpi.des.hdes.engine.execution.connector;
 
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.SinkNode;
 import de.hpi.des.hdes.engine.operation.Collector;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.operation.Sink;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class ListConnector<T> implements Collector<T> {
   private final CopyOnWriteArrayList<OneInputOperator<T, ?>> outOps = new CopyOnWriteArrayList<>();
@@ -19,8 +20,9 @@ public class ListConnector<T> implements Collector<T> {
     return new ListConnector<T>();
   }
 
-  public void addFunction(final Node node, final OneInputOperator<T,?> processFunc) {
+  public void addFunction(final Node node, final OneInputOperator<T,?> processFunc, Query associatedQuery) {
     // todo: we ignore node for now. We could add it to a list and map the lists to each other later
+    processFunc.addAssociatedQuery(associatedQuery);
     outOps.add(processFunc);
   }
 
@@ -33,6 +35,14 @@ public class ListConnector<T> implements Collector<T> {
     Buffer<T> buffer = Buffer.create();
     outBuffers.add(buffer);
     return buffer;
+  }
+
+  public void removeOperationsAssociatedWith(Query query) {
+    // It should be noted that we implicitly assume here that an operator only has one associated query
+    this.outOps.removeAll(outOps.stream()
+            .filter(operator -> operator.getAssociatedQueries().contains(query))
+            .collect(Collectors.toList())
+    );
   }
 
     @Override

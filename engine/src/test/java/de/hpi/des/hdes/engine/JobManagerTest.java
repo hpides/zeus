@@ -30,6 +30,7 @@ public class JobManagerTest {
         builderQ1.streamOf(sourceIntQ1)
                 .map(i -> i + 1)
                 .to(sinkQ1);
+        Query Q1 = new Query(builderQ1.build());
 
         // Query 2 Definition
         final LinkedList<Integer> resultsQ2 = new LinkedList<>();
@@ -38,6 +39,7 @@ public class JobManagerTest {
         builderQ2.streamOf(sourceIntQ1)
                 .map(i -> i * 2)
                 .to(sinkQ2);
+        Query Q2 = new Query(builderQ2.build());
 
         // Query 3 Definition
         final LinkedList<Integer> resultsQ3 = new LinkedList<>();
@@ -46,13 +48,14 @@ public class JobManagerTest {
         builderQ3.streamOf(sourceIntQ1)
                 .map(i -> i * 10)
                 .to(sinkQ3);
+        Query Q3 = new Query(builderQ3.build());
 
         // Run the Queries
         JobManager jobManager = new JobManager();
-        jobManager.addQuery(builderQ1.build());
+        jobManager.addQuery(Q1);
         jobManager.runEngine();
-        jobManager.addQuery(builderQ2.build(), 5, ChronoUnit.MILLIS);
-        jobManager.addQuery(builderQ3.build(), 10, ChronoUnit.MILLIS);
+        jobManager.addQuery(Q2, 5, ChronoUnit.MILLIS);
+        jobManager.addQuery(Q3, 10, ChronoUnit.MILLIS);
 
 
         final var minDiff = resultsQ1.size();

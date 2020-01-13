@@ -3,7 +3,7 @@ package de.hpi.des.hdes.engine.operation;
 import de.hpi.des.hdes.engine.udf.FlatMapper;
 import org.jetbrains.annotations.NotNull;
 
-public class StreamFlatMap<IN, OUT> extends AbstractInitializable<OUT>
+public class StreamFlatMap<IN, OUT> extends AbstractTopologyElement<OUT>
     implements OneInputOperator<IN, OUT> {
 
   private final FlatMapper<? super IN, OUT> flatMapper;

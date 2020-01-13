@@ -1,6 +1,5 @@
 package de.hpi.des.hdes.engine;
 
-import de.hpi.des.hdes.engine.graph.Topology;
 import java.time.temporal.ChronoUnit;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -17,12 +16,12 @@ public class JobManager {
         this.timer = new Timer("AddQueryTimer");
     }
 
-    public void addQuery(Topology topology) {
-        this.engine.addQuery(topology);
+    public void addQuery(Query query) {
+        this.engine.addQuery(query);
     }
 
-    public void addQuery(Topology topology, long delay, ChronoUnit timeUnit) {
-        TimerTask addQueryTask = new AddQueryTimerTask(engine, topology);
+    public void addQuery(Query query, long delay, ChronoUnit timeUnit) {
+        TimerTask addQueryTask = new AddQueryTimerTask(engine, query);
         this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
     }
 

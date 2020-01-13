@@ -31,6 +31,10 @@ public class Topology {
         nodes.add(node);
     }
 
+    public void removeNodes(List<Node> nodeList) {
+        nodes.removeAll(nodeList);
+    }
+
     public Node getNodeById(UUID nodeId) {
         return this.nodes.stream()
                 .filter(node -> node.getNodeId().equals(nodeId))

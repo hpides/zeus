@@ -3,6 +3,7 @@ package de.hpi.des.hdes.benchmark;
 import de.hpi.des.hdes.benchmark.generator.Generator;
 import de.hpi.des.hdes.benchmark.generator.UniformGenerator;
 import de.hpi.des.hdes.engine.Engine;
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.stream.AStream;
 import java.util.concurrent.ExecutorService;
@@ -45,7 +46,8 @@ public class Main implements Runnable {
     stream.to(sink);
 
     var engine = new Engine();
-    engine.addQuery(builder.build());
+    Query query = new Query(builder.build());
+    engine.addQuery(query);
     final Benchmark benchmark = new Benchmark(generator, engine);
     Metrics metrics = benchmark.run(source, sink);
     long endTime = System.nanoTime();

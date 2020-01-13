@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import de.hpi.des.hdes.engine.aggregators.SumAggregator;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
-import de.hpi.des.hdes.engine.graph.Topology;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
@@ -41,8 +40,8 @@ class WindowTest extends ShortTimoutSetup {
     stream.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
         .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
 
-    final Topology topology = builder.build();
-    var slots = ExecutionPlan.from(topology).getSlots();
+    final Query query = new Query(builder.build());
+    var slots = ExecutionPlan.from(query).getSlots();
 
     TestUtil.stepSleepAndTick(slots);
     assertThat(result).containsExactly("22");
@@ -70,9 +69,9 @@ class WindowTest extends ShortTimoutSetup {
     stream.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
             .aggregate(new SumAggregator()).to(sink);
 
-    final Topology topology = builder.build();
+    final Query query = new Query(builder.build());
 
-    var slots = ExecutionPlan.from(topology).getSlots();
+    var slots = ExecutionPlan.from(query).getSlots();
 
     TestUtil.stepSleepAndTick(slots);
     TestUtil.stepSleepAndTick(slots);
