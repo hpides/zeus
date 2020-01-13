@@ -44,12 +44,12 @@ class SlotTest {
             out2,
             UUID.randomUUID());
 
-    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
-    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
-    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
-    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
-    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
-    TestUtil.stepSleepAndTick(List.of(slot1,slot2));
+    TestUtil.runAndTick(List.of(slot1,slot2));
+    TestUtil.runAndTick(List.of(slot1,slot2));
+    TestUtil.runAndTick(List.of(slot1,slot2));
+    TestUtil.runAndTick(List.of(slot1,slot2));
+    TestUtil.runAndTick(List.of(slot1,slot2));
+    TestUtil.runAndTick(List.of(slot1,slot2));
 
     assertThat(out2buffer.unsafePollAll()).containsExactlyElementsOf(List.of(1, 2, 5));
   }

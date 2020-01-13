@@ -5,13 +5,13 @@ import java.util.List;
 
 public class TestUtil {
 
-  public static void stepSleepAndTick(Slot slot)  {
+  public static void runAndTick(Slot slot)  {
     slot.runStep();
     slot.tick();
 
   }
 
-  public static void stepSleepAndTick(List<Slot> slots)  {
-    slots.forEach(TestUtil::stepSleepAndTick);
+  public static void runAndTick(List<Slot> slots)  {
+    slots.forEach(TestUtil::runAndTick);
   }
 }

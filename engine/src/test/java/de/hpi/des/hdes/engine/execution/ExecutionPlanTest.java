@@ -40,13 +40,13 @@ class ExecutionPlanTest extends ShortTimeoutConfig {
 
     var slots = ExecutionPlan.from(query).getSlots();
 
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22");
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22");
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22", "44");
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22", "44", "33");
   }
 

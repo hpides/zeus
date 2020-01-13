@@ -11,11 +11,11 @@ public abstract class TumblingWindow implements WindowAssigner<TimeWindow> {
   }
 
   public static TumblingProcessingTimeWindow ofProcessingTime(final Time time) {
-    return new TumblingProcessingTimeWindow(time.getMillis());
+    return new TumblingProcessingTimeWindow(time.getNanos());
   }
 
   public static TumblingEventTimeWindow ofEventTime(final Time time) {
-    return new TumblingEventTimeWindow(time.getMillis());
+    return new TumblingEventTimeWindow(time.getNanos());
   }
 
 }

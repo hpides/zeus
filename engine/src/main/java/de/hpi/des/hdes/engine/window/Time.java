@@ -33,4 +33,8 @@ public final class Time {
   public long getMillis() {
     return this.millis;
   }
+
+  public long getNanos() {
+    return this.millis * (long) 1e6;
+  }
 }

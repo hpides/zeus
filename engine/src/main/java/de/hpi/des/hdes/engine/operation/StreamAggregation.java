@@ -7,44 +7,36 @@ import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
-public class StreamAggregation<IN, TYPE, OUT, W extends Window> extends AbstractTopologyElement<OUT> implements OneInputOperator<IN, OUT> {
-    private final Aggregator<IN, TYPE, OUT> aggregator;
+public class StreamAggregation<IN, STATE, OUT, W extends Window> extends AbstractTopologyElement<OUT> implements OneInputOperator<IN, OUT> {
+    private final Aggregator<IN, STATE, OUT> aggregator;
     private final WindowAssigner<W> windowAssigner;
-    private final HashMap<W, TYPE> windowToState;
+    private final HashMap<W, STATE> windowToState;
 
-    public StreamAggregation(final Aggregator<IN, TYPE, OUT> aggregator, final WindowAssigner<W> windowAssigner) {
+    public StreamAggregation(final Aggregator<IN, STATE, OUT> aggregator, final WindowAssigner<W> windowAssigner) {
         this.aggregator = aggregator;
         this.windowAssigner = windowAssigner;
         this.windowToState = new HashMap<>();
         aggregator.initialize();
     }
 
-    public void update() {
-        // Send the finished windows to the collector
-        // A Windows is considered finished when a new element is no longer assigned to it
-        // Windows are only sent out if they are finished
-        final List<W> assignedWindows = this.windowAssigner.assignWindows(System.currentTimeMillis());
+    public void closeOutdatedWindows(List<W> activeWindows) {
         for(final W window : windowToState.keySet()) {
-            if(!assignedWindows.contains(window)) {
+            if(!activeWindows.contains(window)) {
                 collector.collect(aggregator.getResult(windowToState.get(window)));
+                windowToState.remove(window);
             }
         }
     }
 
     @Override
     public void process(@NotNull IN input) {
-        update();
-        final List<W> assignedWindows = this.windowAssigner.assignWindows(System.currentTimeMillis());
+        final List<W> activeWindows = this.windowAssigner.assignWindows(System.nanoTime());
+        closeOutdatedWindows(activeWindows);
 
         // Add the input to the windows it belongs to
-        for (final W window : assignedWindows) {
-            if(windowToState.containsKey(window)) {
-                windowToState.put(window, aggregator.add(windowToState.get(window), input));
-            }
-            else {
-                TYPE state = aggregator.initialize();
-                windowToState.put(window, aggregator.add(state, input));
-            }
+        for (final W window : activeWindows) {
+            STATE state = windowToState.computeIfAbsent(window, w -> aggregator.initialize());
+            windowToState.put(window, aggregator.add(state, input));
         }
     }
 }

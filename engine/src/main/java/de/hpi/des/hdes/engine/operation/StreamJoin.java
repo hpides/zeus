@@ -30,7 +30,7 @@ public class StreamJoin<IN1, IN2, OUT,  W extends Window> extends AbstractTopolo
   @Override
   public void processStream1(final IN1 in) {
     // TODO: change interface to AData<IN1> and pass its timestamp
-    final List<W> assignedWindows = this.windowAssigner.assignWindows(System.currentTimeMillis());
+    final List<W> assignedWindows = this.windowAssigner.assignWindows(System.nanoTime());
     for (final Window window : assignedWindows) {
       // put in own state
       final List<IN1> ownState = this.state1.computeIfAbsent(window, w -> new ArrayList<>());
@@ -49,7 +49,7 @@ public class StreamJoin<IN1, IN2, OUT,  W extends Window> extends AbstractTopolo
   @Override
   public void processStream2(final IN2 in) {
     // TODO: change interface to AData<IN2> and pass its timestamp
-    final List<W> assignedWindows = this.windowAssigner.assignWindows(System.currentTimeMillis());
+    final List<W> assignedWindows = this.windowAssigner.assignWindows(System.nanoTime());
     for (final Window window : assignedWindows) {
       // put in own state
       final List<IN2> ownState = this.state2.computeIfAbsent(window, w -> new ArrayList<>());

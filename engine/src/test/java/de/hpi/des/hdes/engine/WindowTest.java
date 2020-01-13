@@ -16,15 +16,17 @@ import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@Slf4j
 class WindowTest extends ShortTimoutSetup {
 
   @Test
   void testTumblingProcessingTimeWindow() throws InterruptedException {
-    System.out.println(ExecutionConfig.getConfig().getChunkSize());
-
     final List<Integer> list = List.of(1, 2, 3);
     final Source<Integer> source = new ListSource<>(list);
     final Source<String> stringSource = new ListSource<>(
@@ -43,20 +45,19 @@ class WindowTest extends ShortTimoutSetup {
     final Query query = new Query(builder.build());
     var slots = ExecutionPlan.from(query).getSlots();
 
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22");
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22");
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22", "44");
     Thread.sleep(TimeUnit.SECONDS.toMillis(2)); // Waiting for the window to close
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22", "44");
   }
 
   @Test
   void testAggregation() throws InterruptedException {
-    System.out.println(ExecutionConfig.getConfig().getChunkSize());
     final List<Integer> list = List.of(1, 2, 3, 4);
     final Source<Integer> source = new ListSource<>(list);
 
@@ -73,11 +74,21 @@ class WindowTest extends ShortTimoutSetup {
 
     var slots = ExecutionPlan.from(query).getSlots();
 
-    TestUtil.stepSleepAndTick(slots);
-    TestUtil.stepSleepAndTick(slots);
-    TestUtil.stepSleepAndTick(slots);
+    log.debug("Result: " + result.stream().map(i -> i.toString()).collect(Collectors.joining(", ")));
+    log.debug("Nanotime: " + System.nanoTime());
+    TestUtil.runAndTick(slots);
+    log.debug("Result: " + result.stream().map(i -> i.toString()).collect(Collectors.joining(", ")));
+    log.debug("Nanotime: " + System.nanoTime());
+    TestUtil.runAndTick(slots);
+    log.debug("Result: " + result.stream().map(i -> i.toString()).collect(Collectors.joining(", ")));
+    log.debug("Nanotime: " + System.nanoTime());
+    TestUtil.runAndTick(slots);
+    log.debug("Result: " + result.stream().map(i -> i.toString()).collect(Collectors.joining(", ")));
+    log.debug("Nanotime: " + System.nanoTime());
     Thread.sleep(TimeUnit.SECONDS.toMillis(2));
-    TestUtil.stepSleepAndTick(slots);
+    TestUtil.runAndTick(slots);
+    log.debug("Result: " + result.stream().map(i -> toString()).collect(Collectors.joining(", ")));
+    log.debug("Nanotime: " + System.nanoTime()/1000);
     assertThat(result).containsExactly(9);
   }
 

@@ -13,7 +13,7 @@ public class TumblingProcessingTimeWindow implements WindowAssigner<TimeWindow> 
 
   @Override
   public List<TimeWindow> assignWindows(final long timestamp) {
-    final long current = System.currentTimeMillis();
+    final long current = System.nanoTime();
     final long windowStart = current - (current + this.size) % this.size;
     return List.of(new TimeWindow(windowStart, windowStart + this.size));
   }
