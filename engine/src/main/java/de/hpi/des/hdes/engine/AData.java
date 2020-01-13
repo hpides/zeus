@@ -4,6 +4,11 @@ public class AData<V> {
   private final V value;
   private final long timestamp;
 
+  public AData(final V value) {
+    this.value = value;
+    this.timestamp = -1;
+  }
+
   public AData(final V value, final long timestamp) {
     this.value = value;
     this.timestamp = timestamp;

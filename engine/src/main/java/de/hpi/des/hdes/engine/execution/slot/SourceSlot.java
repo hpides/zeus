@@ -1,11 +1,9 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
 import de.hpi.des.hdes.engine.execution.connector.ListConnector;
-import de.hpi.des.hdes.engine.operation.Collector;
 import de.hpi.des.hdes.engine.operation.Source;
 import java.util.UUID;
 import lombok.Getter;
-import lombok.Setter;
 
 public class SourceSlot<OUT> extends Slot {
 

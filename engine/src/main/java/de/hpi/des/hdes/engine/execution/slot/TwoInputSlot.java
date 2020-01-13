@@ -4,7 +4,9 @@ import de.hpi.des.hdes.engine.execution.connector.Buffer;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import de.hpi.des.hdes.engine.operation.Collector;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class TwoInputSlot<IN1, IN2, OUT> extends Slot {
 
   private final TwoInputOperator<IN1, IN2, OUT> operator;

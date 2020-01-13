@@ -45,7 +45,7 @@ public class ExecutionPlan {
     public static ExecutionPlan extend(final Query query,
             final Map<UUID, SourceSlot<?>> matchingUUIDtoSourceSlotMap) {
         final List<Node> sortedNodes = query.getTopology().getTopologicalOrdering();
-        final PushExecutionPlanBuilder visitor = new PushExecutionPlanBuilder(matchingUUIDtoSourceSlotMap, query);
+        final LocalExecutionPlanBuilder visitor = new LocalExecutionPlanBuilder(matchingUUIDtoSourceSlotMap, query);
 
         for (Node node : sortedNodes) {
             node.accept(visitor);

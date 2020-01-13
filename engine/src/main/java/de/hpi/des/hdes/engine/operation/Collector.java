@@ -10,6 +10,6 @@ public interface Collector<T> {
    * This tick should be passed to the connected collectors. The default implementation, however,
    * does nothing for convenience reasons, as for example sinks might not need ticks.
    */
-  default void tick(){};
+  default void tick() {}
 
 }
