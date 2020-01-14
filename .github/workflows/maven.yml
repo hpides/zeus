@@ -1,11 +1,7 @@
 name: HDES CI
 
-on: 
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-    branches: 
-      - master
-
+on: push
+    
 jobs:
   test:
     runs-on: ubuntu-latest
