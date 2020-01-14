@@ -35,7 +35,7 @@ public class AJoinTest {
     final AStream<Integer> stream = builder.streamOf(source);
     final AStream<Integer> stream2 = builder.streamOf(source2);
 
-    stream.window(TumblingWindow.ofEventTime(Time.of(500)))
+    stream.window(TumblingWindow.ofProcessingTime(Time.of(500)))
         .ajoin(stream2,
             i -> i,
             i -> i,
