@@ -1,10 +1,10 @@
 package de.hpi.des.hdes.engine.udf;
 
-public interface Aggregator<IN, TYPE, OUT> {
+public interface Aggregator<IN, STATE, OUT> {
 
-    TYPE initialize();
+    STATE initialize();
 
-    TYPE add(TYPE state, IN input);
+    STATE add(STATE state, IN input);
 
-    OUT getResult(TYPE state);
+    OUT getResult(STATE state);
 }

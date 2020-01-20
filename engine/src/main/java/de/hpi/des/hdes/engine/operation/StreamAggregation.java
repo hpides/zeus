@@ -7,20 +7,20 @@ import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
-public class StreamAggregation<IN, STATE, OUT, W extends Window> extends AbstractTopologyElement<OUT> implements OneInputOperator<IN, OUT> {
+public class StreamAggregation<IN, STATE, OUT> extends AbstractTopologyElement<OUT> implements OneInputOperator<IN, OUT> {
     private final Aggregator<IN, STATE, OUT> aggregator;
-    private final WindowAssigner<W> windowAssigner;
-    private final HashMap<W, STATE> windowToState;
+    private final WindowAssigner<? extends Window> windowAssigner;
+    private final HashMap<Window, STATE> windowToState;
 
-    public StreamAggregation(final Aggregator<IN, STATE, OUT> aggregator, final WindowAssigner<W> windowAssigner) {
+    public StreamAggregation(final Aggregator<IN, STATE, OUT> aggregator, final WindowAssigner<? extends Window> windowAssigner) {
         this.aggregator = aggregator;
         this.windowAssigner = windowAssigner;
         this.windowToState = new HashMap<>();
         aggregator.initialize();
     }
 
-    public void closeOutdatedWindows(List<W> activeWindows) {
-        for(final W window : windowToState.keySet()) {
+    public void closeOutdatedWindows(List<? extends Window> activeWindows) {
+        for(final Window window : windowToState.keySet()) {
             if(!activeWindows.contains(window)) {
                 collector.collect(aggregator.getResult(windowToState.get(window)));
                 windowToState.remove(window);
@@ -30,11 +30,11 @@ public class StreamAggregation<IN, STATE, OUT, W extends Window> extends Abstrac
 
     @Override
     public void process(@NotNull IN input) {
-        final List<W> activeWindows = this.windowAssigner.assignWindows(System.nanoTime());
+        final List<? extends Window> activeWindows = this.windowAssigner.assignWindows(System.nanoTime());
         closeOutdatedWindows(activeWindows);
 
         // Add the input to the windows it belongs to
-        for (final W window : activeWindows) {
+        for (final Window window : activeWindows) {
             STATE state = windowToState.computeIfAbsent(window, w -> aggregator.initialize());
             windowToState.put(window, aggregator.add(state, input));
         }

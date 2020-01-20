@@ -40,11 +40,11 @@ public class AStream<In> extends AbstractAStream<In> {
   }
 
   public WindowedAStream<In> window(final WindowAssigner<? extends Window> window) {
-    return new WindowedAStream<>(this.builder, this.node, window);
+    return new WindowedAStream<In>(this.builder, this.node, window);
   }
 
   public WindowedAStream<In> windowAll() {
-    return new WindowedAStream<>(this.builder, this.node, GlobalWindow.create());
+    return new WindowedAStream<In>(this.builder, this.node, GlobalWindow.create());
   }
 
   public void to(final Sink<In> sink) {

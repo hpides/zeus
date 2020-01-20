@@ -17,6 +17,7 @@ import de.hpi.des.hdes.engine.udf.KeySelector;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 
 public class WindowedAStream<In> extends AbstractAStream<In> {
 
@@ -38,6 +39,19 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
     return new AStream<>(this.builder, child);
   }
 
+
+  public <KEY> KeyedWindowedAStream<In, KEY> groupBy(final KeySelector<In, KEY> keyselector) {
+    return new KeyedWindowedAStream<>(keyselector, this.builder, this.node, this.windowAssigner);
+  }
+
+  public <OUT, TYPE> AStream<OUT> aggregate(final Aggregator<In, TYPE, OUT> aggregator) {
+    final UnaryOperationNode<In, OUT> child = new UnaryOperationNode<>(
+        new StreamAggregation<>(aggregator, this.windowAssigner));
+
+    this.builder.addGraphNode(this.node, child);
+    return new AStream<>(this.builder, child);
+  }
+  
   public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
       final KeySelector<In, Key> inKeySelector,
       final KeySelector<Other, Key> otherKeySelector,
@@ -62,12 +76,5 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
     this.builder.addGraphNode(joinNode, sinkNode);
 
     return new AStream<>(this.builder, sinkNode);
-  }
-
-  public <OUT, TYPE> AStream<OUT> aggregate(final Aggregator<In, TYPE, OUT> aggregator) {
-    final UnaryOperationNode<In, OUT> child = new UnaryOperationNode<>(
-        new StreamAggregation<>(aggregator, this.windowAssigner));
-    this.builder.addGraphNode(this.node, child);
-    return new AStream<>(this.builder, child);
   }
 }
