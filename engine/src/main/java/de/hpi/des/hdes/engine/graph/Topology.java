@@ -1,91 +1,92 @@
 package de.hpi.des.hdes.engine.graph;
 
+import com.google.common.collect.Sets;
+import de.hpi.des.hdes.engine.shared.join.node.AJoinNode;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
+@Getter
 public class Topology {
 
-    @Getter
-    private final List<Node> nodes;
+  private final Set<Node> nodes;
 
-    public List<SourceNode> getSourceNodes() {
-        LinkedList<SourceNode> sources = new LinkedList<>();
-        for (Node node : this.nodes) {
-            if (node instanceof SourceNode) {
-                sources.add((SourceNode) node);
-            }
-        }
-        return sources;
+  public Topology(final Set<Node> nodes) {
+    this.nodes = nodes;
+  }
+
+  public Topology extend(final Topology other) {
+    final Set<Node> allNodes = Sets.union(this.nodes, other.getNodes());
+    return new Topology(allNodes);
+  }
+
+  public List<Node> getTopologicalOrdering() {
+    final Map<Node, Long> nodeToIncEdges = new HashMap<>();
+    final List<Node> result = new LinkedList<>();
+
+    for (final Node node : this.nodes) {
+      // only look at incoming edges that are part of this topology
+      final long size = node.getParents().stream().filter(this.nodes::contains).count();
+      nodeToIncEdges.put(node, size);
     }
 
-    public void addNode(Node node) {
-        nodes.add(node);
+    while (!nodeToIncEdges.keySet().isEmpty()) {
+      final Node node = this.topSortNextNode(nodeToIncEdges);
+      this.topSortReduceCount(nodeToIncEdges, node);
+      result.add(node);
     }
 
-    public void removeNodes(List<Node> nodeList) {
-        nodes.removeAll(nodeList);
+    return result;
+  }
+
+  public List<SourceNode<?>> getSourceNodes() {
+    return this.nodes.stream()
+        .filter(node -> node instanceof SourceNode)
+        .map(node -> (SourceNode<?>) node)
+        .collect(Collectors.toList());
+  }
+
+  public List<AJoinNode<?, ?, ?>> getAJoinNodes() {
+    return this.nodes.stream()
+        .filter(node -> node instanceof AJoinNode)
+        .map(node -> (AJoinNode<?, ?, ?>) node)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Retrieves the next node without incoming edges.
+   *
+   * @param nodeToIncEdges nodes mapped to the count of incoming edges
+   * @return a random node with incoming edges
+   */
+  private Node topSortNextNode(final Map<Node, Long> nodeToIncEdges) {
+    for (final Node node : nodeToIncEdges.keySet()) {
+      if (nodeToIncEdges.get(node) == 0) {
+        nodeToIncEdges.remove(node);
+        return node;
+      }
     }
+    throw new IllegalStateException("The graph has no topological ordering. Use a DAG.");
+  }
 
-    public Node getNodeById(UUID nodeId) {
-        return this.nodes.stream()
-                .filter(node -> node.getNodeId().equals(nodeId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Couldn't find node with given ID"));
+  /**
+   * Decreases the amount of inc. edges for all the children of the node.
+   *
+   * @param nodeToIncEdges A map of the remaining unsorted nodes and their remaining inc edge count.
+   * @param node           node that was just added to the sort output
+   */
+  private void topSortReduceCount(final Map<Node, Long> nodeToIncEdges, final Node node) {
+    final Collection<Node> outNodes = node.getChildren();
+    for (final Node currNode : outNodes) {
+      final long currIncEdges = nodeToIncEdges.get(currNode);
+      nodeToIncEdges.put(currNode, currIncEdges - 1);
     }
-
-    public List<Node> getTopologicalOrdering() {
-        final Map<Node, Integer> nodeToIncEdges = new HashMap<>();
-        final List<Node> result = new LinkedList<>();
-
-        for (Node node : this.nodes) {
-            nodeToIncEdges.put(node, node.getParents().size());
-        }
-
-        while (nodeToIncEdges.keySet().size() != 0) {
-            Node node = topSortNextNode(nodeToIncEdges);
-            topSortReduceCount(nodeToIncEdges, node);
-            result.add(node);
-        }
-
-        return result;
-    }
-
-    /**
-     * Retrieves the next node without incoming edges.
-     *
-     * @param nodeToIncEdges nodes mapped to the count of incoming edges
-     * @return a random node with incoming edges
-     */
-    private Node topSortNextNode(Map<Node, Integer> nodeToIncEdges) {
-        for (Node node : nodeToIncEdges.keySet()) {
-            if (nodeToIncEdges.get(node) == 0) {
-                nodeToIncEdges.remove(node);
-                return node;
-            }
-        }
-        throw new IllegalStateException("The graph has no topological ordering. Use a DAG.");
-    }
-
-    /**
-     * Decreases the amount of inc. edges for all the children of the node.
-     *
-     * @param nodeToIncEdges A map of the remaining unsorted nodes and their remaining inc edge count.
-     * @param node node that was just added to the sort output
-     */
-    private void topSortReduceCount(Map<Node, Integer> nodeToIncEdges, Node node) {
-        Collection<Node> outNodes = node.getChildren();
-        for (Node currNode : outNodes) {
-            int currIncEdges = nodeToIncEdges.get(currNode);
-            nodeToIncEdges.put(currNode, currIncEdges - 1);
-        }
-    }
+  }
 }

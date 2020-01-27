@@ -1,61 +1,100 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
 import de.hpi.des.hdes.engine.Query;
-import java.util.ArrayList;
-import java.util.UUID;
-import lombok.Getter;
+import de.hpi.des.hdes.engine.execution.connector.Buffer;
+import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.operation.Collector;
+import de.hpi.des.hdes.engine.operation.OneInputOperator;
+import de.hpi.des.hdes.engine.operation.Sink;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class Slot implements Runnable {
+public abstract class Slot<OUT> implements Collector<OUT> {
 
-    @Getter
-    private final UUID topologyNodeId;
-    @Getter
-    @Setter
-    private boolean alreadyRunning = false;
-    @Getter
-    private ArrayList<Query> associatedQueries = new ArrayList<>();
-    private volatile boolean shutdownFlag = false;
+  private final Map<Node, OneInputOperator<OUT, ?>> outOps = new ConcurrentHashMap<>();
+  private final Map<Node, Sink<OUT>> outSinks = new ConcurrentHashMap<>();
+  private final Map<Node, Buffer<OUT>> outBuffer = new ConcurrentHashMap<>();
+  private final List<Slot<?>> children = new CopyOnWriteArrayList<>();
+  private final List<Map<Node, ?>> outputs = List.of(this.outOps, this.outSinks, this.outBuffer);
 
-    /**
-     * runStep should never block indefinitely. As outgoing buffers might not have been flushed yet.
-     */
-    public abstract void runStep();
+  /**
+   * Retrieve associated topology node.
+   */
+  public abstract Node getTopologyNode();
 
-    public abstract void tick();
-
-  public void shutdown() {
-    log.info("Shutting Down Slot associated with Query: {}", associatedQueries.get(0).getId());
-    this.shutdownFlag = true;
+  public void addOutput(final Node node, final OneInputOperator<OUT, ?> processFunc) {
+    log.debug("Add func {} for node {} in slot {}", processFunc, node, this);
+    this.outOps.put(node, processFunc);
   }
 
-    @Override
-    public void run() {
-        while (!Thread.currentThread().isInterrupted() && !shutdownFlag) {
-            this.runStep();
-            this.tick();
+  public void addOutput(final Node node, final Sink<OUT> sink) {
+    log.debug("Add sink {} for node {} in slot {}", sink, node, this);
+    this.outSinks.put(node, sink);
+  }
+
+  public void addOutput(final Node node, final Buffer<OUT> buffer) {
+    log.debug("Add buffer {} for node {} in slot {}", buffer, node, this);
+    this.outBuffer.put(node, buffer);
+  }
+
+  @Override
+  public void collect(final OUT event) {
+    for (final var op : this.outOps.values()) {
+      log.trace("{}: Output {} to {}", this, event, op);
+      op.process(event);
+    }
+    for (final var sink : this.outSinks.values()) {
+      log.trace("{}: Output {} to {}", this, event, sink);
+      sink.process(event);
+    }
+    for (final var buffer : this.outBuffer.values()) {
+      log.trace("{}: Output {} to {}", this, event, buffer);
+      buffer.add(event);
+    }
+  }
+
+  public void addChild(final Slot<?> slot) {
+    this.children.add(slot);
+  }
+
+  public void remove(final Query query) {
+    for (final Map<Node, ?> nodeMap : this.outputs) {
+      for (final Node node : nodeMap.keySet()) {
+        log.debug("Remove query {} for node {}", query, node);
+        node.removeAssociatedQuery(query);
+        if (node.getAssociatedQueries().isEmpty()) {
+          log.debug("Remove output for node {} from slot {}", node, this);
+          nodeMap.remove(node);
         }
+      }
     }
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Slot) {
-            return this.getTopologyNodeId() == ((Slot) obj).getTopologyNodeId();
-        } else {
-            return false;
-        }
+  public boolean isShutdown() {
+    return this.hasNoOutput();
+  }
+
+  public void tick() {
+    for (final var buffer : this.outBuffer.values()) {
+      buffer.flushIfTimeout();
     }
+  }
 
-    public void addAssociatedQuery(Query query) {
-        this.associatedQueries.add(query);
-    }
+  public List<Slot<?>> getChildren() {
+    return this.children;
+  }
 
-    public void removeAssociatedQuery(Query query) {
-        this.associatedQueries.remove(query);
-    }
+  public List<Map<Node, ?>> getOutputs() {
+    return this.outputs;
+  }
 
+  private boolean hasNoOutput() {
+    return this.getOutputs().stream().allMatch(Map::isEmpty);
+  }
 }

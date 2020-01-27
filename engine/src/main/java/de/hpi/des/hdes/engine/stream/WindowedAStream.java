@@ -1,23 +1,23 @@
 package de.hpi.des.hdes.engine.stream;
 
-import de.hpi.des.hdes.engine.ajoin.Bucket;
-import de.hpi.des.hdes.engine.ajoin.IntersectedBucket;
-import de.hpi.des.hdes.engine.ajoin.StreamAJoin;
-import de.hpi.des.hdes.engine.ajoin.StreamASink;
-import de.hpi.des.hdes.engine.ajoin.StreamASource;
 import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.StreamAggregation;
 import de.hpi.des.hdes.engine.operation.StreamJoin;
+import de.hpi.des.hdes.engine.shared.join.StreamAJoin;
+import de.hpi.des.hdes.engine.shared.join.StreamASink;
+import de.hpi.des.hdes.engine.shared.join.StreamASource;
+import de.hpi.des.hdes.engine.shared.join.node.AJoinNode;
+import de.hpi.des.hdes.engine.shared.join.node.ASinkNode;
+import de.hpi.des.hdes.engine.shared.join.node.ASourceNode;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.udf.Join;
 import de.hpi.des.hdes.engine.udf.KeySelector;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 
 public class WindowedAStream<In> extends AbstractAStream<In> {
 
@@ -51,7 +51,7 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
     this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
   }
-  
+
   public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
       final KeySelector<In, Key> inKeySelector,
       final KeySelector<Other, Key> otherKeySelector,
@@ -63,11 +63,12 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
         otherKeySelector);
     final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>();
     final StreamASink<In, Other, Out> sink = new StreamASink<>(join);
-    final UnaryOperationNode<In, Bucket<Key, In>> sourceNode1 = new UnaryOperationNode<>(source1);
-    final UnaryOperationNode<Other, Bucket<Key, Other>> sourceNode2 = new UnaryOperationNode<>(source2);
-    final BinaryOperationNode<Bucket<Key, In>, Bucket<Key, Other>, IntersectedBucket<In, Other>> joinNode =
-        new BinaryOperationNode<>(aJoin);
-    final UnaryOperationNode<IntersectedBucket<In, Other>, Out> sinkNode = new UnaryOperationNode<>(sink);
+    final ASourceNode<In, Key> sourceNode1 = new ASourceNode<>(this.node.getNodeId(), source1);
+    final ASourceNode<Other, Key> sourceNode2 = new ASourceNode<>(other.getNode().getNodeId(),
+        source2);
+    final AJoinNode<In, Other, Key> joinNode = new AJoinNode<>(this.node.getNodeId(),
+        other.getNode().getNodeId(), aJoin, sink);
+    final ASinkNode<In, Other, Out> sinkNode = new ASinkNode<>(sink);
 
     this.builder.addGraphNode(this.node, sourceNode1);
     this.builder.addGraphNode(other.getNode(), sourceNode2);

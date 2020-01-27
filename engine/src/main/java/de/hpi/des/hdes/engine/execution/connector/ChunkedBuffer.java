@@ -21,9 +21,8 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   protected long nextFlushTime;
 
 
-
   public ChunkedBuffer() {
-    this.inChunk = new ArrayDeque<>(chunkSize);
+    this.inChunk = new ArrayDeque<>(this.chunkSize);
     this.outChunk = new ArrayDeque<>();
     this.queue = new LinkedBlockingQueue<>();
   }
@@ -31,17 +30,18 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   @Nullable
   @Override
   public IN poll() {
-    if(!this.outChunk.isEmpty()){
-      return outChunk.poll();
+    if (!this.outChunk.isEmpty()) {
+      return this.outChunk.poll();
     } else {
       try {
-        var newChunk = queue.poll(ExecutionConfig.getConfig().getFlushIntervallMS()/3 + 1,
-            TimeUnit.MILLISECONDS); // We wait for a limited time to assure
-        if (newChunk != null){
+        final var newChunk = this.queue
+            .poll(ExecutionConfig.getConfig().getFlushIntervallMS() / 3 + 1,
+                TimeUnit.MILLISECONDS); // We wait for a limited time to assure
+        if (newChunk != null) {
           this.outChunk = newChunk;
           return this.outChunk.poll();
         }
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
       }
       return null;
@@ -49,9 +49,9 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   }
 
   @Override
-  public void add(IN val) {
+  public void add(final IN val) {
     this.inChunk.add(val);
-    if(inChunk.size() >= chunkSize){
+    if (this.inChunk.size() >= this.chunkSize) {
       this.flush();
     } else {
       this.flushIfTimeout();
@@ -59,20 +59,20 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   }
 
   @Override
-  public void flush(){
-    if (this.inChunk.isEmpty()){
+  public void flush() {
+    if (this.inChunk.isEmpty()) {
       return;
     }
-    var success = this.queue.offer(this.inChunk);
-    if(success){
-      this.inChunk = new ArrayDeque<>(chunkSize);
+    final var success = this.queue.offer(this.inChunk);
+    if (success) {
+      this.inChunk = new ArrayDeque<>(this.chunkSize);
     }
   }
 
   @Override
   public void flushIfTimeout() {
-    var currentTime = System.nanoTime();
-    if (this.nextFlushTime <= currentTime && !inChunk.isEmpty()){
+    final var currentTime = System.nanoTime();
+    if (this.nextFlushTime <= currentTime && !this.inChunk.isEmpty()) {
       this.flush();
       this.nextFlushTime = currentTime + this.flushIntervall;
     }
@@ -85,7 +85,7 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   @Override
   public List<IN> unsafePollAll() {
     this.flush();
-    var flattenedQueue = new ArrayList<>(this.outChunk);
+    final var flattenedQueue = new ArrayList<>(this.outChunk);
     this.queue.forEach(flattenedQueue::addAll);
     return flattenedQueue;
   }

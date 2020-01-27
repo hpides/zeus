@@ -1,57 +1,63 @@
 package de.hpi.des.hdes.engine.execution.plan;
 
+import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
+import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
-import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
 import de.hpi.des.hdes.engine.graph.Node;
-import java.util.HashMap;
+import de.hpi.des.hdes.engine.graph.Topology;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExecutionPlan {
+public final class ExecutionPlan {
 
-    private final List<Slot> slots;
+  private final LocalExecutionPlanBuilder builder;
+  private final Topology topology;
+  private final List<Slot<?>> slots;
 
-    private ExecutionPlan(final List<Slot> slots) {
-        this.slots = slots;
-    }
+  private ExecutionPlan(final Topology topology, final List<Slot<?>> slots,
+      final LocalExecutionPlanBuilder builder) {
+    this.topology = topology;
+    this.slots = slots;
+    this.builder = builder;
+  }
 
-    public List<Slot> getSlots() {
-        return this.slots;
-    }
+  public static ExecutionPlan emptyExecutionPlan() {
+    return new ExecutionPlan(new Topology(Set.of()), List.of(), new LocalExecutionPlanBuilder());
+  }
 
-    public void addSlot(Slot slot) {
-        this.slots.add(slot);
-    }
+  public ExecutionPlan extend(final Query query) {
+    final Set<Node> topologyNodes = this.topology.getNodes();
+    final Topology queryTopology = query.getTopology();
+    topologyNodes.forEach(node -> {
+      // store associated query in node for later deletion
+      // only works this way cause we have to change the actual nodes in the current topology
+      if (queryTopology.getNodes().contains(node)) {
+        node.addAssociatedQuery(query);
+      }
+    });
+    final Set<Node> toBeSubmitted = Sets.difference(queryTopology.getNodes(), topologyNodes);
+    toBeSubmitted.forEach(node -> node.addAssociatedQuery(query));
+    final List<Slot<?>> newSlots = List.copyOf(this.builder.build(new Topology(toBeSubmitted)));
+    final Topology newTopology = this.topology.extend(queryTopology);
+    return new ExecutionPlan(newTopology, newSlots, this.builder);
+  }
 
-    public void removeSlot(Slot slot) {
-        this.slots.remove(slot);
-    }
+  public List<RunnableSlot<?>> getRunnableSlots() {
+    return this.getSlots().stream()
+        .filter(slot -> slot instanceof RunnableSlot)
+        .map(slot -> (RunnableSlot<?>) slot)
+        .collect(Collectors.toList());
+  }
 
-    public Slot getSlotById(UUID slotId) {
-        return this.slots.stream()
-                .filter(slot -> slot.getTopologyNodeId().equals(slotId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Couldn't find slot with given ID"));
-    }
+  public Topology getTopology() {
+    return this.topology;
+  }
 
-    public static ExecutionPlan from(final Query query) {
-        return extend(query, new HashMap<>());
-    }
-
-    public static ExecutionPlan extend(final Query query,
-            final Map<UUID, SourceSlot<?>> matchingUUIDtoSourceSlotMap) {
-        final List<Node> sortedNodes = query.getTopology().getTopologicalOrdering();
-        final LocalExecutionPlanBuilder visitor = new LocalExecutionPlanBuilder(matchingUUIDtoSourceSlotMap, query);
-
-        for (Node node : sortedNodes) {
-            node.accept(visitor);
-        }
-
-        final List<Slot> slots = visitor.getSlots();
-        return new ExecutionPlan(slots);
-    }
+  public List<Slot<?>> getSlots() {
+    return this.slots;
+  }
 }

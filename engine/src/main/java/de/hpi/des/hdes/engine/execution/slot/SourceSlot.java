@@ -1,23 +1,17 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
-import de.hpi.des.hdes.engine.execution.connector.ListConnector;
+import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.SourceNode;
 import de.hpi.des.hdes.engine.operation.Source;
-import java.util.UUID;
-import lombok.Getter;
 
-public class SourceSlot<OUT> extends Slot {
+public class SourceSlot<OUT> extends RunnableSlot<OUT> {
 
   private final Source<OUT> source;
-  @Getter
-  private final ListConnector<OUT> connector;
+  private final SourceNode<OUT> topologyNode;
 
-  public SourceSlot(final Source<OUT> source,
-                    final UUID topologyNodeId,
-                    final ListConnector<OUT> connector) {
-    super(topologyNodeId);
+  public SourceSlot(final Source<OUT> source, final SourceNode<OUT> topologyNode) {
     this.source = source;
-    this.connector = connector;
-    source.init(connector);
+    this.topologyNode = topologyNode;
   }
 
   @Override
@@ -26,7 +20,8 @@ public class SourceSlot<OUT> extends Slot {
   }
 
   @Override
-  public void tick() {
-    this.connector.tick();
+  public SourceNode<OUT> getTopologyNode() {
+    return this.topologyNode;
   }
+
 }

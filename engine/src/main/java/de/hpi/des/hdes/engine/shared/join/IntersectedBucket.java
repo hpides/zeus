@@ -1,4 +1,4 @@
-package de.hpi.des.hdes.engine.ajoin;
+package de.hpi.des.hdes.engine.shared.join;
 
 import java.util.Set;
 import lombok.Value;

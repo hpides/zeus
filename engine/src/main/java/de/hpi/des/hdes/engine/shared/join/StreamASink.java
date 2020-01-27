@@ -1,4 +1,4 @@
-package de.hpi.des.hdes.engine.ajoin;
+package de.hpi.des.hdes.engine.shared.join;
 
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;

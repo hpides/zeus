@@ -1,25 +1,32 @@
 package de.hpi.des.hdes.engine;
 
 import de.hpi.des.hdes.engine.graph.Topology;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
 
 @Getter
 public class Query {
-    final private Topology topology;
-    final private UUID id;
 
-    public Query(Topology topology) {
-        this.topology = topology;
-        this.id = UUID.randomUUID();
-    }
+  private final Topology topology;
+  private final UUID id;
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Query) {
-            return this.getId() == ((Query) obj).getId();
-        } else {
-            return false;
-        }
+  public Query(final Topology topology) {
+    this.topology = topology;
+    this.id = UUID.randomUUID();
+  }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (obj instanceof Query) {
+      return this.getId() == ((Query) obj).getId();
+    } else {
+      return false;
     }
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.id);
+  }
 }

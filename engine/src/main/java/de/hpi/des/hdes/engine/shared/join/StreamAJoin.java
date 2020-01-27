@@ -1,8 +1,9 @@
-package de.hpi.des.hdes.engine.ajoin;
+package de.hpi.des.hdes.engine.shared.join;
 
 import static org.jooq.lambda.Seq.seq;
 
 import com.google.common.collect.Sets;
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import de.hpi.des.hdes.engine.window.Window;
@@ -71,4 +72,5 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
         .map(i -> new IntersectedBucket<>(entries1.get(i), entries2.get(i)))
         .toList();
   }
+
 }

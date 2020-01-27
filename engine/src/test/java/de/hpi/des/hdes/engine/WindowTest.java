@@ -1,10 +1,13 @@
 package de.hpi.des.hdes.engine;
 
+import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import de.hpi.des.hdes.engine.aggregators.SumAggregator;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
+import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
+import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
@@ -13,6 +16,7 @@ import de.hpi.des.hdes.engine.operation.Source;
 import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.window.Time;
+import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
 import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.lambda.tuple.Tuple2;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 @Slf4j
 class WindowTest extends ShortTimoutSetup {
@@ -50,7 +55,8 @@ class WindowTest extends ShortTimoutSetup {
         .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
 
     final Query query = new Query(builder.build());
-    var slots = ExecutionPlan.from(query).getSlots();
+    final List<RunnableSlot<?>> slots = ExecutionPlan.emptyExecutionPlan().extend(query)
+        .getRunnableSlots();
 
     TestUtil.runAndTick(slots);
     assertThat(result).containsExactly("22");
@@ -102,7 +108,7 @@ class WindowTest extends ShortTimoutSetup {
 
     final Query query = new Query(builder.build());
 
-    var slots = ExecutionPlan.from(query).getSlots();
+    var slots = ExecutionPlan.emptyExecutionPlan().extend(query).getRunnableSlots();
 
     TestUtil.runAndTick(slots);
     TestUtil.runAndTick(slots);
@@ -143,7 +149,7 @@ class WindowTest extends ShortTimoutSetup {
 
     final Query query = new Query(builder.build());
 
-    var slots = ExecutionPlan.from(query).getSlots();
+    var slots = ExecutionPlan.emptyExecutionPlan().extend(query).getRunnableSlots();
 
     log.debug("Result: " + result.stream().map(i -> i.toString()).collect(Collectors.joining(", ")));
     log.debug("Nanotime: " + System.nanoTime());
@@ -161,5 +167,62 @@ class WindowTest extends ShortTimoutSetup {
     log.debug("Result: " + result.stream().map(i -> toString()).collect(Collectors.joining(", ")));
     log.debug("Nanotime: " + System.nanoTime()/1000);
     assertThat(result).containsExactly(9);
+  }
+
+  @Test
+  @Timeout(5)
+  void testTumblingProcessingWindowJoin() throws InterruptedException {
+    final List<Integer> list = List.of(1, 2, 3);
+    final ListSource<Integer> source = new ListSource<>(list);
+    final ListSource<String> stringSource = new ListSource<>(
+        List.of("2", "5", "4", "3"));
+
+    final List<String> result = new LinkedList<>();
+    final ListSink<String> sink = new ListSink<>(result);
+
+    final TopologyBuilder builder = new TopologyBuilder();
+    final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
+    final AStream<String> stringString = builder.streamOf(stringSource);
+
+    stream.window(TumblingWindow.ofProcessingTime(Time.seconds(5)))
+        .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
+    final Query Q1 = new Query(builder.build());
+
+    final var engine = new Engine();
+    engine.addQuery(Q1);
+    engine.run();
+    while (!source.isDone() || !stringSource.isDone() || result.size() != 3) {
+      sleep(100);
+    }
+
+    assertThat(result).containsExactlyInAnyOrder("22", "44", "33");
+  }
+
+  @Test
+  @Timeout(5)
+  void testGlobalWindowJoin() throws InterruptedException {
+    final List<Integer> list = List.of(1, 2, 3);
+    final ListSource<Integer> source = new ListSource<>(list);
+    final ListSource<String> stringSource = new ListSource<>(
+        List.of("2", "5", "4", "3"));
+
+    final List<String> result = new LinkedList<>();
+    final ListSink<String> sink = new ListSink<>(result);
+
+    final TopologyBuilder builder = new TopologyBuilder();
+    final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
+    final AStream<String> stringString = builder.streamOf(stringSource);
+
+    stream.window(new GlobalWindow())
+        .join(stringString, (i, s) -> s + i, (i, s) -> String.valueOf(i).equals(s)).to(sink);
+    final Query Q1 = new Query(builder.build());
+
+    final var engine = new Engine();
+    engine.addQuery(Q1);
+    engine.run();
+    while (!source.isDone() || !stringSource.isDone() || result.size() != 3) {
+      sleep(100);
+    }
+    assertThat(result).containsExactlyInAnyOrder("22", "44", "33");
   }
 }

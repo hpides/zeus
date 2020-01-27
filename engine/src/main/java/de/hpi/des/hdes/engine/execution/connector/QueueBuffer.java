@@ -30,7 +30,7 @@ public class QueueBuffer<VAL> implements Buffer<VAL> {
   }
 
   @Override
-  public void add(VAL val) {
+  public void add(final VAL val) {
     this.queue.add(val);
   }
 }

@@ -5,14 +5,19 @@ import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 public class BinaryOperationNode<IN1, IN2, OUT> extends Node {
 
   @Override
-  public void accept(NodeVisitor visitor) {
+  public void accept(final NodeVisitor visitor) {
     visitor.visit(this);
   }
 
   private final TwoInputOperator<IN1, IN2, OUT> operator;
 
-  public BinaryOperationNode(
+  public BinaryOperationNode(final TwoInputOperator<IN1, IN2, OUT> operator) {
+    this.operator = operator;
+  }
+
+  protected BinaryOperationNode(final String identifier,
       final TwoInputOperator<IN1, IN2, OUT> operator) {
+    super(identifier);
     this.operator = operator;
   }
 

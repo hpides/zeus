@@ -10,12 +10,12 @@ public class SumAggregator implements Aggregator<Integer, Integer, Integer> {
     }
 
     @Override
-    public Integer add(Integer state, Integer input) {
+    public Integer add(final Integer state, final Integer input) {
         return state + input;
     }
 
     @Override
-    public Integer getResult(Integer state) {
+    public Integer getResult(final Integer state) {
         return state;
     }
 }

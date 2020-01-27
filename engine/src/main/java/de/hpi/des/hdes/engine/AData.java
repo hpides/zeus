@@ -1,6 +1,7 @@
 package de.hpi.des.hdes.engine;
 
 public class AData<V> {
+
   private final V value;
   private final long timestamp;
 

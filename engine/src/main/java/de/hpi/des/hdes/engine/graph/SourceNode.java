@@ -10,13 +10,13 @@ public class SourceNode<OUT> extends Node {
 
   private final Source<OUT> source;
 
-  public SourceNode(Source<OUT> source) {
+  public SourceNode(final Source<OUT> source) {
+    super("SourceNode-" + source.getIdentifier());
     this.source = source;
-    this.setNodeId(UUID.nameUUIDFromBytes(Integer.toString(source.hashCode()).getBytes()));
   }
 
   @Override
-  public void accept(NodeVisitor visitor) {
+  public void accept(final NodeVisitor visitor) {
     visitor.visit(this);
   }
 }

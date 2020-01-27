@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine;
 
+
 import java.time.temporal.ChronoUnit;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -8,24 +9,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JobManager {
-    private final Engine engine;
-    private final Timer timer;
 
-    public JobManager() {
-        this.engine = new Engine();
-        this.timer = new Timer("AddQueryTimer");
-    }
+  private final Engine engine;
+  private final Timer timer;
 
-    public void addQuery(Query query) {
-        this.engine.addQuery(query);
-    }
+  public JobManager() {
+    this.engine = new Engine();
+    this.timer = new Timer("AddQueryTimer");
+  }
 
-    public void addQuery(Query query, long delay, ChronoUnit timeUnit) {
-        TimerTask addQueryTask = new AddQueryTimerTask(engine, query);
-        this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
-    }
+  public void addQuery(final Query query) {
+    this.engine.addQuery(query);
+  }
 
-    public void runEngine() {
-        this.engine.run();
-    }
+  public void addQuery(final Query query, final long delay, final ChronoUnit timeUnit) {
+    final TimerTask addQueryTask = new AddQueryTimerTask(this.engine, query);
+    this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
+  }
+
+  public void runEngine() {
+    this.engine.run();
+  }
 }

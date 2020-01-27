@@ -2,6 +2,7 @@ package de.hpi.des.hdes.engine.graph;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.window.GlobalTimeWindow;
 import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
@@ -55,7 +56,7 @@ class TopologyTest {
         joinNode
     );
 
-    Topology topology = new Topology(unorderedNodes);
+    Topology topology = new Topology(Sets.newHashSet(unorderedNodes));
     final List<Node> nodes = topology.getTopologicalOrdering();
 
     assertThat(nodes.indexOf(sourceNode1)).isLessThan(nodes.indexOf(mapNode1));

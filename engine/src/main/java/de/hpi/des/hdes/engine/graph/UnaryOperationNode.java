@@ -5,13 +5,18 @@ import de.hpi.des.hdes.engine.operation.OneInputOperator;
 public class UnaryOperationNode<IN, OUT> extends Node {
 
   @Override
-  public void accept(NodeVisitor visitor) {
+  public void accept(final NodeVisitor visitor) {
     visitor.visit(this);
   }
 
   private final OneInputOperator<IN, OUT> operator;
 
   public UnaryOperationNode(final OneInputOperator<IN, OUT> operator) {
+    this.operator = operator;
+  }
+
+  protected UnaryOperationNode(final String identifier, final OneInputOperator<IN, OUT> operator) {
+    super(identifier);
     this.operator = operator;
   }
 
