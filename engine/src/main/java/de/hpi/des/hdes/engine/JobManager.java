@@ -30,4 +30,9 @@ public class JobManager {
   public void runEngine() {
     this.engine.run();
   }
+
+  public void shutdown() {
+    this.engine.shutdown();
+    this.timer.cancel();
+  }
 }

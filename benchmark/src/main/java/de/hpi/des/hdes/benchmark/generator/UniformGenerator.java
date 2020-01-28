@@ -1,8 +1,6 @@
 package de.hpi.des.hdes.benchmark.generator;
 
-import de.hpi.des.hdes.benchmark.TimedBlockingSource;
-import de.hpi.des.hdes.benchmark.TupleEvent;
-import java.util.Random;
+import de.hpi.des.hdes.benchmark.BlockingSource;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import lombok.Getter;
@@ -11,25 +9,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class UniformGenerator implements Generator<TupleEvent> {
+public abstract class UniformGenerator<E> implements Generator<E> {
 
   private final int eventsPerSecond;
   private final int timeInSeconds;
   private final ExecutorService executor;
-  private final Random random = new Random();
+
   @Getter
   private final int benchmarkCheckpointInterval = 10000;
 
-  private long lastKey = 0;
 
-  private TupleEvent generateRandomIntTuple(boolean isBenchmarkCheckpoint) {
-    final TupleEvent event = new TupleEvent(this.lastKey, this.random.nextInt(10000), isBenchmarkCheckpoint);
-    this.lastKey++;
-    return event;
-  }
+  protected abstract E generateEvent(boolean isBenchmark);
 
-  public CompletableFuture<Boolean> generate(final TimedBlockingSource<TupleEvent> timedBlockingSource) {
-    return CompletableFuture.supplyAsync(() -> this.sendEventsTimeAware(timedBlockingSource), executor);
+  public CompletableFuture<Boolean> generate(final BlockingSource<E> blockingSource) {
+    return CompletableFuture.supplyAsync(() -> this.sendEventsTimeAware(blockingSource), executor);
   }
 
   @Override
@@ -42,9 +35,8 @@ public class UniformGenerator implements Generator<TupleEvent> {
     executor.shutdownNow();
   }
 
-  private Boolean sendEventsTimeAware(final TimedBlockingSource<TupleEvent> timedBlockingSource) {
+  private Boolean sendEventsTimeAware(final BlockingSource<E> blockingSource) {
     long sentEvents = 0;
-    this.lastKey = 0;
     final int totalEvents = eventsPerSecond * timeInSeconds;
     final long startTime = System.nanoTime();
     long benchmarkCheckpointCounter = 0;
@@ -60,14 +52,13 @@ public class UniformGenerator implements Generator<TupleEvent> {
       final long eventsToBeSent = Math.min(totalEvents - sentEvents, missingEvents);
 
       // Send the events
-      for(int i = 0; i < eventsToBeSent; i++) {
-        if(benchmarkCheckpointCounter % benchmarkCheckpointInterval == 0) {
-          timedBlockingSource.offer(this.generateRandomIntTuple(true));
+      for (int i = 0; i < eventsToBeSent; i++) {
+        if (benchmarkCheckpointCounter % benchmarkCheckpointInterval == 0) {
+          blockingSource.offer(this.generateEvent(true));
           log.trace("Events to be sent {}", eventsToBeSent);
-          log.trace("Current Queue Size {}", timedBlockingSource.getQueue().size());
-        }
-        else {
-          timedBlockingSource.offer(this.generateRandomIntTuple(false));
+          log.trace("Current Queue Size {}", blockingSource.getQueue().size());
+        } else {
+          blockingSource.offer(this.generateEvent(false));
         }
         benchmarkCheckpointCounter++;
       }
@@ -78,6 +69,7 @@ public class UniformGenerator implements Generator<TupleEvent> {
     }
 
     log.info("Finished generating events.");
+    blockingSource.getQueue().flush();
     return true;
   }
 

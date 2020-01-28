@@ -30,4 +30,13 @@ public class AData<V> {
     return new AData<>(value, this.ingestionTime, this.eventTime);
   }
 
+
+  @Override
+  public String toString() {
+    return "AData{" +
+        "value=" + value +
+        ", ingestionTime=" + ingestionTime +
+        ", eventTime=" + eventTime +
+        '}';
+  }
 }

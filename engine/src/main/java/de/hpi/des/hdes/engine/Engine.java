@@ -55,6 +55,7 @@ public class Engine {
           });
     }
     this.plan = extendedPlan;
+    log.info("Attaches Query {}", query.getId());
   }
 
   public synchronized void deleteQuery(final Query query) {
