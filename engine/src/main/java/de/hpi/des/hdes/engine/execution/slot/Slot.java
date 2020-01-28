@@ -81,6 +81,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
     return this.hasNoOutput();
   }
 
+  @Override
   public void tick() {
     for (final var buffer : this.outBuffer.values()) {
       buffer.flushIfTimeout();

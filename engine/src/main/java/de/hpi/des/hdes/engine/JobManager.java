@@ -22,6 +22,15 @@ public class JobManager {
     this.engine.addQuery(query);
   }
 
+  public void deleteQuery(final Query query) {
+    this.engine.deleteQuery(query);
+  }
+
+  public void deleteQuery(final Query query, final long delay, final ChronoUnit timeUnit) {
+    final TimerTask addQueryTask = new DeleteQueryTimerTask(this.engine, query);
+    this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
+  }
+
   public void addQuery(final Query query, final long delay, final ChronoUnit timeUnit) {
     final TimerTask addQueryTask = new AddQueryTimerTask(this.engine, query);
     this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));

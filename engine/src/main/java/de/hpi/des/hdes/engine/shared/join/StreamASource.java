@@ -7,6 +7,7 @@ import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.udf.KeySelector;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +37,7 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
     this.windowAssigner = windowAssigner;
     this.keySelector = keySelector;
     this.state = new HashMap<>();
-    this.timer = new Timer();
+    this.timer = new Timer("StreamASource-Timer");
   }
   // 1. pull from external source
   // 2. combine entries of last t time slots into a bucket
@@ -61,6 +62,7 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
   private void trigger() {
     final List<? extends Window> currentWindows = this.windowAssigner
         .assignWindows(System.currentTimeMillis());
+    final var remove = new ArrayList<Window>();
     for (final Entry<Window, Set<IN>> entry : this.state.entrySet()) {
       final Window window = entry.getKey();
       // emit all closed windows
@@ -68,9 +70,10 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
         final Map<KEY, Set<IN>> indices = Seq.seq(entry.getValue())
             .groupBy(this.keySelector::selectKey, Collectors.toSet());
         this.collector.collect(AData.of(new Bucket<>(indices, window)));
-        this.state.remove(window);
+        remove.add(window);
       }
     }
+    remove.forEach(this.state::remove);
   }
 
   private class TriggerTask extends TimerTask {

@@ -22,10 +22,11 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
   @Override
   public void run() {
     this.running = true;
-    while (!Thread.currentThread().isInterrupted() || this.shutdownFlag) {
+    while (!Thread.currentThread().isInterrupted() && !this.shutdownFlag) {
       this.runStep();
       this.tick();
     }
+    log.debug("Stopped running {}", this);
     this.running = false;
   }
 

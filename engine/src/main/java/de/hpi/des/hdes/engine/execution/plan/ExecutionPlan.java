@@ -51,9 +51,7 @@ public final class ExecutionPlan {
     final List<Slot<?>> runningSlots = this.slots.stream().filter(slot -> !slot.isShutdown())
         .collect(Collectors.toList());
 
-    this.topology.getNodes().forEach(node -> {
-      node.removeAssociatedQuery(query);
-    });
+    this.topology.getNodes().forEach(node -> node.removeAssociatedQuery(query));
 
     final Set<Node> currentNodes = this.topology.getNodes().stream()
         .filter(node -> !node.getAssociatedQueries().isEmpty())

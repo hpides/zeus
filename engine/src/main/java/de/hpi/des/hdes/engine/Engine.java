@@ -3,6 +3,8 @@ package de.hpi.des.hdes.engine;
 import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
 import de.hpi.des.hdes.engine.shared.join.node.AJoinNode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ public class Engine {
   private ExecutionPlan plan;
   private final ExecutorService executor;
   private boolean isRunning;
+  private List<Query> runningQueries = new ArrayList<>();
 
   public Engine() {
     this.plan = ExecutionPlan.emptyExecutionPlan();
@@ -56,6 +59,7 @@ public class Engine {
     }
     this.plan = extendedPlan;
     log.info("Attaches Query {}", query.getId());
+    this.runningQueries.add(query);
   }
 
   public synchronized void deleteQuery(final Query query) {
@@ -65,10 +69,12 @@ public class Engine {
       throw new UnsupportedOperationException("There are no queries");
     }
     this.plan = this.plan.delete(query);
+    this.runningQueries.remove(query);
   }
 
   public void shutdown() {
     this.isRunning = false;
+    this.plan.getRunnableSlots().forEach(RunnableSlot::shutdown);
     this.executor.shutdownNow();
   }
 

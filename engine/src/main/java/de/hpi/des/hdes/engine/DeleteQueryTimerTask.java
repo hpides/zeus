@@ -1,0 +1,16 @@
+package de.hpi.des.hdes.engine;
+
+import java.util.TimerTask;
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class DeleteQueryTimerTask extends TimerTask {
+
+  private final Engine engine;
+  private final Query query;
+
+  @Override
+  public void run() {
+    this.engine.deleteQuery(this.query);
+  }
+}

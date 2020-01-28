@@ -86,10 +86,11 @@ public class Main implements Runnable {
     var q2 = Queries.makeQuery2(bidSource, q2Sink);
     var q3Sink = new BenchmarkingSink<Tuple>();
     var q3 = Queries.makeQuery3(personSource, auctionSource, q3Sink);
+
     var q4Sink = new BenchmarkingSink<Tuple>();
-    var q4 = Queries.makePlainJoin(personSource, bidSource, q4Sink);
+    var q4 = Queries.makeAJoin(personSource, bidSource, q4Sink);
     var q5Sink = new BenchmarkingSink<Tuple>();
-    var q5 = Queries.makePlainJoin(personSource, bidSource, q5Sink);
+    var q5 = Queries.makeAJoin(personSource, bidSource, q5Sink);
 
     var querySinks = List.of(q0Sink, q00Sink, q1Sink, q2Sink, q3Sink, q4Sink, q5Sink);
     var jobManager = new JobManager();
@@ -97,19 +98,22 @@ public class Main implements Runnable {
 
 //    jobManager.addQuery(q0);
 //    jobManager.addQuery(q00);
-//    jobManager.addQuery(q1);
-//    jobManager.addQuery(q2);
-//    jobManager.addQuery(q3);
-    jobManager.addQuery(q4);
-//    jobManager.addQuery(q5);
+    //jobManager.addQuery(q1);
+    //jobManager.addQuery(q2);
+    //jobManager.addQuery(q3);
 
+    jobManager.addQuery(q4);
+    jobManager.addQuery(q5);
     jobManager.runEngine();
+
+    //jobManager.deleteQuery(q2, 10, ChronoUnit.SECONDS);
+    //jobManager.deleteQuery(q5, 10, ChronoUnit.SECONDS);
 
     try {
       done.get();
       long endTime = System.nanoTime();
       log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
-      Thread.sleep(TimeUnit.SECONDS.toMillis(50));
+      Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
     } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
