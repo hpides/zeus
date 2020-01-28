@@ -31,7 +31,7 @@ public class AJoinTest {
         List.of(1, 2, 3));
 
     final Set<Integer> result = new HashSet<>();
-    final Sink<Integer> sink = result::add;
+    final Sink<Integer> sink = i -> result.add(i.getValue());
 
     final TopologyBuilder builder = new TopologyBuilder();
     final AStream<Integer> stream = builder.streamOf(source);
@@ -71,7 +71,7 @@ public class AJoinTest {
     final AStream<Integer> stream2 = builder.streamOf(source2);
 
     final Set<Integer> resultSet = new HashSet<>();
-    final Sink<Integer> sink = resultSet::add;
+    final Sink<Integer> sink = i -> resultSet.add(i.getValue());
 
     stream.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
         .ajoin(stream2,
@@ -86,7 +86,7 @@ public class AJoinTest {
     final AStream<Integer> query2Stream2 = query2Builder.streamOf(source2);
 
     final Set<Integer> query2ResultSet = new HashSet<>();
-    final Sink<Integer> query2Sink = query2ResultSet::add;
+    final Sink<Integer> query2Sink = i -> query2ResultSet.add(i.getValue());
 
     query2Stream1.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
         .ajoin(query2Stream2,

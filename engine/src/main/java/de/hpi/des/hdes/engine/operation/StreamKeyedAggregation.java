@@ -1,58 +1,59 @@
 package de.hpi.des.hdes.engine.operation;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.udf.KeySelector;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import org.jetbrains.annotations.NotNull;
 
 public class StreamKeyedAggregation<IN, KEY, STATE, OUT>
-        extends AbstractTopologyElement<OUT>
-        implements OneInputOperator<IN, OUT> {
+    extends AbstractTopologyElement<OUT>
+    implements OneInputOperator<IN, OUT> {
 
-    private final Aggregator<IN, STATE, OUT> aggregator;
-    private final WindowAssigner<Window> windowAssigner;
-    private final HashMap<Window, HashMap<KEY, STATE>> windowToState;
-    private final KeySelector<IN, KEY> keyselector;
+  private final Aggregator<IN, STATE, OUT> aggregator;
+  private final WindowAssigner<Window> windowAssigner;
+  private final HashMap<Window, HashMap<KEY, STATE>> windowToState;
+  private final KeySelector<IN, KEY> keyselector;
 
-    public StreamKeyedAggregation(KeySelector<IN, KEY> keyselector,
-                                  final Aggregator<IN, STATE, OUT> aggregator,
-                                  final WindowAssigner<Window> windowAssigner) {
-        this.keyselector = keyselector;
-        this.aggregator = aggregator;
-        this.windowAssigner = windowAssigner;
-        this.windowToState = new HashMap<>();
-        aggregator.initialize();
-    }
+  public StreamKeyedAggregation(final KeySelector<IN, KEY> keyselector,
+      final Aggregator<IN, STATE, OUT> aggregator,
+      final WindowAssigner<Window> windowAssigner) {
+    this.keyselector = keyselector;
+    this.aggregator = aggregator;
+    this.windowAssigner = windowAssigner;
+    this.windowToState = new HashMap<>();
+    aggregator.initialize();
+  }
 
-    public void closeOutdatedWindows(List<Window> activeWindows) {
-        for(final Window window : windowToState.keySet()) {
-            if(!activeWindows.contains(window)) {
-                Map<KEY, STATE> keyToState = windowToState.get(window);
-                for (KEY key : keyToState.keySet()) {
-                    collector.collect(aggregator.getResult(keyToState.get(key)));
-                }
-                windowToState.remove(window);
-            }
+  public void closeOutdatedWindows(final List<Window> activeWindows) {
+    for (final Window window : this.windowToState.keySet()) {
+      if (!activeWindows.contains(window)) {
+        final Map<KEY, STATE> keyToState = this.windowToState.get(window);
+        for (final STATE state : keyToState.values()) {
+          this.collector.collect(AData.of(this.aggregator.getResult(state)));
         }
+        this.windowToState.remove(window);
+      }
     }
+  }
 
-    @Override
-    public void process(@NotNull IN input) {
-        final List<Window> activeWindows = this.windowAssigner.assignWindows(System.nanoTime());
-        closeOutdatedWindows(activeWindows);
-        KEY key = keyselector.selectKey(input);
+  @Override
+  public void process(@NotNull final AData<IN> input) {
+    final List<Window> activeWindows = this.windowAssigner.assignWindows(input.getEventTime());
+    this.closeOutdatedWindows(activeWindows);
+    final IN value = input.getValue();
+    final KEY key = this.keyselector.selectKey(value);
 
-        // Add the input to the windows it belongs to
-        for (final Window window : activeWindows) {
-            Map<KEY, STATE> inputKeyToState = windowToState.computeIfAbsent(window, w -> new HashMap<>());
-            STATE state = inputKeyToState.computeIfAbsent(key, k -> aggregator.initialize());
-            inputKeyToState.put(key, aggregator.add(state, input));
-        }
+    // Add the input to the windows it belongs to
+    for (final Window window : activeWindows) {
+      final Map<KEY, STATE> inputKeyToState = this.windowToState
+          .computeIfAbsent(window, w -> new HashMap<>());
+      final STATE state = inputKeyToState.computeIfAbsent(key, k -> this.aggregator.initialize());
+      inputKeyToState.put(key, this.aggregator.add(state, value));
     }
+  }
 }

@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.shared.join;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.Collector;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
@@ -16,7 +17,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.jooq.lambda.Seq;
 
 @Slf4j
@@ -30,8 +30,8 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
   private final Timer timer;
 
   public StreamASource(final int triggerInterval,
-                       final WindowAssigner<? extends Window> windowAssigner,
-                       final KeySelector<IN, KEY> keySelector) {
+      final WindowAssigner<? extends Window> windowAssigner,
+      final KeySelector<IN, KEY> keySelector) {
     this.triggerInterval = triggerInterval;
     this.windowAssigner = windowAssigner;
     this.keySelector = keySelector;
@@ -48,13 +48,13 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
   }
 
   @Override
-  public void process(@NotNull final IN in) {
+  public void process(final AData<IN> aData) {
     final List<? extends Window> assignedWindows = this.windowAssigner
-        .assignWindows(System.currentTimeMillis());
+        .assignWindows(aData.getEventTime());
     for (final Window window : assignedWindows) {
       // put in own state
       final Set<IN> ownState = this.state.computeIfAbsent(window, w -> new HashSet<>());
-      ownState.add(in);
+      ownState.add(aData.getValue());
     }
   }
 
@@ -67,7 +67,7 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
       if (!currentWindows.contains(window)) {
         final Map<KEY, Set<IN>> indices = Seq.seq(entry.getValue())
             .groupBy(this.keySelector::selectKey, Collectors.toSet());
-        this.collector.collect(new Bucket<>(indices, window));
+        this.collector.collect(AData.of(new Bucket<>(indices, window)));
         this.state.remove(window);
       }
     }

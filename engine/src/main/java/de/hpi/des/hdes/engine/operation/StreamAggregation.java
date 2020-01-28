@@ -1,11 +1,11 @@
 package de.hpi.des.hdes.engine.operation;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.HashMap;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 
 public class StreamAggregation<IN, STATE, OUT> extends AbstractTopologyElement<OUT> implements OneInputOperator<IN, OUT> {
     private final Aggregator<IN, STATE, OUT> aggregator;
@@ -19,24 +19,24 @@ public class StreamAggregation<IN, STATE, OUT> extends AbstractTopologyElement<O
         aggregator.initialize();
     }
 
-    public void closeOutdatedWindows(List<? extends Window> activeWindows) {
-        for(final Window window : windowToState.keySet()) {
+    public void closeOutdatedWindows(final List<? extends Window> activeWindows) {
+        for(final Window window : this.windowToState.keySet()) {
             if(!activeWindows.contains(window)) {
-                collector.collect(aggregator.getResult(windowToState.get(window)));
-                windowToState.remove(window);
+                this.collector.collect(AData.of(this.aggregator.getResult(this.windowToState.get(window))));
+                this.windowToState.remove(window);
             }
         }
     }
 
     @Override
-    public void process(@NotNull IN input) {
-        final List<? extends Window> activeWindows = this.windowAssigner.assignWindows(System.nanoTime());
-        closeOutdatedWindows(activeWindows);
-
+    public void process(final AData<IN> aData) {
+        final List<? extends Window> activeWindows = this.windowAssigner.assignWindows(aData.getEventTime());
+        this.closeOutdatedWindows(activeWindows);
+        final IN input = aData.getValue();
         // Add the input to the windows it belongs to
         for (final Window window : activeWindows) {
-            STATE state = windowToState.computeIfAbsent(window, w -> aggregator.initialize());
-            windowToState.put(window, aggregator.add(state, input));
+            final STATE state = this.windowToState.computeIfAbsent(window, w -> this.aggregator.initialize());
+            this.windowToState.put(window, this.aggregator.add(state, input));
         }
     }
 }

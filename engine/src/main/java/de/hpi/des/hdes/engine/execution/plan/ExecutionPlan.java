@@ -46,6 +46,22 @@ public final class ExecutionPlan {
     return new ExecutionPlan(newTopology, newSlots, this.builder);
   }
 
+  public ExecutionPlan delete(final Query query) {
+    this.slots.forEach(slot -> slot.remove(query));
+    final List<Slot<?>> runningSlots = this.slots.stream().filter(slot -> !slot.isShutdown())
+        .collect(Collectors.toList());
+
+    this.topology.getNodes().forEach(node -> {
+      node.removeAssociatedQuery(query);
+    });
+
+    final Set<Node> currentNodes = this.topology.getNodes().stream()
+        .filter(node -> !node.getAssociatedQueries().isEmpty())
+        .collect(Collectors.toSet());
+
+    return new ExecutionPlan(new Topology(currentNodes), runningSlots, this.builder);
+  }
+
   public List<RunnableSlot<?>> getRunnableSlots() {
     return this.getSlots().stream()
         .filter(slot -> slot instanceof RunnableSlot)

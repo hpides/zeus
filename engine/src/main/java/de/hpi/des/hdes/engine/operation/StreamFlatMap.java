@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.operation;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.FlatMapper;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,10 +14,10 @@ public class StreamFlatMap<IN, OUT> extends AbstractTopologyElement<OUT>
   }
 
   @Override
-  public void process(@NotNull final IN in) {
-    final Iterable<OUT> result = this.flatMapper.flatMap(in);
+  public void process(@NotNull final AData<IN> aData) {
+    final Iterable<OUT> result = this.flatMapper.flatMap(aData.getValue());
     for (final OUT out : result) {
-      this.collector.collect(out);
+      this.collector.collect(aData.createNew(out));
     }
   }
 }

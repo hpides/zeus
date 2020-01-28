@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
 import de.hpi.des.hdes.engine.graph.Node;
@@ -44,7 +45,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
   }
 
   @Override
-  public void collect(final OUT event) {
+  public void collect(final AData<OUT> event) {
     for (final var op : this.outOps.values()) {
       log.trace("{}: Output {} to {}", this, event, op);
       op.process(event);

@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.engine.operation;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.Filter;
-import org.jetbrains.annotations.NotNull;
 
 public class StreamFilter<IN> extends AbstractTopologyElement<IN>
     implements OneInputOperator<IN, IN> {
@@ -13,9 +13,9 @@ public class StreamFilter<IN> extends AbstractTopologyElement<IN>
   }
 
   @Override
-  public void process(@NotNull final IN in) {
-    if (this.filter.filter(in)) {
-      this.collector.collect(in);
+  public void process(final AData<IN> aData) {
+    if (this.filter.filter(aData.getValue())) {
+      this.collector.collect(aData);
     }
   }
 

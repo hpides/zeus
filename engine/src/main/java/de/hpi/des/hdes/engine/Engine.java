@@ -21,13 +21,20 @@ public class Engine {
   }
 
   public void run() {
+    if (this.isRunning) {
+      throw new IllegalStateException("Engine already running");
+    }
+
     this.isRunning = true;
     for (final RunnableSlot<?> slot : this.plan.getRunnableSlots()) {
+      log.debug("Slot {} submitted", slot);
       this.executor.submit(slot);
     }
   }
 
   public synchronized void addQuery(final Query query) {
+    // We synchronize this method to avoid problems when multiple queries are added or
+    // deleted at the same time
     final ExecutionPlan extendedPlan = this.plan.extend(query);
     // find AJoins that are already part of the topology and append output from new query
     for (final AJoinNode<?, ?, ?> aJoinNode : query.getTopology().getAJoinNodes()) {
@@ -37,20 +44,26 @@ public class Engine {
         }
       }
     }
+
     if (this.isRunning) {
       extendedPlan.getRunnableSlots()
           .stream()
           .filter(slot -> !slot.isRunning())
-          .forEach(this.executor::submit);
+          .forEach(task -> {
+            log.debug("Submitted slot {}", task);
+            this.executor.submit(task);
+          });
     }
     this.plan = extendedPlan;
   }
 
-  public void deleteQuery(final Query query) {
+  public synchronized void deleteQuery(final Query query) {
+    // We synchronize this method to avoid problems when multiple queries are added or
+    // deleted at the same time
     if (!this.isRunning || this.plan.getTopology().getNodes().isEmpty()) {
       throw new UnsupportedOperationException("There are no queries");
     }
-    this.plan.getSlots().forEach(slot -> slot.remove(query));
+    this.plan = this.plan.delete(query);
   }
 
   public void shutdown() {

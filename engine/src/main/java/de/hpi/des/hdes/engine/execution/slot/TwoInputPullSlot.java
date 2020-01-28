@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
 import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.Node;
@@ -36,11 +37,11 @@ public class TwoInputPullSlot<IN1, IN2, OUT> extends RunnableSlot<OUT> {
   }
 
   public void runStep() {
-    final IN1 in1 = this.input1.poll();
+    final AData<IN1> in1 = this.input1.poll();
     if (in1 != null) {
       this.operator.processStream1(in1);
     }
-    final IN2 in2 = this.input2.poll();
+    final AData<IN2> in2 = this.input2.poll();
     if (in2 != null) {
       this.operator.processStream2(in2);
     }

@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.execution.connector;
 
+import de.hpi.des.hdes.engine.AData;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,7 +22,7 @@ public class SizedChunkedBuffer<IN> extends ChunkedBuffer<IN> {
   }
 
   @Override
-  public void add(final IN val) {
+  public void add(final AData<IN> val) {
     if (this.currentSize.get() > this.maxSize) {
       throw new IllegalStateException(
           String.format("Queue is full. Size is %d", this.currentSize.get()));
@@ -34,8 +35,8 @@ public class SizedChunkedBuffer<IN> extends ChunkedBuffer<IN> {
 
   @Nullable
   @Override
-  public IN poll() {
-    final IN pollResult = super.poll();
+  public AData<IN> poll() {
+    final AData<IN> pollResult = super.poll();
     if (pollResult != null) {
       this.currentSize.decrementAndGet();
     }

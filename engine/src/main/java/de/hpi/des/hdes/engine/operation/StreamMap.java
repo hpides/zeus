@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.engine.operation;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.Mapper;
-import org.jetbrains.annotations.NotNull;
 
 public class StreamMap<V, VR> extends AbstractTopologyElement<VR> implements OneInputOperator<V, VR> {
 
@@ -12,8 +12,8 @@ public class StreamMap<V, VR> extends AbstractTopologyElement<VR> implements One
   }
 
   @Override
-  public void process(@NotNull final V value) {
-    final VR output = this.mapper.map(value);
-    this.collector.collect(output);
+  public void process(final AData<V> aData) {
+    final VR output = this.mapper.map(aData.getValue());
+    this.collector.collect(aData.createNew(output));
   }
 }

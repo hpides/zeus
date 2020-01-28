@@ -10,14 +10,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.Time;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 @Slf4j
 public class JobManagerTest {
 
-    @Timeout(10)
+    @Timeout(20)
     @Test
     void testJobManager() throws InterruptedException {
         final var list = new ArrayList<Integer>();

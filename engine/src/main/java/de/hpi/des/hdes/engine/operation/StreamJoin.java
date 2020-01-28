@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.operation;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.Join;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
@@ -28,38 +29,38 @@ public class StreamJoin<IN1, IN2, OUT, W extends Window> extends AbstractTopolog
   }
 
   @Override
-  public void processStream1(final IN1 in) {
+  public void processStream1(final AData<IN1> in) {
     // TODO: change interface to AData<IN1> and pass its timestamp
     final List<? extends W> assignedWindows = this.windowAssigner.assignWindows(System.nanoTime());
     for (final Window window : assignedWindows) {
       // put in own state
       final List<IN1> ownState = this.state1.computeIfAbsent(window, w -> new ArrayList<>());
-      ownState.add(in);
+      ownState.add(in.getValue());
 
       // join
       for (final IN2 element : this.state2.getOrDefault(window, Collections.emptyList())) {
-        if (this.joinCondition.test(in, element)) {
-          final OUT result = this.join.join(in, element);
-          this.collector.collect(result);
+        if (this.joinCondition.test(in.getValue(), element)) {
+          final OUT result = this.join.join(in.getValue(), element);
+          this.collector.collect(AData.of(result));
         }
       }
     }
   }
 
   @Override
-  public void processStream2(final IN2 in) {
+  public void processStream2(final AData<IN2> in) {
     // TODO: change interface to AData<IN2> and pass its timestamp
     final List<? extends W> assignedWindows = this.windowAssigner.assignWindows(System.nanoTime());
     for (final Window window : assignedWindows) {
       // put in own state
       final List<IN2> ownState = this.state2.computeIfAbsent(window, w -> new ArrayList<>());
-      ownState.add(in);
+      ownState.add(in.getValue());
 
       // join
       for (final IN1 element : this.state1.getOrDefault(window, Collections.emptyList())) {
-        if (this.joinCondition.test(element, in)) {
-          final OUT result = this.join.join(element, in);
-          this.collector.collect(result);
+        if (this.joinCondition.test(element, in.getValue())) {
+          final OUT result = this.join.join(element, in.getValue());
+          this.collector.collect(AData.of(result));
         }
       }
     }

@@ -3,7 +3,7 @@ package de.hpi.des.hdes.engine.shared.join;
 import static org.jooq.lambda.Seq.seq;
 
 import com.google.common.collect.Sets;
-import de.hpi.des.hdes.engine.Query;
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import de.hpi.des.hdes.engine.window.Window;
@@ -25,13 +25,14 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
   private final Map<Window, List<Bucket<KEY, IN2>>> state2 = new HashMap<>();
 
   @Override
-  public void processStream1(final Bucket<KEY, IN1> inBucket) {
+  public void processStream1(final AData<Bucket<KEY, IN1>> aData) {
+    final var inBucket = aData.getValue();
     if (this.state2.containsKey(inBucket.getWindow())) {
       final List<Bucket<KEY, IN2>> buckets = this.state2.get(inBucket.getWindow());
       for (final Bucket<KEY, IN2> stateBucket : buckets) {
         final Collection<IntersectedBucket<IN1, IN2>> intersectedBuckets =
             this.buildIntersections(inBucket, stateBucket);
-        intersectedBuckets.forEach(this.collector::collect);
+        intersectedBuckets.forEach(b -> this.collector.collect(AData.of(b)));
       }
       // todo remove with watermark
       this.state2.remove(inBucket.getWindow());
@@ -42,13 +43,14 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
   }
 
   @Override
-  public void processStream2(final Bucket<KEY, IN2> inBucket) {
+  public void processStream2(final AData<Bucket<KEY, IN2>> aData) {
+    final var inBucket = aData.getValue();
     if (this.state1.containsKey(inBucket.getWindow())) {
       final List<Bucket<KEY, IN1>> buckets = this.state1.get(inBucket.getWindow());
       for (final Bucket<KEY, IN1> stateBucket : buckets) {
         final Collection<IntersectedBucket<IN1, IN2>> intersectedBuckets =
             this.buildIntersections(stateBucket, inBucket);
-        intersectedBuckets.forEach(this.collector::collect);
+        intersectedBuckets.forEach(b -> this.collector.collect(AData.of(b)));
       }
       // todo remove with watermark
       this.state1.remove(inBucket.getWindow());

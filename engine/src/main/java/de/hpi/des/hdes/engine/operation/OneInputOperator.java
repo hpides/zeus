@@ -1,8 +1,8 @@
 package de.hpi.des.hdes.engine.operation;
 
-import org.jetbrains.annotations.NotNull;
+import de.hpi.des.hdes.engine.AData;
 
 public interface OneInputOperator<IN, OUT> extends Operator<OUT> {
 
-  void process(@NotNull IN in);
+  void process(AData<IN> in);
 }

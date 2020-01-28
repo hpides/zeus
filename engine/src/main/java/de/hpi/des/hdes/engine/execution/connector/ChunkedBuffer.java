@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.execution.connector;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -15,9 +16,9 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
 
   protected int chunkSize = ExecutionConfig.getConfig().getChunkSize();
   protected final long flushIntervall = ExecutionConfig.getConfig().getFlushIntervallNS(); // in ns
-  protected ArrayDeque<IN> inChunk;
-  protected ArrayDeque<IN> outChunk;
-  protected final LinkedBlockingQueue<ArrayDeque<IN>> queue;
+  protected ArrayDeque<AData<IN>> inChunk;
+  protected ArrayDeque<AData<IN>> outChunk;
+  protected final LinkedBlockingQueue<ArrayDeque<AData<IN>>> queue;
   protected long nextFlushTime;
 
 
@@ -29,7 +30,7 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
 
   @Nullable
   @Override
-  public IN poll() {
+  public AData<IN> poll() {
     if (!this.outChunk.isEmpty()) {
       return this.outChunk.poll();
     } else {
@@ -49,7 +50,7 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   }
 
   @Override
-  public void add(final IN val) {
+  public void add(final AData<IN> val) {
     this.inChunk.add(val);
     if (this.inChunk.size() >= this.chunkSize) {
       this.flush();
@@ -83,7 +84,7 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
    * Exists just for test purposes. Contains race conditions
    */
   @Override
-  public List<IN> unsafePollAll() {
+  public List<AData<IN>> unsafePollAll() {
     this.flush();
     final var flattenedQueue = new ArrayList<>(this.outChunk);
     this.queue.forEach(flattenedQueue::addAll);

@@ -1,8 +1,10 @@
 package de.hpi.des.hdes.engine.operation;
 
+import de.hpi.des.hdes.engine.AData;
+
 public interface Collector<T> {
 
-  void collect(T t);
+  void collect(AData<T> t);
 
   /**
    * This method passes a heartbeat through the pipeline. This can be used if work has to be done

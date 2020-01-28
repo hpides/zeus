@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.benchmark;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.operation.Collector;
 import de.hpi.des.hdes.engine.operation.Sink;
 import java.util.HashMap;
@@ -23,10 +24,10 @@ public class TimedBlockingSink<E extends Event> implements Sink<E> {
     }
 
     @Override
-    public void process(E event) {
-        if(event.isBenchmarkCheckpoint()) {
+    public void process(AData<E> event) {
+        if (event.getValue().isBenchmarkCheckpoint()) {
             final long timestamp = System.nanoTime();
-            benchmarkCheckpointToAddTime.put(event.getKey(), timestamp);
+            benchmarkCheckpointToAddTime.put(event.getValue().getKey(), timestamp);
         }
         sinkSize++;
     }

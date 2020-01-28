@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.execution.plan;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
 import de.hpi.des.hdes.engine.execution.slot.OneInputPushSlot;

@@ -1,19 +1,21 @@
 package de.hpi.des.hdes.engine.io;
 
+import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.Source;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.UUID;
 
 public class ListSource<OUT> extends AbstractTopologyElement<OUT> implements Source<OUT> {
 
+  private final List<AData<OUT>> list;
   private final String identifier;
-  private final List<OUT> list;
   private int i = 0;
 
   public ListSource(final List<OUT> list) {
+    this.list = list.stream().map(AData::of).collect(Collectors.toList());
     this.identifier = UUID.randomUUID().toString();
-    this.list = list;
   }
 
   @Override

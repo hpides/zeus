@@ -26,6 +26,7 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
       this.runStep();
       this.tick();
     }
+    this.running = false;
   }
 
   @Override
