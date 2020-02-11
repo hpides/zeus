@@ -1,8 +1,10 @@
 package de.hpi.des.hdes.engine.window;
 
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @EqualsAndHashCode
+@ToString
 public class TimeWindow implements Window {
 
   private final long start;

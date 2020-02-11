@@ -3,15 +3,14 @@ package de.hpi.des.hdes.engine.window.assigner;
 import de.hpi.des.hdes.engine.window.TimeWindow;
 import java.util.List;
 
-public class TumblingProcessingTimeWindow extends TumblingWindow {
+public class SlidingEventWindow extends SlidingWindow {
 
-  protected TumblingProcessingTimeWindow(final long size) {
-    super(size);
+  protected SlidingEventWindow(final long slide, final long length) {
+    super(slide, length);
   }
 
   @Override
   public List<TimeWindow> assignWindows(final long timestamp) {
-    return this.calculateWindow(System.nanoTime());
+    return this.calculateWindows(timestamp);
   }
-
 }
