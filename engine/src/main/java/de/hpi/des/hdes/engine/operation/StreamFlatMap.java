@@ -17,7 +17,7 @@ public class StreamFlatMap<IN, OUT> extends AbstractTopologyElement<OUT>
   public void process(@NotNull final AData<IN> aData) {
     final Iterable<OUT> result = this.flatMapper.flatMap(aData.getValue());
     for (final OUT out : result) {
-      this.collector.collect(aData.createNew(out));
+      this.collector.collect(aData.transform(out));
     }
   }
 }

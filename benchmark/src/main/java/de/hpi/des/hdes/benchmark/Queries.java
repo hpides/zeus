@@ -7,7 +7,7 @@ import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.window.Time;
-import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
+import de.hpi.des.hdes.engine.window.assigner.TumblingEventTimeWindow;
 import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple1;
 import org.jooq.lambda.tuple.Tuple4;
@@ -101,7 +101,7 @@ public class Queries {
     var ps = builder.streamOf(personSource);
     // ein top builder per query
     return
-        builder.streamOf(bidSource).window(TumblingWindow.ofProcessingTime(Time.seconds(5)))
+        builder.streamOf(bidSource).window(TumblingEventTimeWindow.ofProcessingTime(Time.seconds(5)))
             .ajoin(ps, b -> b.betterId, p -> p.id, (b, p) -> new Tuple1<>(p.name)
             ).to(sink).buildAsQuery();
   }

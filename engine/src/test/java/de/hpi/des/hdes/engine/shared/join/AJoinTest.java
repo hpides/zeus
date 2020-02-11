@@ -11,7 +11,7 @@ import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.window.Time;
-import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
+import de.hpi.des.hdes.engine.window.assigner.TumblingEventTimeWindow;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +37,7 @@ public class AJoinTest {
     final AStream<Integer> stream = builder.streamOf(source);
     final AStream<Integer> stream2 = builder.streamOf(source2);
 
-    stream.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
+    stream.window(new TumblingEventTimeWindow(Time.of(1000).getNanos()))
         .ajoin(stream2,
             i -> i,
             i -> i,
@@ -73,7 +73,7 @@ public class AJoinTest {
     final Set<Integer> resultSet = new HashSet<>();
     final Sink<Integer> sink = i -> resultSet.add(i.getValue());
 
-    stream.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
+    stream.window(new TumblingEventTimeWindow(Time.seconds(1).getNanos()))
         .ajoin(stream2,
             i -> i,
             i -> i,
@@ -88,7 +88,7 @@ public class AJoinTest {
     final Set<Integer> query2ResultSet = new HashSet<>();
     final Sink<Integer> query2Sink = i -> query2ResultSet.add(i.getValue());
 
-    query2Stream1.window(TumblingWindow.ofProcessingTime(Time.seconds(1)))
+    query2Stream1.window(new TumblingEventTimeWindow(Time.seconds(1).getNanos()))
         .ajoin(query2Stream2,
             i -> i,
             i -> i,

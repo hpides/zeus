@@ -4,12 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.io.ListSource;
-import de.hpi.des.hdes.engine.window.GlobalTimeWindow;
-import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
+import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.operation.Source;
 import de.hpi.des.hdes.engine.operation.StreamJoin;
 import de.hpi.des.hdes.engine.operation.StreamMap;
 import java.util.List;
+
+import de.hpi.des.hdes.engine.window.assigner.TumblingEventTimeWindow;
 import org.junit.jupiter.api.Test;
 
 class TopologyTest {
@@ -30,12 +31,16 @@ class TopologyTest {
     StreamMap<Integer, Integer> map2 = new StreamMap<>(x -> x + 2);
     UnaryOperationNode<Integer, Integer> mapNode2 = new UnaryOperationNode<>(map2);
 
-    StreamJoin<Integer, Integer, String, GlobalTimeWindow> join = new StreamJoin<>(
-        (x, y) -> "Matches: " + x + y,
-        Integer::equals,
-        GlobalWindow.create());
+    StreamJoin<Integer, Integer, Integer, Integer> join = new StreamJoin<>(
+      Integer::sum,
+      x -> x,
+      x -> x,
+      new TumblingEventTimeWindow(0),
+      new WatermarkGenerator<Integer>(0, 0),
+      x -> System.nanoTime()
+    );
 
-    BinaryOperationNode<Integer, Integer, String> joinNode = new BinaryOperationNode<>(join);
+    BinaryOperationNode<Integer, Integer, Integer> joinNode = new BinaryOperationNode<>(join);
 
     /*
      * sourceNode1 --> mapNode1

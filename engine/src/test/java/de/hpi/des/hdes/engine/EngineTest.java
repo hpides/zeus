@@ -10,13 +10,20 @@ import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import de.hpi.des.hdes.engine.stream.AStream;
+import de.hpi.des.hdes.engine.udf.Aggregator;
+import de.hpi.des.hdes.engine.window.Time;
+import de.hpi.des.hdes.engine.window.TimeWindow;
+import de.hpi.des.hdes.engine.window.WatermarkGenerator;
+import de.hpi.des.hdes.engine.window.assigner.TumblingEventTimeWindow;
+import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,36 +32,89 @@ import org.junit.jupiter.api.Timeout;
 @Slf4j
 class EngineTest {
 
-  public static final int ENGINE_TIMEOUT = 10;
+  public static final int ENGINE_TIMEOUT = 30;
 
   @Test
   @Timeout(ENGINE_TIMEOUT)
   void testLongQuery() throws InterruptedException {
-    final var list = new ArrayList<Integer>();
-    for (int i = 0; i < 1000; i++) {
-      list.add(i);
-    }
-    final var correctResult = List.copyOf(list).stream().map(i -> i + 1).filter(i -> i > 0)
-        .map(i -> List.of(i, i, i)).flatMap(Collection::stream).map(i -> i * 3).filter(i -> i > 10)
-        .collect(Collectors.toList());
+    final long eventCount = 10000;
+    final int keyCount = 1000;
 
-    final var sourceInt = new ListSource<>(list);
-    final LinkedList<Integer> results = new LinkedList<>();
+    final List<Integer> listS1 = new ArrayList<Integer>();
+    final List<Integer> listS2 = new ArrayList<Integer>();
+
+    for (int i = 0; i < eventCount; i++) {
+      int value = i % keyCount;
+      listS1.add(value);
+      listS2.add(value);
+    }
+
+
+    // for flushing windows of aggregation i.e. they are joined
+    listS1.add(1_000_000_000);
+    listS2.add(1_000_000_000);
+
+    // for flushing windows of join
+    listS1.add(1_000_000_001 + keyCount);
+    listS2.add(1_000_000_002 + keyCount);
+
+    final ListSource<Integer> sourceS1 =
+      new ListSource<>(listS1, new WatermarkGenerator<>(keyCount - 1, 1), e -> e);
+    final ListSource<Integer> sourceS2 =
+      new ListSource<>(listS2, new WatermarkGenerator<>(keyCount - 1, 1), e -> e);
+
+    final List<Integer> results = new LinkedList<>();
     final var sink = new ListSink<>(results);
     final var builder = new TopologyBuilder();
 
-    builder.streamOf(sourceInt).map(i -> i + 1).filter(i -> i > 0).map(i -> List.of(i, i, i))
-        .flatMap(i -> i).map(i -> i * 3).filter(i -> i > 10).to(sink);
-    final Query Q1 = new Query(builder.build());
+    AStream<Integer> stream1 = builder.streamOf(sourceS1).map(i -> i + 1).map(i -> i - 1);
+    AStream<Integer> stream2 = builder.streamOf(sourceS2).map(i -> i + 1).map(i -> i - 1);
+
+    stream1.window(TumblingWindow.ofEventTime(1))
+      .join(
+        stream2,
+        (i, j) -> i + j,
+        i -> i,
+        i -> i,
+        new WatermarkGenerator<>(keyCount, 1),
+        e -> e/2)
+      .window(TumblingEventTimeWindow.ofEventTime(1))
+      .groupBy(e -> e)
+      .aggregate(new Aggregator<Integer, Integer, Integer>() {
+        @Override
+        public Integer initialize() {
+          return 0;
+        }
+
+        @Override
+        public Integer add(Integer state, Integer input) {
+          return state + 1;
+        }
+
+        @Override
+        public Integer getResult(Integer result) {
+          return result;
+        }
+      }, new WatermarkGenerator<>(-1, -1), e -> e)
+      .to(sink);
+
+    final Query query = new Query(builder.build());
 
     final var engine = new Engine();
-    engine.addQuery(Q1);
+    engine.addQuery(query);
     engine.run();
-    while (!sourceInt.isDone() || results.size() != correctResult.size()) {
+//    long totalResultSize = (long) Math.pow(eventCount/keyCount, 2)*keyCount; // + 1 for flush event
+    long totalResultSize = keyCount;
+    log.debug("Total results: {}", totalResultSize);
+    while (!sourceS1.isDone() || results.size() != totalResultSize) {
+      log.debug("Results: {}", results.size());
+      log.debug("Results: {}", results);
       sleep(100);
     }
 
-    assertThat(results).containsExactlyElementsOf(correctResult);
+    for (int i = 0; i < keyCount ; i++) {
+      assertThat(results.get(i)).isEqualTo((int) Math.pow(eventCount/keyCount, 2));
+    }
   }
 
   @Test

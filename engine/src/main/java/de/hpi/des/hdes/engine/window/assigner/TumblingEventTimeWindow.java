@@ -5,7 +5,7 @@ import java.util.List;
 
 public class TumblingEventTimeWindow extends TumblingWindow {
 
-  protected TumblingEventTimeWindow(final long size) {
+  public TumblingEventTimeWindow(final long size) {
     super(size);
   }
 

@@ -11,7 +11,7 @@ import de.hpi.des.hdes.engine.JobManager;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.stream.AStream;
-import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
+
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;

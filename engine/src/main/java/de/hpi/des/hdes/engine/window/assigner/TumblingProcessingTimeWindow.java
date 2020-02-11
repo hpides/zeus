@@ -5,7 +5,7 @@ import java.util.List;
 
 public class TumblingProcessingTimeWindow extends TumblingWindow {
 
-  protected TumblingProcessingTimeWindow(final long size) {
+  public TumblingProcessingTimeWindow(final long size) {
     super(size);
   }
 

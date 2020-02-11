@@ -30,7 +30,7 @@ public class ExecutionConfig {
   @Getter
   public static class DevConfig implements RunConfig {
     private final int chunkSize = 10_000;
-    private final long flushIntervallNS = 100_000_000;
+    private final long flushIntervallNS = 10_000_000;
   }
 
   @Getter

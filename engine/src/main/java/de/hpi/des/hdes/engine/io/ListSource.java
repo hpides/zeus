@@ -1,20 +1,27 @@
 package de.hpi.des.hdes.engine.io;
 
-import de.hpi.des.hdes.engine.AData;
-import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
-import de.hpi.des.hdes.engine.operation.Source;
+import de.hpi.des.hdes.engine.operation.AbstractSource;
+import de.hpi.des.hdes.engine.udf.TimestampExtractor;
+import de.hpi.des.hdes.engine.window.WatermarkGenerator;
+
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.UUID;
 
-public class ListSource<OUT> extends AbstractTopologyElement<OUT> implements Source<OUT> {
+public class ListSource<OUT> extends AbstractSource<OUT> {
 
-  private final List<AData<OUT>> list;
+  private final List<OUT> list;
   private final String identifier;
   private int i = 0;
 
   public ListSource(final List<OUT> list) {
-    this.list = list.stream().map(AData::of).collect(Collectors.toList());
+    super(e -> 0L, new WatermarkGenerator<>(0, 1000));
+    this.list = list;
+    this.identifier = UUID.randomUUID().toString();
+  }
+
+  public ListSource(final List<OUT> list, WatermarkGenerator<OUT> watermarkGenerator, TimestampExtractor<OUT> timestampExtractor) {
+    super(timestampExtractor, watermarkGenerator);
+    this.list = list;
     this.identifier = UUID.randomUUID().toString();
   }
 
@@ -24,9 +31,11 @@ public class ListSource<OUT> extends AbstractTopologyElement<OUT> implements Sou
   }
 
   @Override
-  public void read() {
+  public OUT readEvent() {
     if (this.i < this.list.size()) {
-      this.collector.collect(this.list.get(this.i++));
+      return this.list.get(this.i++);
+    } else {
+      return null;
     }
   }
 

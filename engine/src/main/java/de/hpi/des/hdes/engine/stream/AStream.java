@@ -12,7 +12,6 @@ import de.hpi.des.hdes.engine.udf.Filter;
 import de.hpi.des.hdes.engine.udf.FlatMapper;
 import de.hpi.des.hdes.engine.udf.Mapper;
 import de.hpi.des.hdes.engine.window.Window;
-import de.hpi.des.hdes.engine.window.assigner.GlobalWindow;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 
 public class AStream<In> extends AbstractAStream<In> {
@@ -41,10 +40,6 @@ public class AStream<In> extends AbstractAStream<In> {
 
   public WindowedAStream<In> window(final WindowAssigner<? extends Window> window) {
     return new WindowedAStream<In>(this.builder, this.node, window);
-  }
-
-  public WindowedAStream<In> windowAll() {
-    return new WindowedAStream<In>(this.builder, this.node, GlobalWindow.create());
   }
 
   public TopologyBuilder to(final Sink<? super In> sink) {
