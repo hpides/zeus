@@ -2,7 +2,6 @@ package de.hpi.des.hdes.engine.execution;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
 import de.hpi.des.hdes.engine.execution.connector.ChunkedBuffer;
 import de.hpi.des.hdes.engine.execution.connector.QueueBuffer;
@@ -26,7 +25,7 @@ public class BufferTest {
     int max = 100_000;
     Runnable r1 = () -> {
       for (var i = 1; i <= max; i++) {
-        buffer.add(AData.of(i));
+        buffer.add(i);
       }
       try {
         Thread.sleep(ExecutionConfig.getConfig().getFlushIntervallMS());
@@ -42,7 +41,7 @@ public class BufferTest {
         var res = buffer.poll();
         if (res != null) {
           last = i;
-          i = res.getValue();
+          i = res;
           assertThat(i - 1).isEqualTo(last);
         }
       }
@@ -59,7 +58,7 @@ public class BufferTest {
     Buffer<Integer> buffer = clazz.getDeclaredConstructor().newInstance();
     Runnable r1 = () -> {
       for (var i = 1; i < ExecutionConfig.getConfig().getChunkSize(); i++) {
-        buffer.add(AData.of(i));
+        buffer.add(i);
       }
       try {
         Thread.sleep(ExecutionConfig.getConfig().getFlushIntervallMS());
@@ -75,7 +74,7 @@ public class BufferTest {
         var res = buffer.poll();
         if (res != null) {
           last = i;
-          i = res.getValue();
+          i = res;
           assertThat(i - 1).isEqualTo(last);
         }
       }
@@ -87,8 +86,6 @@ public class BufferTest {
    * Because we assert in a Callable object we need to check for potential assertion in its future's
    * results. As exceptions in threads are not immediately passed to the parent thread.
    *
-   * @param r1
-   * @param r2
    */
   private void awaitCompletion(Runnable r1, Runnable r2) {
     ExecutorService executor = Executors.newFixedThreadPool(2);

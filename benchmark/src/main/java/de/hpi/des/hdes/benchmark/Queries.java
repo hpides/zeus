@@ -6,20 +6,21 @@ import de.hpi.des.hdes.benchmark.nexmark.entities.Person;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.operation.Sink;
+import de.hpi.des.hdes.engine.udf.TimestampExtractor;
 import de.hpi.des.hdes.engine.window.Time;
-import de.hpi.des.hdes.engine.window.assigner.TumblingEventTimeWindow;
+import de.hpi.des.hdes.engine.window.WatermarkGenerator;
+import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple1;
 import org.jooq.lambda.tuple.Tuple4;
 
 public class Queries {
 
+  private Queries() {
+  }
+
   /**
    * Nooop query
-   *
-   * @param source
-   * @param sink
-   * @return
    */
   public static <T> Query makeQuery0(BlockingSource<T> source, Sink<T> sink) {
     return new Query(
@@ -70,10 +71,13 @@ public class Queries {
         .filter(p -> p.address.province.equals("Oregon"));
     // ein top builder per query
     return
-        builder.streamOf(auctionSource).filter(a -> a.category == 10).windowAll()
-            .join(ps, (a, p) -> new Tuple4<>(p.name,
-                    p.address.city, p.address.province, a.category),
-                (a, p) -> a.sellerId == p.id
+        builder.streamOf(auctionSource).filter(a -> a.category == 10)
+            .window(TumblingWindow.ofEventTime(Time.seconds(5)))
+            .join(ps,
+                (a, p) -> new Tuple4<>(p.name, p.address.city, p.address.province, a.category),
+                a -> a.sellerId,
+                p -> p.id, WatermarkGenerator.seconds(1, 10_000),
+                TimestampExtractor.currentTimeNS()
             ).to(sink).buildAsQuery();
   }
 
@@ -86,9 +90,11 @@ public class Queries {
     var ps = builder.streamOf(personSource);
     // ein top builder per query
     return
-        builder.streamOf(bidSource).windowAll()
+        builder.streamOf(bidSource).window(TumblingWindow.ofEventTime(Time.seconds(5)))
             .join(ps, (b, p) -> new Tuple1<>(p.name),
-                (b, p) -> true
+                b -> b.betterId, p -> p.id,
+                WatermarkGenerator.seconds(10, 10_000),
+                TimestampExtractor.currentTimeNS()
             ).to(sink).buildAsQuery();
   }
 
@@ -101,7 +107,8 @@ public class Queries {
     var ps = builder.streamOf(personSource);
     // ein top builder per query
     return
-        builder.streamOf(bidSource).window(TumblingEventTimeWindow.ofProcessingTime(Time.seconds(5)))
+        builder.streamOf(bidSource)
+            .window(TumblingWindow.ofProcessingTime(Time.seconds(5)))
             .ajoin(ps, b -> b.betterId, p -> p.id, (b, p) -> new Tuple1<>(p.name)
             ).to(sink).buildAsQuery();
   }

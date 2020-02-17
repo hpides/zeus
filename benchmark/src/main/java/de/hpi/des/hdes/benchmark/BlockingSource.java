@@ -1,32 +1,38 @@
 package de.hpi.des.hdes.benchmark;
 
-import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.execution.connector.SizedChunkedBuffer;
-import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
-import de.hpi.des.hdes.engine.operation.Source;
+import de.hpi.des.hdes.engine.operation.AbstractSource;
+import de.hpi.des.hdes.engine.udf.TimestampExtractor;
+import de.hpi.des.hdes.engine.window.Time;
+import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Getter
-public class BlockingSource<E> extends AbstractTopologyElement<E> implements Source<E> {
+public class BlockingSource<E> extends AbstractSource<E> {
 
   private final SizedChunkedBuffer<E> queue;
   private final UUID id;
 
-  public BlockingSource(int capacity) {
+  public BlockingSource(int capacity, TimestampExtractor<E> timestampExtractor,
+      WatermarkGenerator<E> watermarkGenerator) {
+    super(timestampExtractor, watermarkGenerator);
     this.queue = new SizedChunkedBuffer<>(capacity);
     this.id = UUID.randomUUID();
   }
 
-  public BlockingSource() {
-    this(Integer.MAX_VALUE);
+  public BlockingSource(int capacity) {
+    this(capacity, TimestampExtractor.currentTimeNS(),
+        new WatermarkGenerator<>(Time.seconds(1).getNanos(), 1000));
+
   }
+
 
   public void offer(E event) {
     try {
-      queue.add(AData.of(event));
+      queue.add(event);
     } catch (IllegalStateException e) {
       queue.drop();
       log.warn("Dropped input buffer of {}", event.getClass());
@@ -39,10 +45,7 @@ public class BlockingSource<E> extends AbstractTopologyElement<E> implements Sou
   }
 
   @Override
-  public void read() {
-    AData<E> event = queue.poll();
-    if (event != null) {
-      collector.collect(event);
-    }
+  public E readEvent() {
+    return queue.poll();
   }
 }

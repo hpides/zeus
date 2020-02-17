@@ -86,8 +86,8 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
     final Node parentNode2 = parents.next();
     final Slot<IN1> parent1Slot = this.outputSlots.get(parentNode1);
     final Slot<IN2> parent2Slot = this.outputSlots.get(parentNode2);
-    final Buffer<IN1> input1 = Buffer.create();
-    final Buffer<IN2> input2 = Buffer.create();
+    final Buffer<AData<IN1>> input1 = Buffer.createADataBuffer();
+    final Buffer<AData<IN2>> input2 = Buffer.createADataBuffer();
     parent1Slot.addOutput(binaryOperationNode, input1);
     parent2Slot.addOutput(binaryOperationNode, input2);
 

@@ -20,7 +20,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
 
   private final Map<Node, OneInputOperator<OUT, ?>> outOps = new ConcurrentHashMap<>();
   private final Map<Node, Sink<OUT>> outSinks = new ConcurrentHashMap<>();
-  private final Map<Node, Buffer<OUT>> outBuffer = new ConcurrentHashMap<>();
+  private final Map<Node, Buffer<AData<OUT>>> outBuffer = new ConcurrentHashMap<>();
   private final List<Slot<?>> children = new CopyOnWriteArrayList<>();
   private final List<Map<Node, ?>> outputs = List.of(this.outOps, this.outSinks, this.outBuffer);
 
@@ -39,7 +39,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
     this.outSinks.put(node, sink);
   }
 
-  public void addOutput(final Node node, final Buffer<OUT> buffer) {
+  public void addOutput(final Node node, final Buffer<AData<OUT>> buffer) {
     log.debug("Add buffer {} for node {} in slot {}", buffer, node, this);
     this.outBuffer.put(node, buffer);
   }

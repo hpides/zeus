@@ -1,6 +1,5 @@
 package de.hpi.des.hdes.engine.execution.connector;
 
-import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -8,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.Nullable;
 
 @Log4j2
 public class ChunkedBuffer<IN> implements Buffer<IN> {
@@ -16,9 +14,9 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
 
   protected int chunkSize = ExecutionConfig.getConfig().getChunkSize();
   protected final long flushIntervall = ExecutionConfig.getConfig().getFlushIntervallNS(); // in ns
-  protected ArrayDeque<AData<IN>> inChunk;
-  protected ArrayDeque<AData<IN>> outChunk;
-  protected final LinkedBlockingQueue<ArrayDeque<AData<IN>>> queue;
+  protected final LinkedBlockingQueue<ArrayDeque<IN>> queue;
+  protected ArrayDeque<IN> inChunk;
+  protected ArrayDeque<IN> outChunk;
   protected long nextFlushTime;
 
 
@@ -28,9 +26,8 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
     this.queue = new LinkedBlockingQueue<>();
   }
 
-  @Nullable
   @Override
-  public AData<IN> poll() {
+  public IN poll() {
     if (!this.outChunk.isEmpty()) {
       return this.outChunk.poll();
     } else {
@@ -50,7 +47,7 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   }
 
   @Override
-  public void add(final AData<IN> val) {
+  public void add(final IN val) {
     this.inChunk.add(val);
     if (this.inChunk.size() >= this.chunkSize) {
       this.flush();
@@ -82,9 +79,11 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
 
   /**
    * Exists just for test purposes. Contains race conditions
+   *
+   * @return List of all elements in the Buffer, including those in the internal buffers and queue.
    */
   @Override
-  public List<AData<IN>> unsafePollAll() {
+  public List<IN> unsafePollAll() {
     this.flush();
     final var flattenedQueue = new ArrayList<>(this.outChunk);
     this.queue.forEach(flattenedQueue::addAll);

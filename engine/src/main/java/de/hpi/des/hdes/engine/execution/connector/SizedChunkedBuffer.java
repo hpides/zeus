@@ -1,9 +1,7 @@
 package de.hpi.des.hdes.engine.execution.connector;
 
-import de.hpi.des.hdes.engine.AData;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.log4j.Log4j2;
-import org.jetbrains.annotations.Nullable;
 
 @Log4j2
 public class SizedChunkedBuffer<IN> extends ChunkedBuffer<IN> {
@@ -24,9 +22,10 @@ public class SizedChunkedBuffer<IN> extends ChunkedBuffer<IN> {
   }
 
   @Override
-  public void add(final AData<IN> val) {
+  public void add(final IN val) {
     if (this.currentSize.get() > this.maxSize) {
-      throw new IllegalStateException(String.format("Queue is full. Size is %d", this.currentSize.get()));
+      throw new IllegalStateException(
+          String.format("Queue is full. Size is %d", this.currentSize.get()));
     }
     this.currentSize.incrementAndGet();
     super.add(val);
@@ -41,10 +40,9 @@ public class SizedChunkedBuffer<IN> extends ChunkedBuffer<IN> {
     this.currentSize.set(0);
   }
 
-  @Nullable
   @Override
-  public AData<IN> poll() {
-    final AData<IN> pollResult = super.poll();
+  public IN poll() {
+    final IN pollResult = super.poll();
     if (pollResult != null) {
       this.currentSize.decrementAndGet();
     }

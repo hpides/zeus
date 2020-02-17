@@ -20,8 +20,6 @@ import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 
-import java.util.function.BiPredicate;
-
 public class WindowedAStream<In> extends AbstractAStream<In> {
 
   private final WindowAssigner<? extends Window> windowAssigner;

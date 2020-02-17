@@ -6,6 +6,7 @@ import lombok.Getter;
 
 @Getter
 public class WatermarkGenerator<T> {
+
   private long lateness;
   private long interval;
   private long eventCount = 0;
@@ -13,6 +14,10 @@ public class WatermarkGenerator<T> {
   public WatermarkGenerator(long lateness, long interval) {
     this.lateness = lateness;
     this.interval = interval;
+  }
+
+  public static <T> WatermarkGenerator<T> seconds(long secondsLateness, long interval) {
+    return new WatermarkGenerator<>(Time.seconds(secondsLateness).getNanos(), interval);
   }
 
   public AData<T> apply(AData<T> event) {

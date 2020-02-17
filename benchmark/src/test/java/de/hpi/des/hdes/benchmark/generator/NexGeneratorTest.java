@@ -47,11 +47,11 @@ public class NexGeneratorTest {
       e.printStackTrace();
     }
     Seq.seq(personSource.getQueue().unsafePollAll()).zip(personSource2.getQueue().unsafePollAll())
-        .forEach(t -> assertThat(t.v1.getValue()).isEqualTo(t.v2.getValue()));
+        .forEach(t -> assertThat(t.v1).isEqualTo(t.v2));
     Seq.seq(auctionSource.getQueue().unsafePollAll()).zip(auctionSource2.getQueue().unsafePollAll())
-        .forEach(t -> assertThat(t.v1.getValue()).isEqualTo(t.v2.getValue()));
+        .forEach(t -> assertThat(t.v1).isEqualTo(t.v2));
     Seq.seq(bidSource.getQueue().unsafePollAll()).zip(bidSource2.getQueue().unsafePollAll())
-        .forEach(t -> assertThat(t.v1.getValue()).isEqualTo(t.v2.getValue()));
+        .forEach(t -> assertThat(t.v1).isEqualTo(t.v2));
 
   }
 
@@ -90,11 +90,11 @@ public class NexGeneratorTest {
       e.printStackTrace();
     }
     Seq.seq(personSource.getQueue().unsafePollAll()).zip(personSource2.getQueue().unsafePollAll())
-        .forEach(t -> assertThat(t.v1.getValue()).isEqualTo(t.v2.getValue()));
+        .forEach(t -> assertThat(t.v1).isEqualTo(t.v2));
     Seq.seq(auctionSource.getQueue().unsafePollAll()).zip(auctionSource2.getQueue().unsafePollAll())
-        .forEach(t -> assertThat(t.v1.getValue()).isEqualTo(t.v2.getValue()));
+        .forEach(t -> assertThat(t.v1).isEqualTo(t.v2));
     Seq.seq(bidSource.getQueue().unsafePollAll()).zip(bidSource2.getQueue().unsafePollAll())
-        .forEach(t -> assertThat(t.v1.getValue()).isEqualTo(t.v2.getValue()));
+        .forEach(t -> assertThat(t.v1).isEqualTo(t.v2));
 
   }
 

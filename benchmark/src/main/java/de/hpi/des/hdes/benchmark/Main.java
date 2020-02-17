@@ -11,7 +11,10 @@ import de.hpi.des.hdes.engine.JobManager;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.stream.AStream;
-
+import de.hpi.des.hdes.engine.udf.TimestampExtractor;
+import de.hpi.des.hdes.engine.window.Time;
+import de.hpi.des.hdes.engine.window.WatermarkGenerator;
+import de.hpi.des.hdes.engine.window.assigner.TumblingEventTimeWindow;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -55,7 +58,6 @@ public class Main implements Runnable {
   }
 
   public void runNexmark() {
-
     final var personSource = new BlockingSource<Person>(
         (int) (personFraction * eventsPerSecond * maxDelayInSeconds));
     final var auctionSource = new BlockingSource<Auction>(
@@ -155,8 +157,10 @@ public class Main implements Runnable {
         .map(e -> new Tuple1<>(e.v1.charAt(rand.nextInt(e.v1.length() - 1))))
         .map(e -> new Tuple1<>(((int) e.v1) % 10))
         .filter(e -> e.v1 != 5)
-        .window(new GlobalWindow())
-        .join(streamA, (a, b) -> new Tuple1<>(a.v1 + b.v1), (a, b) -> true);
+        .window(new TumblingEventTimeWindow(Time.seconds(10).getNanos()))
+        .join(streamA, (a, b) -> new Tuple1<>(a.v1 + b.v1), a -> a.v1, b -> b.v1,
+            WatermarkGenerator.seconds(5, 10_000),
+            TimestampExtractor.currentTimeNS());
 
     Query query = new Query(streamA.to(sink).build());
 

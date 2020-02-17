@@ -25,7 +25,7 @@ public class BenchmarkingSink<E> implements Sink<E> {
     long checkEvery = 1_000;
     if (totalCount % checkEvery == 0) {
       long currentTime = System.nanoTime();
-      var ingestionTime = in.getIngestionTime();
+      var ingestionTime = in.getEventTime();
       if (ingestionTime == 0) {
         return;
       }

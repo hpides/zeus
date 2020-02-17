@@ -6,26 +6,33 @@ import org.jetbrains.annotations.Nullable;
 
 public interface Buffer<IN> {
 
+  static <IN> Buffer<AData<IN>> createADataBuffer() {
+    return new ChunkedBuffer<>();
+  }
+
+  static <IN> Buffer<IN> create() {
+    return new ChunkedBuffer<>();
+  }
+
   /**
    * @return The next value from the buffer or null
    */
   @Nullable
-  AData<IN> poll();
-
+  IN poll();
 
   /**
    * @return All the values currently in the buffer. This might, however, not be thread save and
    * should only be used with cation in testing.
    */
-  List<AData<IN>> unsafePollAll();
+  List<IN> unsafePollAll();
 
-  void add(AData<IN> val);
-
-  default void flush(){}
-
-  default void flushIfTimeout(){}
-
-  static <IN> Buffer<IN> create(){
-    return new ChunkedBuffer<>();
+  default void flush() {
   }
+
+  default void flushIfTimeout() {
+  }
+
+  void add(IN val);
+
+
 }
