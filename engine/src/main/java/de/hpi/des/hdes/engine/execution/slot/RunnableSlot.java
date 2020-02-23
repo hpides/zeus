@@ -34,7 +34,7 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
   public void remove(final Query query) {
     super.remove(query);
     // if there are no downstream processor left, we can shutdown the slot
-    if (this.getOutputs().stream().allMatch(Map::isEmpty)) {
+    if (this.hasNoOutput()) {
       log.debug("Shutdown slot {}", this);
       this.shutdown();
     }

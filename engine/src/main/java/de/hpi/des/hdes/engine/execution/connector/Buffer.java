@@ -1,10 +1,11 @@
 package de.hpi.des.hdes.engine.execution.connector;
 
 import de.hpi.des.hdes.engine.AData;
+import de.hpi.des.hdes.engine.execution.SlotProcessor;
 import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
-public interface Buffer<IN> {
+public interface Buffer<IN> extends SlotProcessor<IN> {
 
   static <IN> Buffer<AData<IN>> createADataBuffer() {
     return new ChunkedBuffer<>();
@@ -34,5 +35,9 @@ public interface Buffer<IN> {
 
   void add(IN val);
 
+  @Override
+  default void sendDownstream(IN event) {
+    this.add(event);
+  }
 
 }
