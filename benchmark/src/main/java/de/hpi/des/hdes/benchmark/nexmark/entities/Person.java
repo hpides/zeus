@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.benchmark.nexmark.entities;
 
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public final class Person {
+public final class Person implements Serializable {
 
   public long id;
   public String name;

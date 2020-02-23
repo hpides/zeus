@@ -76,7 +76,7 @@ public class Queries {
             .join(ps,
                 (a, p) -> new Tuple4<>(p.name, p.address.city, p.address.province, a.category),
                 a -> a.sellerId,
-                p -> p.id, WatermarkGenerator.seconds(1, 10_000),
+                p -> p.id, WatermarkGenerator.seconds(0, 1),
                 TimestampExtractor.currentTimeNS()
             ).to(sink).buildAsQuery();
   }
@@ -84,16 +84,16 @@ public class Queries {
   /**
    * Select person.name from bid, person where person.id = bid.betterid
    */
-  public static Query makePlainJoin(BlockingSource<Person> personSource,
+  public static Query makePlainJoin(BlockingSource<Auction> auctionSource,
       BlockingSource<Bid> bidSource, BenchmarkingSink<Tuple> sink) {
     var builder = new TopologyBuilder();
-    var ps = builder.streamOf(personSource);
+    var as = builder.streamOf(auctionSource);
     // ein top builder per query
     return
-        builder.streamOf(bidSource).window(TumblingWindow.ofEventTime(Time.seconds(5)))
-            .join(ps, (b, p) -> new Tuple1<>(p.name),
-                b -> b.betterId, p -> p.id,
-                WatermarkGenerator.seconds(10, 10_000),
+        builder.streamOf(bidSource).window(TumblingWindow.ofEventTime(Time.seconds(10)))
+            .join(as, (b, p) -> new Tuple1<>(p.id),
+                b -> b.auctionId, p -> p.id,
+                WatermarkGenerator.seconds(1, 10_000),
                 TimestampExtractor.currentTimeNS()
             ).to(sink).buildAsQuery();
   }

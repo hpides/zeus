@@ -8,6 +8,7 @@ import de.hpi.des.hdes.benchmark.nexmark.entities.Person;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -24,8 +25,11 @@ public class InMemoryNexGenerator {
   private final double fractionPersons;
   private final double fractionAction;
   private final double fractionBid;
+  @Getter
   private final ArrayList<Person> personBuffer = new ArrayList<>(1_000_000);
+  @Getter
   private final ArrayList<Auction> auctionBuffer = new ArrayList<>(1_000_000);
+  @Getter
   private final ArrayList<Bid> bidBuffer = new ArrayList<>(1_000_000);
 
 

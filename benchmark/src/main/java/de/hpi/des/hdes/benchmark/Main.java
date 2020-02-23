@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
 import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple1;
 import org.jooq.lambda.tuple.Tuple2;
@@ -75,7 +76,7 @@ public class Main implements Runnable {
     } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
-    log.info("Running with {} EPS, {}s max delay for {}s.",
+    log.printf(Level.INFO, "Running with %,d EPS, %ds max delay for %ds.",
         eventsPerSecond, maxDelayInSeconds, timeInSeconds);
     long startTime = System.nanoTime();
     var q0Sink = new BenchmarkingSink<Person>();
@@ -90,9 +91,9 @@ public class Main implements Runnable {
     var q3 = Queries.makeQuery3(personSource, auctionSource, q3Sink);
 
     var q4Sink = new BenchmarkingSink<Tuple>();
-    var q4 = Queries.makeAJoin(personSource, bidSource, q4Sink);
+    var q4 = Queries.makePlainJoin(auctionSource, bidSource, q4Sink);
     var q5Sink = new BenchmarkingSink<Tuple>();
-    var q5 = Queries.makeAJoin(personSource, bidSource, q5Sink);
+    var q5 = Queries.makePlainJoin(auctionSource, bidSource, q5Sink);
 
     var querySinks = List.of(q0Sink, q00Sink, q1Sink, q2Sink, q3Sink, q4Sink, q5Sink);
     var jobManager = new JobManager();
@@ -105,7 +106,7 @@ public class Main implements Runnable {
     //jobManager.addQuery(q3);
 
     jobManager.addQuery(q4);
-    jobManager.addQuery(q5);
+    //jobManager.addQuery(q5);
     jobManager.runEngine();
 
     //jobManager.deleteQuery(q2, 10, ChronoUnit.SECONDS);
@@ -123,7 +124,7 @@ public class Main implements Runnable {
     jobManager.shutdown();
     querySinks.forEach(qs -> {
       log.info("Latency {} Milliseconds", qs.getIngestionLatency());
-      log.info("Total Tuples {}", qs.getTotalCount());
+      log.printf(Level.INFO, "Total Tuples %,d", qs.getTotalCount());
     });
 
   }
