@@ -65,7 +65,7 @@ public class Engine {
   public synchronized void deleteQuery(final Query query) {
     // We synchronize this method to avoid problems when multiple queries are added or
     // deleted at the same time
-    if (!this.isRunning || this.plan.getTopology().getNodes().isEmpty()) {
+    if (this.plan.getTopology().getNodes().isEmpty()) {
       throw new UnsupportedOperationException("There are no queries");
     }
     this.plan = this.plan.delete(query);
