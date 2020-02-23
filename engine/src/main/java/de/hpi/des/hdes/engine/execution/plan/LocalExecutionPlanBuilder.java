@@ -17,9 +17,7 @@ import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.operation.Source;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -27,23 +25,32 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LocalExecutionPlanBuilder implements NodeVisitor {
 
-  private final Map<Node, Slot> outputSlots = new HashMap<>();
-  private final List<Slot<?>> slots = new LinkedList<>();
+  private final Topology topology;
+  private final List<Slot<?>> slots;
+  private final Map<Node, Slot<?>> outputSlots;
 
-  public List<Slot<?>> build(final Query query) {
-    final List<Node> sortedNodes = query.getTopology().getTopologicalOrdering();
-    for (final Node node : sortedNodes) {
-      node.accept(this);
-    }
-    return this.slots;
+  public LocalExecutionPlanBuilder(final Topology topology, final List<Slot<?>> slots,
+      final Map<Node, Slot<?>> outputSlots) {
+    this.topology = topology;
+    this.slots = slots;
+    this.outputSlots = outputSlots;
   }
 
-  public List<Slot<?>> build(final Topology topology) {
-    final List<Node> sortedNodes = topology.getTopologicalOrdering();
+  public LocalExecutionPlanBuilder(final ExecutionPlan oldPlan) {
+    this(oldPlan.getTopology(), oldPlan.getSlots(), oldPlan.getOutputSlotMap());
+  }
+
+  public ExecutionPlan build(final Topology queryTopology) {
+    final List<Node> sortedNodes = queryTopology.getTopologicalOrdering();
     for (final Node node : sortedNodes) {
       node.accept(this);
     }
-    return this.slots;
+    final Topology updated = this.topology.extend(queryTopology);
+    return new ExecutionPlan(updated, this.slots, this.outputSlots);
+  }
+
+  public ExecutionPlan build(final Query query) {
+    return this.build(query.getTopology());
   }
 
   @Override
@@ -58,7 +65,7 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
   @Override
   public <IN> void visit(final SinkNode<IN> sinkNode) {
     final Node parent = sinkNode.getParents().iterator().next();
-    final Slot<IN> parentSlot = this.outputSlots.get(parent);
+    final Slot<IN> parentSlot = this.getParentSlot(parent);
     parentSlot.addOutput(sinkNode, sinkNode.getSink());
   }
 
@@ -66,7 +73,7 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
   public <IN, OUT> void visit(final UnaryOperationNode<IN, OUT> unaryOperationNode) {
     final OneInputOperator<IN, OUT> operator = unaryOperationNode.getOperator();
     final Node parentNode = unaryOperationNode.getParents().iterator().next();
-    final Slot<IN> parentSlot = this.outputSlots.get(parentNode);
+    final Slot<IN> parentSlot = this.getParentSlot(parentNode);
 
     final OneInputPushSlot<IN, OUT> slot = new OneInputPushSlot<>(parentSlot, operator,
         unaryOperationNode);
@@ -84,8 +91,8 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
     final Iterator<Node> parents = binaryOperationNode.getParents().iterator();
     final Node parentNode1 = parents.next();
     final Node parentNode2 = parents.next();
-    final Slot<IN1> parent1Slot = this.outputSlots.get(parentNode1);
-    final Slot<IN2> parent2Slot = this.outputSlots.get(parentNode2);
+    final Slot<IN1> parent1Slot = this.getParentSlot(parentNode1);
+    final Slot<IN2> parent2Slot = this.getParentSlot(parentNode2);
     final Buffer<AData<IN1>> input1 = Buffer.createADataBuffer();
     final Buffer<AData<IN2>> input2 = Buffer.createADataBuffer();
     parent1Slot.addOutput(binaryOperationNode, input1);
@@ -99,5 +106,10 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
 
     this.outputSlots.put(binaryOperationNode, slot);
     this.slots.add(slot);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <IN> Slot<IN> getParentSlot(final Node parent) {
+    return (Slot<IN>) this.outputSlots.get(parent);
   }
 }

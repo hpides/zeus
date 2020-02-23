@@ -2,7 +2,6 @@ package de.hpi.des.hdes.engine;
 
 import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
-import de.hpi.des.hdes.engine.shared.join.node.AJoinNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -12,10 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Engine {
 
+  private final List<Query> runningQueries = new ArrayList<>();
+
   private ExecutionPlan plan;
   private final ExecutorService executor;
   private boolean isRunning;
-  private List<Query> runningQueries = new ArrayList<>();
 
   public Engine() {
     this.plan = ExecutionPlan.emptyExecutionPlan();
@@ -38,16 +38,7 @@ public class Engine {
   public synchronized void addQuery(final Query query) {
     // We synchronize this method to avoid problems when multiple queries are added or
     // deleted at the same time
-    final ExecutionPlan extendedPlan = this.plan.extend(query);
-    // find AJoins that are already part of the topology and append output from new query
-    for (final AJoinNode<?, ?, ?> aJoinNode : query.getTopology().getAJoinNodes()) {
-      for (final RunnableSlot runnableSlot : this.plan.getRunnableSlots()) {
-        if (runnableSlot.getTopologyNode().equals(aJoinNode)) {
-          runnableSlot.addOutput(aJoinNode, aJoinNode.getSink());
-        }
-      }
-    }
-
+    final ExecutionPlan extendedPlan = ExecutionPlan.extend(this.plan, query);;
     if (this.isRunning) {
       extendedPlan.getRunnableSlots()
           .stream()
@@ -68,7 +59,7 @@ public class Engine {
     if (this.plan.getTopology().getNodes().isEmpty()) {
       throw new UnsupportedOperationException("There are no queries");
     }
-    this.plan = this.plan.delete(query);
+    this.plan = ExecutionPlan.delete(this.plan, query);
     this.runningQueries.remove(query);
   }
 

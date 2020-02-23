@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Timeout;
 public class AJoinTest {
 
   @Test
-  @Timeout(5)
+  @Timeout(10)
   void testAJoin() throws InterruptedException {
     final List<Integer> list = List.of(1, 2, 3);
     final ListSource<Integer> source = new ListSource<>(list);
@@ -57,7 +57,7 @@ public class AJoinTest {
   }
 
   @Test
-  @Timeout(5)
+  @Timeout(10)
   void testQuerySharing() throws InterruptedException {
     final List<Integer> listSource1 = List.of(4, 5, 6);
     final List<Integer> listSource2 = List.of(4, 5, 6);

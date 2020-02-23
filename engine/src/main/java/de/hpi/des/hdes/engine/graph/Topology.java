@@ -1,14 +1,13 @@
 package de.hpi.des.hdes.engine.graph;
 
 import com.google.common.collect.Sets;
-import de.hpi.des.hdes.engine.shared.join.node.AJoinNode;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +19,18 @@ public class Topology {
 
   public Topology(final Set<Node> nodes) {
     this.nodes = nodes;
+  }
+
+  public Topology() {
+    this(new HashSet<>());
+  }
+
+  public static Topology emptyTopology() {
+    return new Topology();
+  }
+
+  public static Topology of(final Set<Node> nodes) {
+    return new Topology(nodes);
   }
 
   public Topology extend(final Topology other) {
@@ -44,20 +55,6 @@ public class Topology {
     }
 
     return result;
-  }
-
-  public List<SourceNode<?>> getSourceNodes() {
-    return this.nodes.stream()
-        .filter(node -> node instanceof SourceNode)
-        .map(node -> (SourceNode<?>) node)
-        .collect(Collectors.toList());
-  }
-
-  public List<AJoinNode<?, ?, ?>> getAJoinNodes() {
-    return this.nodes.stream()
-        .filter(node -> node instanceof AJoinNode)
-        .map(node -> (AJoinNode<?, ?, ?>) node)
-        .collect(Collectors.toList());
   }
 
   /**

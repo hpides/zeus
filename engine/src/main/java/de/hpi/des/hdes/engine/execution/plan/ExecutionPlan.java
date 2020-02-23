@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.execution.plan;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
@@ -7,57 +9,27 @@ import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.Topology;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Data;
 
-@Slf4j
-public final class ExecutionPlan {
+@Data
+public class ExecutionPlan {
 
-  private final LocalExecutionPlanBuilder builder;
   private final Topology topology;
   private final List<Slot<?>> slots;
+  private final Map<Node, Slot<?>> outputSlotMap;
 
-  private ExecutionPlan(final Topology topology, final List<Slot<?>> slots,
-      final LocalExecutionPlanBuilder builder) {
+  public ExecutionPlan(final Topology topology, final List<Slot<?>> slots,
+      final Map<Node, Slot<?>> outputSlotMap) {
     this.topology = topology;
     this.slots = slots;
-    this.builder = builder;
+    this.outputSlotMap = outputSlotMap;
   }
 
-  public static ExecutionPlan emptyExecutionPlan() {
-    return new ExecutionPlan(new Topology(Set.of()), List.of(), new LocalExecutionPlanBuilder());
-  }
-
-  public ExecutionPlan extend(final Query query) {
-    final Set<Node> topologyNodes = this.topology.getNodes();
-    final Topology queryTopology = query.getTopology();
-    topologyNodes.forEach(node -> {
-      // store associated query in node for later deletion
-      // only works this way cause we have to change the actual nodes in the current topology
-      if (queryTopology.getNodes().contains(node)) {
-        node.addAssociatedQuery(query);
-      }
-    });
-    final Set<Node> toBeSubmitted = Sets.difference(queryTopology.getNodes(), topologyNodes);
-    toBeSubmitted.forEach(node -> node.addAssociatedQuery(query));
-    final List<Slot<?>> newSlots = List.copyOf(this.builder.build(new Topology(toBeSubmitted)));
-    final Topology newTopology = this.topology.extend(queryTopology);
-    return new ExecutionPlan(newTopology, newSlots, this.builder);
-  }
-
-  public ExecutionPlan delete(final Query query) {
-    this.slots.forEach(slot -> slot.remove(query));
-    final List<Slot<?>> runningSlots = this.slots.stream().filter(slot -> !slot.isShutdown())
-        .collect(Collectors.toList());
-
-    this.topology.getNodes().forEach(node -> node.removeAssociatedQuery(query));
-
-    final Set<Node> currentNodes = this.topology.getNodes().stream()
-        .filter(node -> !node.getAssociatedQueries().isEmpty())
-        .collect(Collectors.toSet());
-
-    return new ExecutionPlan(new Topology(currentNodes), runningSlots, this.builder);
+  private ExecutionPlan() {
+    this(Topology.emptyTopology(), Lists.newArrayList(), Maps.newHashMap());
   }
 
   public List<RunnableSlot<?>> getRunnableSlots() {
@@ -67,11 +39,49 @@ public final class ExecutionPlan {
         .collect(Collectors.toList());
   }
 
-  public Topology getTopology() {
-    return this.topology;
+  public static ExecutionPlan emptyExecutionPlan() {
+    return new ExecutionPlan();
   }
 
-  public List<Slot<?>> getSlots() {
-    return this.slots;
+  public static ExecutionPlan extend(final ExecutionPlan executionPlan, final Query query) {
+    final Set<Node> topologyNodes = executionPlan.getTopology().getNodes();
+    final Topology queryTopology = query.getTopology();
+    topologyNodes.forEach(node -> {
+      // store associated query in node for later deletion
+      // only works this way cause we have to change the actual nodes in the current topology
+      if (queryTopology.getNodes().contains(node)) {
+        node.addAssociatedQuery(query);
+      }
+    });
+    final Set<Node> newNodes = Sets.difference(queryTopology.getNodes(), topologyNodes);
+    newNodes.forEach(node -> node.addAssociatedQuery(query));
+    final LocalExecutionPlanBuilder planBuilder = new LocalExecutionPlanBuilder(executionPlan);
+    return planBuilder.build(Topology.of(newNodes));
+  }
+
+  public static ExecutionPlan createPlan(final Query query) {
+    return extend(emptyExecutionPlan(), query);
+  }
+
+  public static ExecutionPlan delete(final ExecutionPlan executionPlan, final Query query) {
+    final List<Slot<?>> slots = executionPlan.getSlots();
+    final Set<Node> nodes = executionPlan.getTopology().getNodes();
+
+    // this will shutdown a slot when there are no more associated queries
+    slots.forEach(slot -> slot.remove(query));
+    final List<Slot<?>> runningSlots = slots.stream()
+        .filter(slot -> !slot.isShutdown())
+        .collect(Collectors.toList());
+
+    // keep only nodes associated with a query
+    final Set<Node> currentNodes = nodes.stream()
+        .filter(node -> !node.getAssociatedQueries().isEmpty())
+        .collect(Collectors.toSet());
+
+    // keep only the outputs of members of the topology
+    final Map<Node, Slot<?>> outputSlotMap = Maps.newHashMap(executionPlan.getOutputSlotMap());
+    outputSlotMap.keySet().retainAll(currentNodes);
+
+    return new ExecutionPlan(Topology.of(currentNodes), runningSlots, outputSlotMap);
   }
 }
