@@ -1,7 +1,6 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
 import de.hpi.des.hdes.engine.Query;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,13 +20,22 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
 
   @Override
   public void run() {
-    this.running = true;
-    while (!Thread.currentThread().isInterrupted() && !this.shutdownFlag) {
-      this.runStep();
-      this.tick();
+    try {
+      this.running = true;
+      while (!Thread.currentThread().isInterrupted() && !this.shutdownFlag) {
+        this.runStep();
+        this.tick();
+      }
+      log.debug("Stopped running {}", this);
+      this.running = false;
+    } catch (Exception e) {
+      log.error("Slot had an exception");
+      log.error(e.getMessage());
+      log.error(e.toString());
+      e.printStackTrace();
+
+      throw e;
     }
-    log.debug("Stopped running {}", this);
-    this.running = false;
   }
 
   @Override

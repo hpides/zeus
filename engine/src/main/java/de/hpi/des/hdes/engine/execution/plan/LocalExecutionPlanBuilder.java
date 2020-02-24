@@ -77,12 +77,14 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
 
     final OneInputPushSlot<IN, OUT> slot = new OneInputPushSlot<>(parentSlot, operator,
         unaryOperationNode);
-    parentSlot.addChild(slot);
-    parentSlot.addOutput(unaryOperationNode, operator);
+
     operator.init(slot);
 
     this.outputSlots.put(unaryOperationNode, slot);
     this.slots.add(slot);
+
+    parentSlot.addChild(slot);
+    parentSlot.addOutput(unaryOperationNode, operator);
   }
 
   @Override
