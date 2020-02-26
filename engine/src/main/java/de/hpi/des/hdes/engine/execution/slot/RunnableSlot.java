@@ -29,11 +29,7 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
       log.debug("Stopped running {}", this);
       this.running = false;
     } catch (Exception e) {
-      log.error("Slot had an exception");
-      log.error(e.getMessage());
-      log.error(e.toString());
-      e.printStackTrace();
-
+      log.error("Slot had an exception: ", e);
       throw e;
     }
   }
@@ -48,6 +44,7 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
     }
   }
 
+  @Override
   public boolean isShutdown() {
     return this.shutdownFlag;
   }

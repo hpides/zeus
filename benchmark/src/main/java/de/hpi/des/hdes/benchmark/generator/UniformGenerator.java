@@ -5,9 +5,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
 
-@Slf4j
+@Log4j2
 @RequiredArgsConstructor
 public abstract class UniformGenerator<E> implements Generator<E> {
 
@@ -55,21 +56,29 @@ public abstract class UniformGenerator<E> implements Generator<E> {
       for (int i = 0; i < eventsToBeSent; i++) {
         if (benchmarkCheckpointCounter % benchmarkCheckpointInterval == 0) {
           blockingSource.offer(this.generateEvent(true));
-          log.trace("Events to be sent {}", eventsToBeSent);
-          log.trace("Current Queue Size {}", blockingSource.getQueue().size());
+//          log.trace("Events to be sent {}", eventsToBeSent);
+//          log.trace("Current Queue Size {}", blockingSource.getQueue().size());
         } else {
           blockingSource.offer(this.generateEvent(false));
         }
         benchmarkCheckpointCounter++;
       }
 
-      log.debug("Sent events: {}", sentEvents);
-      log.debug("Missing events: {}", missingEvents);
+//      log.trace("Sent events: {}", sentEvents);
+//      log.trace("Missing events: {}", missingEvents);
       sentEvents += eventsToBeSent;
+      if (eventsToBeSent == 1) {
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
     }
 
-    log.info("Finished generating events.");
+    log.printf(Level.INFO, "Finished generating events. Sent %,d events", sentEvents);
     blockingSource.getQueue().flush();
+    this.shutdown();
     return true;
   }
 

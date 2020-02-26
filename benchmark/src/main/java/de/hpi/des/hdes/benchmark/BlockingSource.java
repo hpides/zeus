@@ -24,7 +24,7 @@ public class BlockingSource<E> extends AbstractSource<E> {
 
   public BlockingSource(int capacity) {
     this(capacity, TimestampExtractor.currentTimeNS(),
-        WatermarkGenerator.milliseconds(100, 100));
+        WatermarkGenerator.milliseconds(0, 100));
 
   }
 

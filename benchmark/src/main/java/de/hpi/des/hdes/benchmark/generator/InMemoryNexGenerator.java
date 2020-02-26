@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
 
 
 @Log4j2
@@ -104,11 +105,15 @@ public class InMemoryNexGenerator {
 
       sentEvents += sentPersons + sentAuctions + sentBids;
     }
-    log.info("Sent {} events", sentEvents);
+    log.printf(Level.INFO, "Sent %,d events", sentEvents);
+    log.printf(Level.INFO, "Sent  %,d persons", personIndex);
+    log.printf(Level.INFO, "Sent  %,d bids", bidsIndex);
+    log.printf(Level.INFO, "Sent  %,d auctions", auctionIndex);
+
     this.personSource.getQueue().flush();
     this.auctionSource.getQueue().flush();
     this.bidSource.getQueue().flush();
-    log.info("Finished generating events.");
+    log.info("Finished sending events.");
 
     return true;
 
@@ -117,7 +122,7 @@ public class InMemoryNexGenerator {
   private <T> long send(int nrEvents, ArrayList<T> buffer, int index,
       BlockingSource<T> source) {
     if (nrEvents >= 1) {
-      for (int i = 0; i < nrEvents; i++) {
+      for (int i = 0; i < nrEvents && index < buffer.size(); i++) {
         source.offer(buffer.get(index++));
       }
       return nrEvents;

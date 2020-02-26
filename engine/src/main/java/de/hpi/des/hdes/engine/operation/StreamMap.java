@@ -14,6 +14,7 @@ public class StreamMap<V, VR> extends AbstractTopologyElement<VR> implements One
   @Override
   public void process(final AData<V> aData) {
     final VR output = this.mapper.map(aData.getValue());
-    this.collector.collect(aData.transform(output));
+    var newAData = aData.transform(output);
+    this.collector.collect(newAData);
   }
 }

@@ -40,6 +40,14 @@ public class TwoInputPullSlot<IN1, IN2, OUT> extends RunnableSlot<OUT> {
   }
 
   @Override
+  public void shutdown() {
+    super.shutdown();
+    if (input1.unsafePollAll().size() > 0 || input2.unsafePollAll().size() > 0) {
+      log.warn("TwoInputSlot shut down but input buffers were not empty!");
+    }
+  }
+
+  @Override
   public BinaryOperationNode<IN1, IN2, OUT> getTopologyNode() {
     return this.binaryOperationNode;
   }

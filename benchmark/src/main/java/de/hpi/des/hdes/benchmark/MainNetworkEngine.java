@@ -39,9 +39,12 @@ public class MainNetworkEngine implements Runnable {
     public void run() {
         // Be aware that the sources are not flushed and could therefore still have events in their buffer when execution is finished
         // The engine will exit after 60 Seconds
-        final var auctionSource = new NetworkSource<>((int) (eventsPerSecond * maxDelayInSeconds), auctionNetworkSocketPort, Auction.class);
-        final var bidSource = new NetworkSource<>((int) (eventsPerSecond * maxDelayInSeconds), bidNetworkSocketPort, Bid.class);
-        final var personSource = new NetworkSource<>((int) (eventsPerSecond * maxDelayInSeconds), personNetworkSocketPort, Person.class);
+        final var auctionSource = new NetworkSource<>(eventsPerSecond * maxDelayInSeconds,
+            auctionNetworkSocketPort, Auction.class);
+        final var bidSource = new NetworkSource<>(eventsPerSecond * maxDelayInSeconds,
+            bidNetworkSocketPort, Bid.class);
+        final var personSource = new NetworkSource<>(eventsPerSecond * maxDelayInSeconds,
+            personNetworkSocketPort, Person.class);
 
         Thread t1 = new Thread(auctionSource);
         Thread t2 = new Thread(bidSource);
@@ -51,7 +54,8 @@ public class MainNetworkEngine implements Runnable {
         t2.start();
         t3.start();
 
-        log.info("Running with {} EPS, {}s max delay for {}s.", eventsPerSecond, maxDelayInSeconds, timeInSeconds);
+        log.info("Running with {} EPS, {}s max delay for {}s.", eventsPerSecond, maxDelayInSeconds,
+            timeInSeconds);
 
         var q1Sink = new BenchmarkingSink<Tuple>();
         var q1 = Queries.makeQuery1(bidSource, q1Sink);
@@ -77,10 +81,7 @@ public class MainNetworkEngine implements Runnable {
             e.printStackTrace();
         }
         jobManager.shutdown();
-        querySinks.forEach(qs -> {
-            log.info("Latency {} Milliseconds", qs.getIngestionLatency());
-            log.info("Total Tuples {}", qs.getTotalCount());
-        });
+        querySinks.forEach(BenchmarkingSink::log);
         log.info("Telling Threads to stop");
 
         auctionSource.stop();

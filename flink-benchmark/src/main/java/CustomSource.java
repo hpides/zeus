@@ -39,6 +39,7 @@ public class CustomSource<T> implements SourceFunction<T> {
       }
     }
     System.out.println(sentEvents);
+
   }
 
   @Override

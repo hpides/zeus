@@ -2,6 +2,7 @@ package de.hpi.des.hdes.benchmark;
 
 import de.hpi.des.hdes.benchmark.generator.Generator;
 import de.hpi.des.hdes.benchmark.generator.InMemoryNexGenerator;
+import de.hpi.des.hdes.benchmark.generator.IntegerTupleGenerator;
 import de.hpi.des.hdes.benchmark.generator.NetworkGenerator;
 import de.hpi.des.hdes.benchmark.generator.StringTupleGenerator;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
@@ -16,6 +17,8 @@ import de.hpi.des.hdes.engine.udf.TimestampExtractor;
 import de.hpi.des.hdes.engine.window.Time;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.assigner.TumblingEventTimeWindow;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -56,7 +59,7 @@ public class Main implements Runnable {
 
   @Override
   public void run() {
-    runNexmarkLocalhostNetwork();
+    runBasicBenchmark();
   }
 
   public void runNexmark() {
@@ -82,8 +85,8 @@ public class Main implements Runnable {
     long startTime = System.nanoTime();
     var q0Sink = new BenchmarkingSink<Person>();
     var q0 = Queries.makeQuery0(personSource, q0Sink);
-    var q00Sink = new BenchmarkingSink<Auction>();
-    var q00 = Queries.makeQuery0(auctionSource, q00Sink);
+    var q00Sink = new BenchmarkingSink<Bid>();
+    var q00 = Queries.makeQuery0(bidSource, q00Sink);
     var q1Sink = new BenchmarkingSink<Tuple>();
     var q1 = Queries.makeQuery1(bidSource, q1Sink);
     var q2Sink = new BenchmarkingSink<Bid>();
@@ -106,7 +109,7 @@ public class Main implements Runnable {
     //jobManager.addQuery(q2);
     //jobManager.addQuery(q3);
 
-    jobManager.addQuery(q4);
+    jobManager.addQuery(q1);
     //jobManager.addQuery(q5);
     jobManager.runEngine();
 
@@ -117,14 +120,14 @@ public class Main implements Runnable {
       done.get();
       long endTime = System.nanoTime();
       log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
-      Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+      Thread.sleep(TimeUnit.SECONDS.toMillis(maxDelayInSeconds));
 
     } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
     jobManager.shutdown();
     querySinks.forEach(qs -> {
-      log.info("Latency {} Milliseconds", qs.getIngestionLatency());
+      log.info("Latency {} Milliseconds", qs.getProcessingLatency());
       log.printf(Level.INFO, "Total Tuples %,d", qs.getTotalCount());
     });
   }
@@ -184,14 +187,85 @@ public class Main implements Runnable {
       e.printStackTrace();
     }
     jobManager.shutdown();
-    querySinks.forEach(qs -> {
-      log.info("Latency {} Milliseconds", qs.getIngestionLatency());
-      log.info("Total Tuples {}", qs.getTotalCount());
-    });
+    querySinks.forEach(BenchmarkingSink::log);
     log.info("Telling Threads to stop");
     auctionSource.stop();
     personSource.stop();
     bidSource.stop();
+
+  }
+
+  public void runBasicBenchmark() {
+    log.info("Running with {} EPS, {}s max delay for {}s.",
+        eventsPerSecond, maxDelayInSeconds, timeInSeconds);
+    final ExecutorService executor = Executors.newFixedThreadPool(4);
+    final IntegerTupleGenerator generator1 = new IntegerTupleGenerator(
+        eventsPerSecond,
+        timeInSeconds,
+        executor,
+        1
+    );
+    final IntegerTupleGenerator generator2 = new IntegerTupleGenerator(
+        eventsPerSecond,
+        timeInSeconds,
+        executor,
+        2
+    );
+    log.printf(Level.INFO, "Expecting %,d join tupel",
+        generator1.expectedJoinSize(generator2, eventsPerSecond) * timeInSeconds / 5);
+
+    var bs11 = new BlockingSource<Tuple1<Integer>>(maxDelayInSeconds * eventsPerSecond);
+    var bs12 = new BlockingSource<Tuple1<Integer>>(maxDelayInSeconds * eventsPerSecond);
+    var q0Sink = new BenchmarkingSink<Tuple>();
+    var q0 = Queries.makeQuery0Measured(bs11, q0Sink);
+    var q1Sink = new BenchmarkingSink<Tuple>();
+    var q1 = Queries.makePlainJoin0Measured(bs11, bs12, q1Sink);
+    var jobManager = new JobManager();
+
+    var querySinks = new ArrayList<>(List.of(q0Sink, q1Sink));
+
+    jobManager.addQuery(q0);
+    jobManager.addQuery(q1);
+    jobManager.runEngine();
+    var done = generator1.generate(bs11);
+    var done2 = generator2.generate(bs12);
+
+    var addedQueries = new ArrayDeque<Query>();
+    final long startTime = System.nanoTime();
+
+    try {
+      for (int i = 0; i < 59; i++) {
+        Thread.sleep(1000);
+
+        var qs = new BenchmarkingSink<Tuple>();
+        var q = Queries.makeQuery0Measured(bs11, qs);
+
+        if (i % 5 == 0) {
+          qs = new BenchmarkingSink<Tuple>("JoinSink" + i);
+          q = Queries.makePlainJoin0Measured(bs11, bs12, qs);
+        }
+        jobManager.addQuery(q);
+        addedQueries.add(q);
+        querySinks.add(qs);
+
+        if (i % 4 == 0) {
+          var rq = addedQueries.pop();
+          jobManager.deleteQuery(rq);
+        }
+      }
+      done.get();
+      done2.get();
+
+      long endTime = System.nanoTime();
+      log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
+      Thread.sleep(TimeUnit.SECONDS.toMillis(maxDelayInSeconds));
+
+    } catch (InterruptedException | ExecutionException e) {
+      e.printStackTrace();
+    }
+    jobManager.shutdown();
+    querySinks.forEach(BenchmarkingSink::log);
+
   }
 
   public void runIntBenchmark() {

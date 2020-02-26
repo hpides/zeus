@@ -44,7 +44,7 @@ public class Benchmark<IN, OUT> {
       dataGenerator.shutdown();
     }
     log.info(Long.toString(timedSink.getTotalCount()));
-    log.info(Double.toString(timedSink.getIngestionLatency()));
+    log.info(Double.toString(timedSink.getProcessingLatency()));
     log.info(Double.toString(timedSink.getMinLatency()));
     log.info(Double.toString(timedSink.getMaxLatency()));
   }
