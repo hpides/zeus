@@ -7,6 +7,7 @@ import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.Source;
+import de.hpi.des.hdes.engine.udf.Filter;
 import de.hpi.des.hdes.engine.udf.Join;
 import de.hpi.des.hdes.engine.udf.Mapper;
 import de.hpi.des.hdes.engine.udf.TimestampExtractor;
@@ -68,8 +69,12 @@ public class Queries {
     return new Tuple3<>(tuple.v1, tuple.v2, System.nanoTime() - tuple.v3);
   }
 
-  public static <T, R> Mapper<Tuple2<T, Long>, Tuple2<R, Long>> makeF(Function<T, R> f) {
+  public static <T, R> Mapper<Tuple2<T, Long>, Tuple2<R, Long>> makeMap(Function<T, R> f) {
     return (Tuple2<T, Long> t) -> new Tuple2<>(f.apply(t.v1), t.v2);
+  }
+
+  public static <T, R> Filter<Tuple2<T, Long>> makeFilter(Function<T, Boolean> f) {
+    return (Tuple2<T, Long> t) -> f.apply(t.v1);
   }
 
   /**
@@ -79,24 +84,27 @@ public class Queries {
       Sink<Tuple> sink) {
     return new Query(
         new TopologyBuilder().streamOf(bidSource).map(Queries::prepare)
-            .map(makeF(bid -> new Tuple4<>(bid.auctionId,
-                Queries.dollarToEuro(bid.bid), bid.betterId, bid.time))).map(Queries::calcDelta)
+            .map(makeMap(bid -> new Tuple4<>(bid.auctionId,
+                Queries.dollarToEuro(bid.bid), bid.betterId, bid.time)))
+                .map(Queries::calcDelta)
             .to(sink).build());
   }
 
   public static Query makeQueryAgeFilter(Source<Person> personSource, Sink<Tuple> sink) {
     return new Query(
-        new TopologyBuilder().streamOf(personSource)
-            .map(person -> new Tuple4<>(person.id, person.name, person.province, person.age))
-            .filter(p -> Integer.parseInt(p.v4) > 1)
+        new TopologyBuilder().streamOf(personSource).map(Queries::prepare)
+            .map(makeMap(person -> new Tuple4<>(person.id, person.name, person.province, person.age)))
+            .filter(makeFilter(p -> Integer.parseInt(p.v4) > 1))
+                .map(Queries::calcDelta)
             .to(sink).build());
   }
 
   public static Query makeSimpleAuctionQuery(Source<Auction> auctionSource, Sink<Tuple> sink) {
     return new Query(
-            new TopologyBuilder().streamOf(auctionSource)
-                    .map(auction -> new Tuple4<>(auction.id, auction.quantity, auction.currentPrice, auction.reserve))
-                    .filter(a -> a.v2 > 5)
+            new TopologyBuilder().streamOf(auctionSource).map(Queries::prepare)
+                    .map(makeMap(auction -> new Tuple4<>(auction.id, auction.quantity, auction.currentPrice, auction.reserve)))
+                    .filter(makeFilter(a -> a.v2 > 5))
+                    .map(Queries::calcDelta)
                     .to(sink).build());
   }
 

@@ -38,7 +38,7 @@ import picocli.CommandLine.Option;
 @Log4j2
 public class Main implements Runnable {
 
-  @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "5000")
+  @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "100000")
   private int eventsPerSecond;
   @Option(names = {"--maxDelayInSeconds", "-mds"}, defaultValue = "10")
   private int maxDelayInSeconds;
@@ -59,7 +59,7 @@ public class Main implements Runnable {
 
   @Override
   public void run() {
-    runBasicBenchmark();
+    runNexmarkLocalhostNetwork();
   }
 
   public void runNexmark() {

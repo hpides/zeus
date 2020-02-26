@@ -3,6 +3,7 @@ package de.hpi.des.hdes.benchmark.generator;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.SerializerFactory.FieldSerializerFactory;
 import com.esotericsoftware.kryo.io.Output;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.hpi.des.hdes.benchmark.nexmark.ObjectAuctionStreamGenerator;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
@@ -13,8 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -34,6 +37,7 @@ public class NetworkGenerator {
     private final int auctionNetworkSocketPort;
     private final int bidNetworkSocketPort;
     private final int personNetworkSocketPort;
+    private ObjectMapper objectMapper;
 
     private boolean engineRunning = true;
 
@@ -46,6 +50,7 @@ public class NetworkGenerator {
         this.kryo.register(Auction.class);
         this.kryo.register(Bid.class);
         this.objectAuctionStreamGenerator = new ObjectAuctionStreamGenerator();
+        this.objectMapper = new ObjectMapper();
     }
 
     public CompletableFuture<Boolean> generate() {
@@ -59,9 +64,9 @@ public class NetworkGenerator {
             Socket auctionSocket = new Socket(this.engineIp, this.auctionNetworkSocketPort);
             Socket bidSocket = new Socket(this.engineIp, this.bidNetworkSocketPort);
 
-            DataOutputStream auctionOut = new DataOutputStream(auctionSocket.getOutputStream());
-            DataOutputStream bidOut = new DataOutputStream(bidSocket.getOutputStream());
-            DataOutputStream personOut = new DataOutputStream(personSocket.getOutputStream());
+            OutputStreamWriter auctionOut = new OutputStreamWriter(auctionSocket.getOutputStream(), StandardCharsets.UTF_8);
+            OutputStreamWriter bidOut = new OutputStreamWriter(bidSocket.getOutputStream(), StandardCharsets.UTF_8);
+            OutputStreamWriter personOut = new OutputStreamWriter(personSocket.getOutputStream(), StandardCharsets.UTF_8);
 
             long sentEvents = 0;
 
@@ -81,9 +86,9 @@ public class NetworkGenerator {
                 nrAuctions += eventsToBeSent * this.fractionAction;
                 nrBids += eventsToBeSent * this.fractionBid;
 
-                long sentPersons = sendViaSocket(nrPersons, personOut, objectAuctionStreamGenerator::generatePerson);
-                long sentAuctions = sendViaSocket(nrAuctions, auctionOut, objectAuctionStreamGenerator::generateAuction);
-                long sentBids = sendViaSocket(nrBids, bidOut, objectAuctionStreamGenerator::generateBid);
+                long sentPersons = sendJSONViaSocket(nrPersons, personOut, objectAuctionStreamGenerator::generatePerson);
+                long sentAuctions = sendJSONViaSocket(nrAuctions, auctionOut, objectAuctionStreamGenerator::generateAuction);
+                long sentBids = sendJSONViaSocket(nrBids, bidOut, objectAuctionStreamGenerator::generateBid);
 
                 nrPersons -= sentPersons;
                 nrAuctions -= sentAuctions;
@@ -98,7 +103,7 @@ public class NetworkGenerator {
         return true;
     }
 
-    private <T> long sendViaSocket(double numEvents, DataOutputStream out, Supplier<T> generator) {
+    private <T> long sendJSONViaSocket(double numEvents, OutputStreamWriter out, Supplier<T> generator) {
         if (numEvents < 1) {
             return 0;
         }
@@ -107,15 +112,9 @@ public class NetworkGenerator {
             for (int i = 0; i < events; i++) {
                 T event = generator.get();
 
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                Output output = new Output(bout);
-                kryo.writeClassAndObject(output, event);
-                output.flush();
-                byte[] byteBuffer = bout.toByteArray();
-                out.writeInt(byteBuffer.length);
-                out.write(byteBuffer);
+                String jsonString = objectMapper.writeValueAsString(event).concat("\n");
+                out.write(jsonString);
                 out.flush();
-
             }
         } catch (IOException e) {
             if(e instanceof SocketException) {
@@ -128,4 +127,5 @@ public class NetworkGenerator {
         }
         return events;
     }
+
 }

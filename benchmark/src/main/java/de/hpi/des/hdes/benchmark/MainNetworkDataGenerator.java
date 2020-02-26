@@ -9,9 +9,9 @@ import picocli.CommandLine.Option;
 
 @Slf4j
 public class MainNetworkDataGenerator implements Runnable {
-    @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "1000")
+    @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "100000")
     private int eventsPerSecond;
-    @Option(names = {"--timeInSeconds", "-tis"}, defaultValue = "60")
+    @Option(names = {"--timeInSeconds", "-tis"}, defaultValue = "10")
     private int timeInSeconds;
     @Option(names = {"--personFraction", "-pf"}, defaultValue = "0.05")
     private double personFraction;
@@ -19,7 +19,7 @@ public class MainNetworkDataGenerator implements Runnable {
     private double auctionFraction;
     @Option(names = {"--bidFraction", "-bf"}, defaultValue = "0.60")
     private double bidFraction;
-    @Option(names = {"--engineHost", "-eh"}, defaultValue = "192.168.0.19")
+    @Option(names = {"--engineHost", "-eh"}, defaultValue = "172.22.17.248")
     private String engineHost;
     @Option(names = {"--auctionSourcePort", "-asp"}, defaultValue = "5551")
     private int auctionNetworkSocketPort;
