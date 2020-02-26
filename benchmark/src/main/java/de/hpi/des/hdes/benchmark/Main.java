@@ -2,6 +2,7 @@ package de.hpi.des.hdes.benchmark;
 
 import de.hpi.des.hdes.benchmark.generator.Generator;
 import de.hpi.des.hdes.benchmark.generator.InMemoryNexGenerator;
+import de.hpi.des.hdes.benchmark.generator.NetworkGenerator;
 import de.hpi.des.hdes.benchmark.generator.StringTupleGenerator;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
@@ -36,7 +37,7 @@ public class Main implements Runnable {
 
   @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "5000")
   private int eventsPerSecond;
-  @Option(names = {"--maxDelayInSeconds", "-mds"}, defaultValue = "1")
+  @Option(names = {"--maxDelayInSeconds", "-mds"}, defaultValue = "10")
   private int maxDelayInSeconds;
   @Option(names = {"--timeInSeconds", "-tis"}, defaultValue = "10")
   private int timeInSeconds;
@@ -55,7 +56,7 @@ public class Main implements Runnable {
 
   @Override
   public void run() {
-    runNexmark();
+    runNexmarkLocalhostNetwork();
   }
 
   public void runNexmark() {
@@ -126,7 +127,71 @@ public class Main implements Runnable {
       log.info("Latency {} Milliseconds", qs.getIngestionLatency());
       log.printf(Level.INFO, "Total Tuples %,d", qs.getTotalCount());
     });
+  }
 
+  public void runNexmarkLocalhostNetwork() {
+    final String engineIp = "127.0.0.1";
+    final int auctionNetworkSocketPort = 5551;
+    final int bidNetworkSocketPort = 5552;
+    final int personNetworkSocketPort = 5553;
+
+    // Be aware that the sources are not flushed and could therefore still have events in their buffer when execution is finished
+    final var auctionSource = new NetworkSource<>((int) (auctionFraction * eventsPerSecond * maxDelayInSeconds), auctionNetworkSocketPort, Auction.class);
+    final var bidSource = new NetworkSource<>((int) (bidFraction * eventsPerSecond * maxDelayInSeconds), bidNetworkSocketPort, Bid.class);
+    final var personSource = new NetworkSource<>((int) (personFraction * eventsPerSecond * maxDelayInSeconds), personNetworkSocketPort, Person.class);
+
+    Thread t1 = new Thread(auctionSource);
+    Thread t2 = new Thread(bidSource);
+    Thread t3 = new Thread(personSource);
+
+    t1.start();
+    t2.start();
+    t3.start();
+
+    final var generator = new NetworkGenerator(eventsPerSecond,
+            timeInSeconds, this.personFraction, this.auctionFraction, this.bidFraction, engineIp,
+            auctionNetworkSocketPort, bidNetworkSocketPort, personNetworkSocketPort);
+
+    log.info("Running with {} EPS, {}s max delay for {}s.", eventsPerSecond, maxDelayInSeconds, timeInSeconds);
+    long startTime = System.nanoTime();
+
+    var q1Sink = new BenchmarkingSink<Tuple>();
+    var q1 = Queries.makeQuery1(bidSource, q1Sink);
+
+    var q2Sink = new BenchmarkingSink<Tuple>();
+    var q2 = Queries.makeQueryAgeFilter(personSource, q2Sink);
+
+    var q3Sink = new BenchmarkingSink<Tuple>();
+    var q3 = Queries.makeSimpleAuctionQuery(auctionSource, q3Sink);
+
+
+    var querySinks = List.of(q1Sink, q2Sink, q3Sink);
+    var jobManager = new JobManager();
+    var done = generator.generate();
+
+    jobManager.addQuery(q1);
+    jobManager.addQuery(q2);
+    jobManager.addQuery(q3);
+    jobManager.runEngine();
+
+    try {
+      done.get();
+      long endTime = System.nanoTime();
+      log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
+      Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+
+    } catch (InterruptedException | ExecutionException e) {
+      e.printStackTrace();
+    }
+    jobManager.shutdown();
+    querySinks.forEach(qs -> {
+      log.info("Latency {} Milliseconds", qs.getIngestionLatency());
+      log.info("Total Tuples {}", qs.getTotalCount());
+    });
+    log.info("Telling Threads to stop");
+    auctionSource.stop();
+    personSource.stop();
+    bidSource.stop();
   }
 
   public void runIntBenchmark() {

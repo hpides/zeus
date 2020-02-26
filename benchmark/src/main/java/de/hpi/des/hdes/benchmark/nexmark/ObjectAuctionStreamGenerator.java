@@ -1,10 +1,9 @@
 package de.hpi.des.hdes.benchmark.nexmark;
 
-import de.hpi.des.hdes.benchmark.nexmark.entities.Address;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Person;
-import de.hpi.des.hdes.benchmark.nexmark.entities.Profile;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -27,6 +26,8 @@ public class ObjectAuctionStreamGenerator {
 
 
   public Bid generateBid() {
+    generatePersonIfNecessary();
+    generateAuctionIfNecessary();
     Auction auction = auctions.get(rnd.nextInt(auctions.size()));
     long betterId = persons.get(rnd.nextInt(persons.size())).id;
     calendar.incrementTime();
@@ -49,8 +50,19 @@ public class ObjectAuctionStreamGenerator {
     String email = lastName.concat("@").concat(domain);
     String homepage = "https://www.".concat(domain).concat("/~").concat(lastName);
     String creditCard = createCreditCardNumber();
-    Address address = createAddress();
-    Profile profile = createProfile();
+
+    String street = Integer.toString(rnd.nextInt(100)).concat(" ")
+            .concat(this.dataGenerator.getRandomLastName()).concat(" Rd");
+    String city = this.dataGenerator.getRandomCity();
+    String country = this.dataGenerator.getRandomCountry();
+    String province = this.dataGenerator.getRandomProvinces();
+    String zipCode = String.valueOf(rnd.nextInt(99999) + 1);
+
+    String education = this.dataGenerator.getRandomEducation();
+    String gender = (rnd.nextInt(2) == 1) ? "male" : "female";
+    String business = (rnd.nextInt(2) == 1) ? "Yes" : "No";
+    String age = Integer.toString(rnd.nextInt(50) + 18);
+    String income = String.valueOf((rnd.nextInt(65000) + 30000));
 
     Person person = new Person(personIdCounter,
         firstName.concat(" ").concat(lastName),
@@ -58,14 +70,15 @@ public class ObjectAuctionStreamGenerator {
         phoneNumber,
         homepage,
         creditCard,
-        profile,
-        address);
+        street,city,country,province,zipCode,
+        education,gender,business,age,income);
     personIdCounter++;
     persons.add(person);
     return person;
   }
 
   public Auction generateAuction() {
+    generatePersonIfNecessary();
     long currentPrice = rnd.nextInt(200) + 1;
     long reserve = (int) Math.round(currentPrice * (1.2 + (this.rnd.nextDouble() + 1)));
     String privacy = (rnd.nextInt(2) == 1) ? "Yes" : "No";
@@ -107,23 +120,16 @@ public class ObjectAuctionStreamGenerator {
     return creditCard;
   }
 
-  private Address createAddress() {
-    String street = Integer.toString(rnd.nextInt(100)).concat(" ")
-        .concat(this.dataGenerator.getRandomLastName()).concat(" Rd");
-    String city = this.dataGenerator.getRandomCity();
-    String country = this.dataGenerator.getRandomCountry();
-    String province = this.dataGenerator.getRandomProvinces();
-    String zipCode = String.valueOf(rnd.nextInt(99999) + 1);
-    return new Address(street, city, province, country, zipCode);
+  private void generatePersonIfNecessary() {
+    if(this.persons.size() == 0) {
+      this.generatePerson();
+    }
   }
 
-  private Profile createProfile() {
-    String education = this.dataGenerator.getRandomEducation();
-    String gender = (rnd.nextInt(2) == 1) ? "male" : "female";
-    String business = (rnd.nextInt(2) == 1) ? "Yes" : "No";
-    String age = Integer.toString(rnd.nextInt(50) + 18);
-    String income = String.valueOf((rnd.nextInt(65000) + 30000));
-    return new Profile(education, gender, business, age, income);
+  private void generateAuctionIfNecessary() {
+    if(this.auctions.size() == 0) {
+      this.generateAuction();
+    }
   }
 
 }

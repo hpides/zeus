@@ -7,11 +7,12 @@ import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.unsafe.UnsafeInput;
 import de.hpi.des.hdes.benchmark.BlockingSource;
 import de.hpi.des.hdes.benchmark.nexmark.ObjectAuctionStreamGenerator;
-import de.hpi.des.hdes.benchmark.nexmark.entities.Address;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Person;
-import de.hpi.des.hdes.benchmark.nexmark.entities.Profile;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,8 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 
 @Log4j2
@@ -44,11 +43,9 @@ public class DiskNexGenerator {
 
   private void init() {
     this.serializerFactory.getConfig().setFieldsCanBeNull(false);
-    serializerFactory.getConfig().setVariableLengthEncoding(false);
-    serializerFactory.getConfig().setFixedFieldTypes(true);
-    kryo.setDefaultSerializer(serializerFactory);
-    this.kryo.register(Profile.class);
-    this.kryo.register(Address.class);
+    this.serializerFactory.getConfig().setVariableLengthEncoding(false);
+    this.serializerFactory.getConfig().setFixedFieldTypes(true);
+    this.kryo.setDefaultSerializer(serializerFactory);
     this.kryo.register(Person.class);
     this.kryo.register(Auction.class);
     this.kryo.register(Bid.class);
@@ -99,7 +96,6 @@ public class DiskNexGenerator {
   }
 
   private boolean sendEventsTimeAware() {
-
     try (
         var pis = new UnsafeInput(Files.newInputStream(Paths.get(this.personFilePath)),
             100_000_000);
@@ -145,7 +141,6 @@ public class DiskNexGenerator {
     log.info("Finished generating events.");
 
     return true;
-
   }
 
   private <T> long send(double nrEvents, Input input,
@@ -166,7 +161,6 @@ public class DiskNexGenerator {
     return 0;
   }
 
-
   private String generateForType(
       long eventsToBeSent,
       File tempFile,
@@ -186,5 +180,4 @@ public class DiskNexGenerator {
     }
     return "";
   }
-
 }
