@@ -71,12 +71,39 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
       otherKeySelector);
     final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>();
     final StreamASink<In, Other, Out> sink = new StreamASink<>(join);
-    final ASourceNode<In, Key> sourceNode1 = new ASourceNode<>(this.node.getNodeId(), source1);
-    final ASourceNode<Other, Key> sourceNode2 = new ASourceNode<>(other.getNode().getNodeId(),
-      source2);
-    final AJoinNode<In, Other, Key> joinNode = new AJoinNode<>(this.node.getNodeId(),
-      other.getNode().getNodeId(), aJoin, sink);
-    final ASinkNode<In, Other, Out> sinkNode = new ASinkNode<>(sink);
+
+    final ASourceNode<In, Key> sourceNode1 = new ASourceNode<>(this.node, source1);
+    final ASourceNode<Other, Key> sourceNode2 = new ASourceNode<>(other.getNode(), source2);
+    final AJoinNode<In, Other, Key> joinNode = new AJoinNode<>(sourceNode1.getNodeId(),
+        sourceNode2.getNodeId(), aJoin);
+    final ASinkNode<In, Other, Out> sinkNode = new ASinkNode<>("A-", sink);
+
+    this.builder.addGraphNode(this.node, sourceNode1);
+    this.builder.addGraphNode(other.getNode(), sourceNode2);
+    this.builder.addGraphNode(sourceNode1, joinNode);
+    this.builder.addGraphNode(sourceNode2, joinNode);
+    this.builder.addGraphNode(joinNode, sinkNode);
+
+    return new AStream<>(this.builder, sinkNode);
+  }
+
+  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
+      final KeySelector<In, Key> inKeySelector,
+      final KeySelector<Other, Key> otherKeySelector,
+      final Join<? super In, ? super Other, ? extends Out> join,
+      final String name) {
+    // todo use triggerInterval based on window assigner
+    final StreamASource<In, Key> source1 = new StreamASource<>(50, this.windowAssigner,
+        inKeySelector);
+    final StreamASource<Other, Key> source2 = new StreamASource<>(50, this.windowAssigner,
+        otherKeySelector);
+    final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>();
+    final StreamASink<In, Other, Out> sink = new StreamASink<>(join);
+
+    final ASourceNode<In, Key> sourceNode1 = new ASourceNode<>(this.node, source1);
+    final ASourceNode<Other, Key> sourceNode2 = new ASourceNode<>(other.getNode(), source2);
+    final AJoinNode<In, Other, Key> joinNode = new AJoinNode<>(name, aJoin);
+    final ASinkNode<In, Other, Out> sinkNode = new ASinkNode<>(name, sink);
 
     this.builder.addGraphNode(this.node, sourceNode1);
     this.builder.addGraphNode(other.getNode(), sourceNode2);

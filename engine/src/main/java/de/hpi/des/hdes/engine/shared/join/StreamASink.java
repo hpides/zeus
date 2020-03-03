@@ -28,4 +28,8 @@ public class StreamASink<IN1, IN2, OUT> extends AbstractTopologyElement<OUT> imp
       }
     }
   }
+
+  public String getID() {
+    return this.join.toString();
+  }
 }

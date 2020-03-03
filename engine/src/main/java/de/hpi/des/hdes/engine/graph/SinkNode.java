@@ -11,7 +11,7 @@ public class SinkNode<IN> extends Node {
   private final Sink<IN> sink;
 
   @Override
-  public void accept(NodeVisitor visitor) {
+  public void accept(final NodeVisitor visitor) {
     visitor.visit(this);
   }
 

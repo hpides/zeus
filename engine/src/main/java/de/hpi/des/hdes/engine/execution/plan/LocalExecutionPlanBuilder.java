@@ -43,7 +43,9 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
   public ExecutionPlan build(final Topology queryTopology) {
     final List<Node> sortedNodes = queryTopology.getTopologicalOrdering();
     for (final Node node : sortedNodes) {
-      node.accept(this);
+      if (!this.topology.getNodes().contains(node)) {
+        node.accept(this);
+      }
     }
     final Topology updated = this.topology.extend(queryTopology);
     return new ExecutionPlan(updated, this.slots, this.outputSlots);

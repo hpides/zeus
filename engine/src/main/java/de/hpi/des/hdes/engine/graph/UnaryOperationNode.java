@@ -12,6 +12,7 @@ public class UnaryOperationNode<IN, OUT> extends Node {
   private final OneInputOperator<IN, OUT> operator;
 
   public UnaryOperationNode(final OneInputOperator<IN, OUT> operator) {
+    super(operator.toString());
     this.operator = operator;
   }
 

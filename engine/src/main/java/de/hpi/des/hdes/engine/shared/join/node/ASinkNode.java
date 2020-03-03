@@ -6,7 +6,9 @@ import de.hpi.des.hdes.engine.shared.join.StreamASink;
 
 public class ASinkNode<IN1, IN2, OUT> extends UnaryOperationNode<IntersectedBucket<IN1, IN2>, OUT> {
 
-  public ASinkNode(final StreamASink<IN1, IN2, OUT> operator) {
-    super(operator);
+
+  public ASinkNode(final String name, final StreamASink<IN1, IN2, OUT> operator) {
+    super(name + operator.toString(), operator);
   }
+
 }

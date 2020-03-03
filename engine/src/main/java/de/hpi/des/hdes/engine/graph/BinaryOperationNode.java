@@ -15,7 +15,7 @@ public class BinaryOperationNode<IN1, IN2, OUT> extends Node {
     this.operator = operator;
   }
 
-  protected BinaryOperationNode(final String identifier,
+  public BinaryOperationNode(final String identifier,
       final TwoInputOperator<IN1, IN2, OUT> operator) {
     super(identifier);
     this.operator = operator;
