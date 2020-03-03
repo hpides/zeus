@@ -29,5 +29,10 @@ public abstract class TumblingWindow implements WindowAssigner<TimeWindow> {
     return new TumblingEventTimeWindow(time.getNanos());
   }
 
+  @Override
+  public long nextWindowStart(final long watermark) {
+    final long windowStart = watermark - (watermark + this.size) % this.size;
+    return windowStart - this.size;
+  }
 }
 

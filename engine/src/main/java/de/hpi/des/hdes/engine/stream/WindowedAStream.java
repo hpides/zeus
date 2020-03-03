@@ -65,11 +65,9 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
                                               final KeySelector<Other, Key> otherKeySelector,
                                               final Join<? super In, ? super Other, ? extends Out> join) {
     // todo use triggerInterval based on window assigner
-    final StreamASource<In, Key> source1 = new StreamASource<>(50, this.windowAssigner,
-      inKeySelector);
-    final StreamASource<Other, Key> source2 = new StreamASource<>(50, this.windowAssigner,
-      otherKeySelector);
-    final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>();
+    final StreamASource<In, Key> source1 = new StreamASource<>(50, inKeySelector);
+    final StreamASource<Other, Key> source2 = new StreamASource<>(50, otherKeySelector);
+    final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>(this.windowAssigner);
     final StreamASink<In, Other, Out> sink = new StreamASink<>(join);
 
     final ASourceNode<In, Key> sourceNode1 = new ASourceNode<>(this.node, source1);

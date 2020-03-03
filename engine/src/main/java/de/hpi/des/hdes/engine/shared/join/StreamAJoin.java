@@ -4,16 +4,21 @@ import static org.jooq.lambda.Seq.seq;
 
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.AData;
+import de.hpi.des.hdes.engine.ADataWatermark;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import de.hpi.des.hdes.engine.window.Window;
+import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.lambda.Seq;
+import org.jooq.lambda.tuple.Tuple2;
 
 @Slf4j
 public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<IntersectedBucket<IN1, IN2>>
@@ -23,56 +28,91 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
   // late materialization --> avoid performing the cross-product of intersection
   private final Map<Window, List<Bucket<KEY, IN1>>> state1 = new HashMap<>();
   private final Map<Window, List<Bucket<KEY, IN2>>> state2 = new HashMap<>();
+  private final WindowAssigner<? extends Window> windowAssigner;
+
+  public StreamAJoin(final WindowAssigner<? extends Window> windowAssigner) {
+    this.windowAssigner = windowAssigner;
+  }
 
   @Override
   public void processStream1(final AData<Bucket<KEY, IN1>> aData) {
-    final var inBucket = aData.getValue();
-    if (this.state2.containsKey(inBucket.getWindow())) {
-      final List<Bucket<KEY, IN2>> buckets = this.state2.get(inBucket.getWindow());
-      for (final Bucket<KEY, IN2> stateBucket : buckets) {
-        final Collection<IntersectedBucket<IN1, IN2>> intersectedBuckets =
-            this.buildIntersections(inBucket, stateBucket);
-        intersectedBuckets.forEach(b -> this.collector.collect(AData.of(b)));
-      }
-      // todo remove with watermark
-      this.state2.remove(inBucket.getWindow());
+    final List<? extends Window> assignedWindows = this.windowAssigner
+        .assignWindows(aData.getEventTime());
+
+    for (final Window window : assignedWindows) {
+      final List<Bucket<KEY, IN1>> windowState = this.state1
+          .computeIfAbsent(window, w -> new ArrayList<>());
+      windowState.add(aData.getValue());
     }
-    final List<Bucket<KEY, IN1>> bucket = this.state1.computeIfAbsent(inBucket.getWindow(),
-        w -> new ArrayList<>());
-    bucket.add(inBucket);
+
+    if (aData.isWatermark()) {
+      final long timestamp = ((ADataWatermark<?>) aData).getWatermarkTimestamp();
+      this.trigger(timestamp);
+      final long nextWindowStart = this.windowAssigner.nextWindowStart(timestamp);
+      this.state2.entrySet().removeIf(entry -> entry.getKey().getMaxTimestamp() < nextWindowStart);
+    }
   }
 
   @Override
   public void processStream2(final AData<Bucket<KEY, IN2>> aData) {
-    final var inBucket = aData.getValue();
-    if (this.state1.containsKey(inBucket.getWindow())) {
-      final List<Bucket<KEY, IN1>> buckets = this.state1.get(inBucket.getWindow());
-      for (final Bucket<KEY, IN1> stateBucket : buckets) {
-        final Collection<IntersectedBucket<IN1, IN2>> intersectedBuckets =
-            this.buildIntersections(stateBucket, inBucket);
-        intersectedBuckets.forEach(b -> this.collector.collect(AData.of(b)));
-      }
-      // todo remove with watermark
-      this.state1.remove(inBucket.getWindow());
+    final List<? extends Window> assignedWindows = this.windowAssigner
+        .assignWindows(aData.getEventTime());
+
+    for (final Window window : assignedWindows) {
+      final List<Bucket<KEY, IN2>> windowState = this.state2
+          .computeIfAbsent(window, w -> new ArrayList<>());
+      windowState.add(aData.getValue());
     }
-    final List<Bucket<KEY, IN2>> bucket = this.state2.computeIfAbsent(inBucket.getWindow(),
-        w -> new ArrayList<>());
-    bucket.add(inBucket);
+
+    if (aData.isWatermark()) {
+      final long timestamp = ((ADataWatermark<?>) aData).getWatermarkTimestamp();
+      this.trigger(timestamp);
+      final long nextWindowStart = this.windowAssigner.nextWindowStart(timestamp);
+      this.state1.entrySet().removeIf(entry -> entry.getKey().getMaxTimestamp() < nextWindowStart);
+    }
+  }
+
+  private void trigger(final long timestamp) {
+    for (final Entry<Window, List<Bucket<KEY, IN1>>> entry : this.state1.entrySet()) {
+      final Window window = entry.getKey();
+      // not closed
+      if (window.getMaxTimestamp() > timestamp) {
+        continue;
+      }
+
+      final List<Bucket<KEY, IN2>> otherBuckets = this.state2.get(window);
+
+      // no join partner available
+      if (otherBuckets == null) {
+        continue;
+      }
+
+      final Collection<IntersectedBucket<IN1, IN2>> intersectedBuckets = this.buildIntersections(
+          entry.getValue(), otherBuckets);
+      intersectedBuckets.forEach(bucket -> this.collector.collect(AData.of(bucket)));
+    }
   }
 
   private Collection<IntersectedBucket<IN1, IN2>> buildIntersections(
-      final Bucket<KEY, IN1> in1Bucket, final Bucket<KEY, IN2> in2Bucket) {
-    final Set<KEY> inKeySet1 = in1Bucket.getSet().keySet();
-    final Set<KEY> inKeySet2 = in2Bucket.getSet().keySet();
-    final Set<KEY> index = Sets.intersection(inKeySet1, inKeySet2);
-    return this.mergeEntries(index, in1Bucket.getSet(), in2Bucket.getSet());
-  }
+      final Collection<Bucket<KEY, IN1>> in1Buckets,
+      final Collection<Bucket<KEY, IN2>> in2Buckets) {
 
-  private Collection<IntersectedBucket<IN1, IN2>> mergeEntries(final Set<KEY> index,
-      final Map<KEY, ? extends Set<IN1>> entries1, final Map<KEY, ? extends Set<IN2>> entries2) {
-    return seq(index)
-        .map(i -> new IntersectedBucket<>(entries1.get(i), entries2.get(i)))
+    return seq(in1Buckets)
+        .crossJoin(in2Buckets)
+        .flatMap(this::getMergesEntries)
         .toList();
   }
 
+  private Seq<IntersectedBucket<IN1, IN2>> getMergesEntries(
+      final Tuple2<Bucket<KEY, IN1>, Bucket<KEY, IN2>> bucketTuple) {
+    final Set<KEY> inKeySet1 = bucketTuple.v1.getSet().keySet();
+    final Set<KEY> inKeySet2 = bucketTuple.v2.getSet().keySet();
+    final Set<KEY> index = Sets.intersection(inKeySet1, inKeySet2);
+    return this.mergeEntries(index, bucketTuple.v1.getSet(), bucketTuple.v2.getSet());
+  }
+
+  private Seq<IntersectedBucket<IN1, IN2>> mergeEntries(final Set<KEY> index,
+      final Map<KEY, ? extends Set<IN1>> entries1, final Map<KEY, ? extends Set<IN2>> entries2) {
+    return seq(index).map(i -> new IntersectedBucket<>(entries1.get(i), entries2.get(i)));
+  }
 }

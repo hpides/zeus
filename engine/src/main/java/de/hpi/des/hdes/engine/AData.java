@@ -21,16 +21,16 @@ public class AData<V> {
     this.isWatermark = isWatermark;
   }
 
-  public static <V> AData<V> of(V value) {
+  public static <V> AData<V> of(final V value) {
     return new AData<>(value);
   }
 
-  public <W> AData<W> transform(W value) {
-    if (isWatermark) {
-      ADataWatermark watermark = (ADataWatermark) this;
-      return new ADataWatermark(value, this.eventTime, watermark.getWatermarkTimestamp());
+  public <W> AData<W> transform(final W value) {
+    if (this.isWatermark) {
+      final ADataWatermark<W> watermark = (ADataWatermark<W>) this;
+      return new ADataWatermark<>(value, this.eventTime, watermark.getWatermarkTimestamp());
     }
-    return new AData<>(value, this.eventTime, isWatermark);
+    return new AData<>(value, this.eventTime, this.isWatermark);
   }
 
   public boolean isWatermark() {
@@ -40,8 +40,8 @@ public class AData<V> {
   @Override
   public String toString() {
     return "AData{" +
-        "value=" + value +
-        ", eventTime=" + eventTime +
+        "value=" + this.value +
+        ", eventTime=" + this.eventTime +
         '}';
   }
 }

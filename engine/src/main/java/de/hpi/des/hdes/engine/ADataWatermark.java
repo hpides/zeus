@@ -1,7 +1,9 @@
 package de.hpi.des.hdes.engine;
 
 import lombok.Getter;
+import lombok.ToString;
 
+@ToString
 public class ADataWatermark<T> extends AData<T> {
   @Getter
   private long watermarkTimestamp;
@@ -23,4 +25,5 @@ public class ADataWatermark<T> extends AData<T> {
   public boolean isWatermark() {
     return true;
   }
+
 }

@@ -1,86 +1,83 @@
 package de.hpi.des.hdes.engine.shared.join;
 
 import de.hpi.des.hdes.engine.AData;
+import de.hpi.des.hdes.engine.ADataWatermark;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
-import de.hpi.des.hdes.engine.operation.Collector;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.udf.KeySelector;
 import de.hpi.des.hdes.engine.window.Window;
+import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.lambda.Seq;
 
 @Slf4j
 public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, IN>>
     implements OneInputOperator<IN, Bucket<KEY, IN>> {
 
-  private final int triggerInterval;
-  private final WindowAssigner<? extends Window> windowAssigner;
+  private final WindowAssigner<? extends Window> sliceAssigner;
   private final KeySelector<IN, KEY> keySelector;
-  private final Map<Window, Set<IN>> state;
-  private final Timer timer;
+  private final Map<Window, Map<KEY, Set<IN>>> state;
 
-  public StreamASource(final int triggerInterval,
-      final WindowAssigner<? extends Window> windowAssigner,
-      final KeySelector<IN, KEY> keySelector) {
-    this.triggerInterval = triggerInterval;
-    this.windowAssigner = windowAssigner;
+  public StreamASource(final int triggerInterval, final KeySelector<IN, KEY> keySelector) {
+    this.sliceAssigner = TumblingWindow.ofEventTime(triggerInterval);
     this.keySelector = keySelector;
     this.state = new HashMap<>();
-    this.timer = new Timer("StreamASource-Timer");
   }
+
   // 1. pull from external source
   // 2. combine entries of last t time slots into a bucket
-
-  @Override
-  public void init(final Collector<Bucket<KEY, IN>> collector) {
-    super.init(collector);
-    this.timer.scheduleAtFixedRate(new TriggerTask(), this.triggerInterval, this.triggerInterval);
-  }
-
   @Override
   public void process(final AData<IN> aData) {
-    final List<? extends Window> assignedWindows = this.windowAssigner
+    final List<? extends Window> assignedWindows = this.sliceAssigner
         .assignWindows(aData.getEventTime());
-    for (final Window window : assignedWindows) {
-      // put in own state
-      final Set<IN> ownState = this.state.computeIfAbsent(window, w -> new HashSet<>());
-      ownState.add(aData.getValue());
+    // put in own state; we know there is only window
+    final Window window = assignedWindows.get(0);
+    final Map<KEY, Set<IN>> windowState = this.state.computeIfAbsent(window, w -> new HashMap<>());
+    final KEY joinKey = this.keySelector.selectKey(aData.getValue());
+    final Set<IN> keyState = windowState.computeIfAbsent(joinKey, key -> new HashSet<>());
+    keyState.add(aData.getValue());
+
+    if (aData.isWatermark()) {
+      final ADataWatermark<IN> watermark = (ADataWatermark<IN>) aData;
+      this.trigger(watermark.getWatermarkTimestamp());
     }
   }
 
-  private void trigger() {
-    final List<? extends Window> currentWindows = this.windowAssigner
-        .assignWindows(System.currentTimeMillis());
-    final var remove = new ArrayList<Window>();
-    for (final Entry<Window, Set<IN>> entry : this.state.entrySet()) {
-      final Window window = entry.getKey();
-      // emit all closed windows
-      if (!currentWindows.contains(window)) {
-        final Map<KEY, Set<IN>> indices = Seq.seq(entry.getValue())
-            .groupBy(this.keySelector::selectKey, Collectors.toSet());
-        this.collector.collect(AData.of(new Bucket<>(indices, window)));
-        remove.add(window);
+  private void trigger(final long watermarkTimestamp) {
+    final List<AData<Bucket<KEY, IN>>> output = new ArrayList<>(this.state.values().size());
+    // we are using an iterator to remove state
+    final Iterator<Entry<Window, Map<KEY, Set<IN>>>> iterator = this.state.entrySet().iterator();
+    while (iterator.hasNext()) {
+      final Entry<Window, Map<KEY, Set<IN>>> windowEntry = iterator.next();
+      final Window window = windowEntry.getKey();
+      // not closed
+      if (window.getMaxTimestamp() > watermarkTimestamp) {
+        continue;
       }
-    }
-    remove.forEach(this.state::remove);
-  }
 
-  private class TriggerTask extends TimerTask {
-
-    @Override
-    public void run() {
-      StreamASource.this.trigger();
+      // emit all closed windows
+      final Bucket<KEY, IN> bucket = new Bucket<>(windowEntry.getValue(), window);
+      AData<Bucket<KEY, IN>> bucketAData = new AData<>(bucket,
+          window.getMaxTimestamp(), false);
+      // send watermark for last element
+      output.add(bucketAData);
+      iterator.remove();
     }
+
+    final int lastIndex = output.size() - 1;
+    final AData<Bucket<KEY, IN>> bucketAData = output.get(lastIndex);
+    final ADataWatermark<Bucket<KEY, IN>> watermark = ADataWatermark
+        .from(bucketAData, watermarkTimestamp);
+    output.set(lastIndex, watermark);
+    output.forEach(this.collector::collect);
   }
 }
+
