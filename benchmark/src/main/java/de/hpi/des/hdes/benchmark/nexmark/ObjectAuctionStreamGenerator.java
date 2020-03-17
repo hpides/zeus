@@ -3,6 +3,7 @@ package de.hpi.des.hdes.benchmark.nexmark;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Person;
+import de.hpi.des.hdes.benchmark.nexmark.protobuf.NextmarkScheme;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +34,14 @@ public class ObjectAuctionStreamGenerator {
     calendar.incrementTime();
     long time = calendar.getTimeInSecs();
     long bidPrice = auction.currentPrice + rnd.nextInt(25) + 1;
+    long eventTime = System.nanoTime();
+
     Bid bid = new Bid(bidIdCounter,
-        auction.id,
-        betterId,
-        time,
-        bidPrice);
+            auction.id,
+            betterId,
+            time,
+            bidPrice,
+            eventTime);
     bidIdCounter++;
     return bid;
   }
@@ -64,15 +68,20 @@ public class ObjectAuctionStreamGenerator {
     String age = Integer.toString(rnd.nextInt(50) + 18);
     String income = String.valueOf((rnd.nextInt(65000) + 30000));
 
+    long eventTime = System.nanoTime();
+
     Person person = new Person(personIdCounter,
-        firstName.concat(" ").concat(lastName),
-        email,
-        phoneNumber,
-        homepage,
-        creditCard,
-        street,city,country,province,zipCode,
-        education,gender,business,age,income);
+            firstName.concat(" ").concat(lastName),
+            email,
+            phoneNumber,
+            homepage,
+            creditCard,
+            street, city, country, province, zipCode,
+            education, gender, business, age, income, eventTime);
     personIdCounter++;
+    if (this.persons.size() > 10000) {
+      this.persons = new ArrayList<>();
+    }
     persons.add(person);
     return person;
   }
@@ -87,17 +96,19 @@ public class ObjectAuctionStreamGenerator {
     String type = auction_type[rnd.nextInt(3)];
     long startTime = calendar.getTimeInSecs();
     long endTime = calendar.getTimeInSecs() + rnd.nextInt(MAXAUCTIONLEN_SEC) + MINAUCTIONLEN_SEC;
+    long eventTime = System.nanoTime();
 
     Auction auction = new Auction(auctionIdCounter,
-        currentPrice,
-        reserve,
-        privacy,
-        persons.get(rnd.nextInt(persons.size())).id,
-        category,
-        quantity,
-        type,
-        startTime,
-        endTime);
+            currentPrice,
+            reserve,
+            privacy,
+            persons.get(rnd.nextInt(persons.size())).id,
+            category,
+            quantity,
+            type,
+            startTime,
+            endTime,
+            eventTime);
     auctionIdCounter++;
     auctions.add(auction);
     return auction;
@@ -130,6 +141,72 @@ public class ObjectAuctionStreamGenerator {
     if(this.auctions.size() == 0) {
       this.generateAuction();
     }
+  }
+
+  public NextmarkScheme.Bid generateProtobufBid() {
+    Bid bid = generateBid();
+    return NextmarkScheme.Bid.newBuilder()
+            .setId(bid.id)
+            .setAuctionId(bid.auctionId)
+            .setBetterId(bid.betterId)
+            .setTime(bid.time)
+            .setBid((int) bid.bid)
+            .setEventTime(System.nanoTime()).build();
+  }
+
+  public NextmarkScheme.Auction generateProtobufAuction() {
+    Auction auction = generateAuction();
+    return NextmarkScheme.Auction.newBuilder()
+            .setId(auction.id)
+            .setCurrentPrice((int) auction.currentPrice)
+            .setReserve((int) auction.reserve)
+            .setPrivacy(auction.privacy)
+            .setSellerId(auction.sellerId)
+            .setCategory((int) auction.category)
+            .setQuantity((int) auction.quantity)
+            .setType(auction.type)
+            .setStartTime(auction.startTime)
+            .setEndTime(auction.endTime)
+            .setEventTime(System.nanoTime()).build();
+  }
+
+  public NextmarkScheme.Person generateProtobufPerson() {
+    Person person = generatePerson();
+    return NextmarkScheme.Person.newBuilder()
+            .setId(person.id)
+            .setName(person.name)
+            .setEmail(person.email)
+            .setPhone(person.phone)
+            .setHomepage(person.homepage)
+            .setCreditcard(person.creditcard)
+            .setStreet(person.street)
+            .setCity(person.city)
+            .setProvince(person.province)
+            .setCountry(person.country)
+            .setZipCode(person.zipCode)
+            .setEducation(person.education)
+            .setGender(person.gender)
+            .setBusiness(person.business)
+            .setAge(person.age)
+            .setIncome(person.income)
+            .setEventTime(System.nanoTime()).build();
+  }
+
+  public static Bid protobufBidtoBid(NextmarkScheme.Bid bid) {
+    return new Bid(bid.getId(), bid.getAuctionId(), bid.getBetterId(), bid.getTime(), bid.getBid(), bid.getEventTime());
+  }
+
+  public static Auction protobufAuctionToAuction(NextmarkScheme.Auction auction) {
+    return new Auction(auction.getId(), auction.getCurrentPrice(), auction.getReserve(), auction.getPrivacy(),
+            auction.getSellerId(), auction.getCategory(), auction.getQuantity(), auction.getType(),
+            auction.getStartTime(), auction.getEndTime(), auction.getEventTime());
+  }
+
+  public static Person protobufPersonToPerson(NextmarkScheme.Person person) {
+    return new Person(person.getId(), person.getName(), person.getEmail(), person.getPhone(), person.getHomepage(),
+            person.getCreditcard(), person.getStreet(), person.getCity(), person.getProvince(), person.getCountry(),
+            person.getZipCode(), person.getEducation(), person.getGender(), person.getBusiness(), person.getAge(),
+            person.getIncome(), person.getEventTime());
   }
 
 }

@@ -26,6 +26,7 @@ public class Queries {
   private Queries() {
   }
 
+
   /**
    * Nooop query
    */
@@ -34,35 +35,57 @@ public class Queries {
         new TopologyBuilder().streamOf(source).map(e -> e).to(sink).build());
   }
 
-  public static <T> Query makeQuery0Measured(Source<T> source, Sink<Tuple> sink) {
+  public static <T> Query makeQuery0Measured(Source<Tuple2<T, Long>> source, Sink<Tuple> sink) {
     return
         new TopologyBuilder().streamOf(source).map(Queries::prepare).map(e -> e)
-            .map(Queries::calcDelta).to(sink).buildAsQuery();
+            .map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
   }
 
-  public static <In, Other> Join<Tuple2<In, Long>, Tuple2<Other, Long>, Tuple3<In, Other, Long>> makeJoinF() {
-    return (Tuple2<In, Long> t1, Tuple2<Other, Long> t2) -> new Tuple3<>(t1.v1, t2.v1,
-        Math.max(t1.v2, t2.v2));
+  public static <In, Other> Join<Tuple3<In, Long, Long>, Tuple3<Other, Long, Long>, Tuple3<Tuple2<In, Other>, Long, Long>> makeJoinF() {
+    return (Tuple3<In, Long, Long> t1, Tuple3<Other, Long, Long> t2) -> new Tuple3<>(
+        new Tuple2<>(t1.v1, t2.v1),
+        Math.max(t1.v2, t2.v2), Math.max(t1.v3, t2.v3));// you could also argue that these need
+    // to be synced so if the first is v2 the second should be too
   }
 
-  public static <T1, T2> Query makePlainJoin0Measured(Source<T1> source1,
-      Source<T2> source2, Sink<Tuple> sink) {
+  public static <T1, T2> Query makePlainJoin0Measured(Source<Tuple2<T1, Long>> source1,
+      Source<Tuple2<T2, Long>> source2, Sink<Tuple> sink) {
     var tp = new TopologyBuilder();
 
     var s1 = tp.streamOf(source1).map(Queries::prepare);
     var s2 = tp.streamOf(source2).map(Queries::prepare);
-    var j1 = s1.window(TumblingWindow.ofProcessingTime(Time.seconds(5)))
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5)))
         .join(s2, makeJoinF(), t1 -> t1.v1, t2 -> t2.v1, WatermarkGenerator.seconds(0, 1_000),
             TimestampExtractor.currentTimeNS());
-    return j1.map(Queries::calcDelta).to(sink).buildAsQuery();
+    return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
+  }
+
+  public static <T1, T2> Query makeAJoin0Measured(Source<Tuple2<T1, Long>> source1,
+      Source<Tuple2<T2, Long>> source2, Sink<Tuple> sink) {
+    var tp = new TopologyBuilder();
+
+    var s1 = tp.streamOf(source1).map(Queries::prepare);
+    var s2 = tp.streamOf(source2).map(Queries::prepare);
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5)))
+        .ajoin(s2, t1 -> t1.v1, t2 -> t2.v1, makeJoinF());
+    return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
   }
 
   public static <T> Tuple2<T, Long> prepare(T value) {
     return new Tuple2<>(value, System.nanoTime());
   }
 
+  //value, event time, processing time
+  public static <T> Tuple3<T, Long, Long> prepare(Tuple2<T, Long> value) {
+    return new Tuple3<>(value.v1, value.v2, System.currentTimeMillis());
+  }
+
   public static <T> Tuple2<T, Long> calcDelta(Tuple2<T, Long> tuple) {
     return new Tuple2<>(tuple.v1, System.nanoTime() - tuple.v2);
+  }
+
+  public static <T> Tuple3<Long, Long, Long> setEjectTimestamp(Tuple3<T, Long, Long> tuple) {
+    return new Tuple3<>(tuple.v2, tuple.v3, System.currentTimeMillis());
   }
 
   public static <T1, T2> Tuple3<T1, T2, Long> calcDelta(Tuple3<T1, T2, Long> tuple) {
@@ -86,26 +109,28 @@ public class Queries {
         new TopologyBuilder().streamOf(bidSource).map(Queries::prepare)
             .map(makeMap(bid -> new Tuple4<>(bid.auctionId,
                 Queries.dollarToEuro(bid.bid), bid.betterId, bid.time)))
-                .map(Queries::calcDelta)
+            .map(Queries::calcDelta)
             .to(sink).build());
   }
 
   public static Query makeQueryAgeFilter(Source<Person> personSource, Sink<Tuple> sink) {
     return new Query(
         new TopologyBuilder().streamOf(personSource).map(Queries::prepare)
-            .map(makeMap(person -> new Tuple4<>(person.id, person.name, person.province, person.age)))
+            .map(makeMap(
+                person -> new Tuple4<>(person.id, person.name, person.province, person.age)))
             .filter(makeFilter(p -> Integer.parseInt(p.v4) > 1))
-                .map(Queries::calcDelta)
+            .map(Queries::calcDelta)
             .to(sink).build());
   }
 
   public static Query makeSimpleAuctionQuery(Source<Auction> auctionSource, Sink<Tuple> sink) {
     return new Query(
-            new TopologyBuilder().streamOf(auctionSource).map(Queries::prepare)
-                    .map(makeMap(auction -> new Tuple4<>(auction.id, auction.quantity, auction.currentPrice, auction.reserve)))
-                    .filter(makeFilter(a -> a.v2 > 5))
-                    .map(Queries::calcDelta)
-                    .to(sink).build());
+        new TopologyBuilder().streamOf(auctionSource).map(Queries::prepare)
+            .map(makeMap(auction -> new Tuple4<>(auction.id, auction.quantity, auction.currentPrice,
+                auction.reserve)))
+            .filter(makeFilter(a -> a.v2 > 5))
+            .map(Queries::calcDelta)
+            .to(sink).build());
   }
 
   /**
@@ -138,16 +163,16 @@ public class Queries {
             .join(ps,
                 (a, p) -> new Tuple4<>(p.name, p.city, p.province, a.category),
                 a -> a.sellerId,
-                            p -> p.id, WatermarkGenerator.seconds(0, 1),
-                            TimestampExtractor.currentTimeNS()
-                    ).to(sink).buildAsQuery();
+                p -> p.id, WatermarkGenerator.seconds(0, 1),
+                TimestampExtractor.currentTimeNS()
+            ).to(sink).buildAsQuery();
   }
 
   /**
    * Select person.name from bid, person where person.id = bid.betterid
    */
   public static Query makePlainJoin(Source<Auction> auctionSource,
-          Source<Bid> bidSource, BenchmarkingSink<Tuple> sink) {
+      Source<Bid> bidSource, BenchmarkingSink<Tuple> sink) {
     var builder = new TopologyBuilder();
     var as = builder.streamOf(auctionSource);
     // ein top builder per query
@@ -164,7 +189,7 @@ public class Queries {
    * Select person.name from bid, person where person.id = bid.betterid
    */
   public static Query makeAJoin(Source<Person> personSource,
-                                Source<Bid> bidSource, BenchmarkingSink<Tuple> sink) {
+      Source<Bid> bidSource, BenchmarkingSink<Tuple> sink) {
     var builder = new TopologyBuilder();
     var ps = builder.streamOf(personSource);
     // ein top builder per query

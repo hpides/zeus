@@ -22,7 +22,8 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
 
   public ChunkedBuffer() {
     this.inChunk = new ArrayDeque<>(this.chunkSize);
-    this.outChunk = new ArrayDeque<>();
+    this.outChunk = new ArrayDeque<>(this.chunkSize);
+    log.info("Chunck Size {}", this.chunkSize);
     this.queue = new LinkedBlockingQueue<>();
   }
 
@@ -34,7 +35,8 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
       try {
         final var newChunk = this.queue
             .poll(ExecutionConfig.getConfig().getFlushIntervallMS() / 3 + 1,
-                TimeUnit.MILLISECONDS); // We wait for a limited time to assure
+                TimeUnit.MILLISECONDS); // We wait for a limited time to assure that operations
+        // downstream can continue
         if (newChunk != null) {
           this.outChunk = newChunk;
           return this.outChunk.poll();

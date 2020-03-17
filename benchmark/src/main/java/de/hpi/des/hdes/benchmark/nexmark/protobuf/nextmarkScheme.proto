@@ -1,0 +1,48 @@
+syntax = "proto2";
+
+message Bid {
+    required int64 id = 1;
+    required int64 auction_id = 2;
+    required int64 better_id = 3;
+    required int64 time = 4;
+    required int32 bid = 5;
+    required int64 event_time = 6;
+}
+
+message Auction {
+    required int64 id = 1;
+    required int32 current_price = 2;
+    required int32 reserve = 3;
+    required string privacy = 4;
+    required int64 seller_id = 5;
+    required int32 category = 6;
+    required int32 quantity = 7;
+    required string type = 8;
+    required int64 start_time = 9;
+    required int64 end_time = 10;
+
+    required int64 event_time = 11;
+}
+
+message Person {
+    required int64 id = 1;
+    required string name = 2;
+    required string email = 3;
+    required string phone = 4;
+    required string homepage = 5;
+    required string creditcard = 6;
+
+    required string street = 7;
+    required string city = 8;
+    required string province = 9;
+    required string country = 10;
+    required string zipCode = 11;
+
+    required string education = 12;
+    required string gender = 13;
+    required string business = 14;
+    required string age = 15;
+    required string income = 16;
+
+    required int64 event_time = 17;
+}

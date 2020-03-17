@@ -10,7 +10,7 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Getter
-public class BlockingSource<E> extends AbstractSource<E> {
+public class BlockingSource<E> extends AbstractSource<E> implements BlockingOffer<E> {
 
   private final SizedChunkedBuffer<E> queue;
   private final UUID id;
@@ -20,6 +20,11 @@ public class BlockingSource<E> extends AbstractSource<E> {
     super(timestampExtractor, watermarkGenerator);
     this.queue = new SizedChunkedBuffer<>(capacity);
     this.id = UUID.randomUUID();
+  }
+
+  @Override
+  public void flush() {
+    this.getQueue().flush();
   }
 
   public BlockingSource(int capacity) {

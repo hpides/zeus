@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 public interface Buffer<IN> extends SlotProcessor<IN> {
 
   static <IN> Buffer<AData<IN>> createADataBuffer() {
-    return new ChunkedBuffer<>();
+    return new BlockingSizedChunkedBuffer<>(250_000);
   }
 
   static <IN> Buffer<IN> create() {

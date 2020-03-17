@@ -43,7 +43,8 @@ public class TwoInputPullSlot<IN1, IN2, OUT> extends RunnableSlot<OUT> {
   public void shutdown() {
     super.shutdown();
     if (input1.unsafePollAll().size() > 0 || input2.unsafePollAll().size() > 0) {
-      log.warn("TwoInputSlot shut down but input buffers were not empty!");
+      log.warn("TwoInputSlot shut down but input buffers were not empty! {} and {} elements left",
+          input1.unsafePollAll().size(), input2.unsafePollAll().size());
     }
   }
 

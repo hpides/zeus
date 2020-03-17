@@ -4,29 +4,42 @@ import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.Getter;
-import org.jooq.lambda.tuple.Tuple1;
+import org.jooq.lambda.tuple.Tuple2;
 
-public class IntegerTupleGenerator extends UniformGenerator<Tuple1<Integer>> {
+public class IntegerTupleGenerator extends UniformGenerator<Tuple2<Integer, Long>> {
 
   private final Random random;
   @Getter
   private final List<Integer> values;
   private int i = 0;
 
-  public IntegerTupleGenerator(int eventsPerSecond, int timeInSeconds, ExecutorService executor,
+  public IntegerTupleGenerator(long eventsPerSecond, long timeInSeconds, ExecutorService executor,
       int seed) {
     super(eventsPerSecond, timeInSeconds, executor);
     this.random = new Random(seed);
-    values = IntStream.generate(() -> random.nextInt(1_000_000)).limit(1_000).boxed()
-        .collect(Collectors.toList());
+//    values = IntStream.generate(() -> random.nextInt( 1_000_000)).limit(1_000).boxed()
+//        .collect(Collectors.toList());
+    values = IntStream.generate(new IntSupplier() {
+      int i = seed * 10_000;
+
+      @Override
+      public int getAsInt() {
+        return this.i++;
+      }
+    }).limit(10_000).boxed().collect(Collectors.toList());
+    values.add(1);
   }
 
-  public int expectedJoinSize(IntegerTupleGenerator other, int eps) {
-    return Sets.intersection(
-        Sets.newHashSet(this.values), Sets.newHashSet(other.getValues())).size() * eps;
+  public long expectedJoinSize(IntegerTupleGenerator other, long eps, long totalTime,
+      int windowTime) {
+    return (long) (Math.pow(Sets.intersection(
+        Sets.newHashSet(this.values), Sets.newHashSet(other.getValues())).size() * (eps
+        / (double) values.size()
+    ), 2) * (totalTime / (double) windowTime));
   }
 
   public IntegerTupleGenerator(int eventsPerSecond, int timeInSeconds, ExecutorService executor) {
@@ -35,7 +48,9 @@ public class IntegerTupleGenerator extends UniformGenerator<Tuple1<Integer>> {
 
 
   @Override
-  protected Tuple1<Integer> generateEvent(boolean isBenchmark) {
-    return new Tuple1<>(values.get(i++ % values.size()));
+  protected Tuple2<Integer, Long> generateEvent() {
+    return new Tuple2<>(values.get(i++ % values.size()), System.currentTimeMillis());
   }
+
+
 }

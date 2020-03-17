@@ -1,6 +1,6 @@
 package de.hpi.des.hdes.benchmark.generator;
 
-import de.hpi.des.hdes.benchmark.BlockingSource;
+import de.hpi.des.hdes.benchmark.BlockingOffer;
 import java.util.concurrent.CompletableFuture;
 
 public interface Generator<E> {
@@ -11,7 +11,7 @@ public interface Generator<E> {
    * @param queue This queue receives the generated events.
    * @return Future is completed with true or false depending on the success of the generation.
    */
-  CompletableFuture<Boolean> generate(BlockingSource<E> queue);
+  CompletableFuture<Boolean> generate(BlockingOffer<E> queue);
 
   Long getTotalEvents();
 

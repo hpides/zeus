@@ -1,7 +1,6 @@
 package de.hpi.des.hdes.benchmark.nexmark.entities;
 
 import java.util.Objects;
-import java.io.Serializable;
 
 public final class Person {
 
@@ -26,11 +25,13 @@ public final class Person {
   public String age;
   public String income;
 
+  public Long eventTime;
+
   public Person() {}
 
   public Person(long id, String name, String email, String phone, String homepage, String creditcard, String street,
                 String city, String province, String country, String zipCode, String education, String gender,
-                String business, String age, String income) {
+                String business, String age, String income, long eventTime) {
     this.id = id;
     this.name = name;
     this.email = email;
@@ -47,6 +48,7 @@ public final class Person {
     this.business = business;
     this.age = age;
     this.income = income;
+    this.eventTime = eventTime;
   }
 
   public long getId() {
@@ -177,37 +179,64 @@ public final class Person {
     this.income = income;
   }
 
+  public Long getEventTime() {
+    return eventTime;
+  }
+
+  public void setEventTime(Long eventTime) {
+    this.eventTime = eventTime;
+  }
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     Person person = (Person) o;
     return id == person.id &&
-            name.equals(person.name) &&
-            email.equals(person.email) &&
-            phone.equals(person.phone) &&
-            homepage.equals(person.homepage) &&
-            creditcard.equals(person.creditcard) &&
-            street.equals(person.street) &&
-            city.equals(person.city) &&
-            province.equals(person.province) &&
-            country.equals(person.country) &&
-            zipCode.equals(person.zipCode) &&
-            education.equals(person.education) &&
-            gender.equals(person.gender) &&
-            business.equals(person.business) &&
-            age.equals(person.age) &&
-            income.equals(person.income);
+            Objects.equals(name, person.name) &&
+            Objects.equals(email, person.email) &&
+            Objects.equals(phone, person.phone) &&
+            Objects.equals(homepage, person.homepage) &&
+            Objects.equals(creditcard, person.creditcard) &&
+            Objects.equals(street, person.street) &&
+            Objects.equals(city, person.city) &&
+            Objects.equals(province, person.province) &&
+            Objects.equals(country, person.country) &&
+            Objects.equals(zipCode, person.zipCode) &&
+            Objects.equals(education, person.education) &&
+            Objects.equals(gender, person.gender) &&
+            Objects.equals(business, person.business) &&
+            Objects.equals(age, person.age) &&
+            Objects.equals(income, person.income);
+  }
+
+  @Override
+  public String toString() {
+    return "Person{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", email='" + email + '\'' +
+        ", phone='" + phone + '\'' +
+        ", homepage='" + homepage + '\'' +
+        ", creditcard='" + creditcard + '\'' +
+        ", street='" + street + '\'' +
+        ", city='" + city + '\'' +
+        ", province='" + province + '\'' +
+        ", country='" + country + '\'' +
+        ", zipCode='" + zipCode + '\'' +
+        ", education='" + education + '\'' +
+        ", gender='" + gender + '\'' +
+        ", business='" + business + '\'' +
+        ", age='" + age + '\'' +
+        ", income='" + income + '\'' +
+        ", eventTime=" + eventTime +
+        '}';
   }
 
   @Override
   public int hashCode() {
     return Objects
-            .hash(id, name, email, phone, homepage, creditcard, street, city, province, country, zipCode, education,
-                    gender, business, age, income);
+        .hash(id, name, email, phone, homepage, creditcard, street, city, province, country,
+            zipCode, education, gender, business, age, income, eventTime);
   }
 }

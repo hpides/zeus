@@ -3,7 +3,6 @@ package de.hpi.des.hdes.benchmark;
 import de.hpi.des.hdes.benchmark.generator.Generator;
 import de.hpi.des.hdes.benchmark.generator.InMemoryNexGenerator;
 import de.hpi.des.hdes.benchmark.generator.IntegerTupleGenerator;
-import de.hpi.des.hdes.benchmark.generator.NetworkGenerator;
 import de.hpi.des.hdes.benchmark.generator.StringTupleGenerator;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
 import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
@@ -38,7 +37,7 @@ import picocli.CommandLine.Option;
 @Log4j2
 public class Main implements Runnable {
 
-  @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "100000")
+  @Option(names = {"--eventsPerSecond", "-eps"}, defaultValue = "500000")
   private int eventsPerSecond;
   @Option(names = {"--maxDelayInSeconds", "-mds"}, defaultValue = "10")
   private int maxDelayInSeconds;
@@ -52,6 +51,8 @@ public class Main implements Runnable {
   private double auctionFraction;
   @Option(names = {"--bidFraction", "-bf"}, defaultValue = "0.60")
   private double bidFraction;
+  @Option(names = {"--newQueriesPerSecond", "-nqs"}, defaultValue = "1")
+  private double newQueriesPerSecond;
 
   public static void main(final String[] args) {
     new CommandLine(new Main()).execute(args);
@@ -59,7 +60,7 @@ public class Main implements Runnable {
 
   @Override
   public void run() {
-    runNexmarkLocalhostNetwork();
+    runBasicBenchmark();
   }
 
   public void runNexmark() {
@@ -132,68 +133,6 @@ public class Main implements Runnable {
     });
   }
 
-  public void runNexmarkLocalhostNetwork() {
-    final String engineIp = "127.0.0.1";
-    final int auctionNetworkSocketPort = 5551;
-    final int bidNetworkSocketPort = 5552;
-    final int personNetworkSocketPort = 5553;
-
-    // Be aware that the sources are not flushed and could therefore still have events in their buffer when execution is finished
-    final var auctionSource = new NetworkSource<>((int) (auctionFraction * eventsPerSecond * maxDelayInSeconds), auctionNetworkSocketPort, Auction.class);
-    final var bidSource = new NetworkSource<>((int) (bidFraction * eventsPerSecond * maxDelayInSeconds), bidNetworkSocketPort, Bid.class);
-    final var personSource = new NetworkSource<>((int) (personFraction * eventsPerSecond * maxDelayInSeconds), personNetworkSocketPort, Person.class);
-
-    Thread t1 = new Thread(auctionSource);
-    Thread t2 = new Thread(bidSource);
-    Thread t3 = new Thread(personSource);
-
-    t1.start();
-    t2.start();
-    t3.start();
-
-    final var generator = new NetworkGenerator(eventsPerSecond,
-            timeInSeconds, this.personFraction, this.auctionFraction, this.bidFraction, engineIp,
-            auctionNetworkSocketPort, bidNetworkSocketPort, personNetworkSocketPort);
-
-    log.info("Running with {} EPS, {}s max delay for {}s.", eventsPerSecond, maxDelayInSeconds, timeInSeconds);
-    long startTime = System.nanoTime();
-
-    var q1Sink = new BenchmarkingSink<Tuple>();
-    var q1 = Queries.makeQuery1(bidSource, q1Sink);
-
-    var q2Sink = new BenchmarkingSink<Tuple>();
-    var q2 = Queries.makeQueryAgeFilter(personSource, q2Sink);
-
-    var q3Sink = new BenchmarkingSink<Tuple>();
-    var q3 = Queries.makeSimpleAuctionQuery(auctionSource, q3Sink);
-
-
-    var querySinks = List.of(q1Sink, q2Sink, q3Sink);
-    var jobManager = new JobManager();
-    var done = generator.generate();
-
-    jobManager.addQuery(q1);
-    jobManager.addQuery(q2);
-    jobManager.addQuery(q3);
-    jobManager.runEngine();
-
-    try {
-      done.get();
-      long endTime = System.nanoTime();
-      log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
-      Thread.sleep(TimeUnit.SECONDS.toMillis(5));
-
-    } catch (InterruptedException | ExecutionException e) {
-      e.printStackTrace();
-    }
-    jobManager.shutdown();
-    querySinks.forEach(BenchmarkingSink::log);
-    log.info("Telling Threads to stop");
-    auctionSource.stop();
-    personSource.stop();
-    bidSource.stop();
-
-  }
 
   public void runBasicBenchmark() {
     log.info("Running with {} EPS, {}s max delay for {}s.",
@@ -212,10 +151,10 @@ public class Main implements Runnable {
         2
     );
     log.printf(Level.INFO, "Expecting %,d join tupel",
-        generator1.expectedJoinSize(generator2, eventsPerSecond) * timeInSeconds / 5);
+        generator1.expectedJoinSize(generator2, eventsPerSecond, timeInSeconds, 5));
 
-    var bs11 = new BlockingSource<Tuple1<Integer>>(maxDelayInSeconds * eventsPerSecond);
-    var bs12 = new BlockingSource<Tuple1<Integer>>(maxDelayInSeconds * eventsPerSecond);
+    var bs11 = new BlockingSource<Tuple2<Integer, Long>>(maxDelayInSeconds * eventsPerSecond);
+    var bs12 = new BlockingSource<Tuple2<Integer, Long>>(maxDelayInSeconds * eventsPerSecond);
     var q0Sink = new BenchmarkingSink<Tuple>();
     var q0 = Queries.makeQuery0Measured(bs11, q0Sink);
     var q1Sink = new BenchmarkingSink<Tuple>();

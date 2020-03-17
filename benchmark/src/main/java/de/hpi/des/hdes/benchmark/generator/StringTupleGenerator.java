@@ -13,7 +13,7 @@ public class StringTupleGenerator extends UniformGenerator<Tuple1<String>> {
   }
 
   @Override
-  protected Tuple1<String> generateEvent(boolean isBenchmark) {
+  protected Tuple1<String> generateEvent() {
     return new Tuple1<>(createCreditCardNumber());
   }
 

@@ -1,6 +1,6 @@
 package de.hpi.des.hdes.engine.operation;
 
-import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.AData;
@@ -11,10 +11,14 @@ import de.hpi.des.hdes.engine.udf.TimestampExtractor;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StreamJoin<IN1, IN2, KEY, OUT> extends AbstractTopologyElement<OUT> implements
@@ -50,7 +54,8 @@ public class StreamJoin<IN1, IN2, KEY, OUT> extends AbstractTopologyElement<OUT>
     final List<? extends Window> assignedWindows = this.windowAssigner.assignWindows(in.getEventTime());
     for (final Window window : assignedWindows) {
       // put in own state
-      final Multimap<KEY, IN1> index = this.state1.computeIfAbsent(window, w -> LinkedListMultimap.create());
+      final Multimap<KEY, IN1> index = this.state1
+          .computeIfAbsent(window, w -> ArrayListMultimap.create());
       index.put(keySelector1.selectKey(in.getValue()), in.getValue());
     }
     processWatermark1(in);
@@ -61,7 +66,8 @@ public class StreamJoin<IN1, IN2, KEY, OUT> extends AbstractTopologyElement<OUT>
     final List<? extends Window> assignedWindows = this.windowAssigner.assignWindows(in.getEventTime());
     for (final Window window : assignedWindows) {
       // put in own state
-      final Multimap<KEY, IN2> index = this.state2.computeIfAbsent(window, w -> LinkedListMultimap.create());
+      final Multimap<KEY, IN2> index = this.state2.computeIfAbsent(window,
+          w -> ArrayListMultimap.create());
       index.put(keySelector2.selectKey(in.getValue()), in.getValue());
     }
     processWatermark2(in);

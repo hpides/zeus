@@ -72,6 +72,11 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
       iterator.remove();
     }
 
+    // skip if there are no closed windows
+    if (output.isEmpty()) {
+      return;
+    }
+
     final int lastIndex = output.size() - 1;
     final AData<Bucket<KEY, IN>> bucketAData = output.get(lastIndex);
     final ADataWatermark<Bucket<KEY, IN>> watermark = ADataWatermark

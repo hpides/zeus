@@ -1,7 +1,6 @@
 package de.hpi.des.hdes.benchmark.nexmark.entities;
 
 import java.util.Objects;
-import java.io.Serializable;
 
 public final class Auction {
 
@@ -15,10 +14,12 @@ public final class Auction {
   public String type;
   public long startTime;
   public long endTime;
+  public long eventTime;
 
   public Auction() {}
 
-  public Auction(long id, long currentPrice, long reserve, String privacy, long sellerId, long category, long quantity, String type, long startTime, long endTime) {
+  public Auction(long id, long currentPrice, long reserve, String privacy, long sellerId, long category, long quantity,
+                 String type, long startTime, long endTime, long eventTime) {
     this.id = id;
     this.currentPrice = currentPrice;
     this.reserve = reserve;
@@ -29,6 +30,7 @@ public final class Auction {
     this.type = type;
     this.startTime = startTime;
     this.endTime = endTime;
+    this.eventTime = eventTime;
   }
 
   public long getId() {
@@ -111,6 +113,14 @@ public final class Auction {
     this.endTime = endTime;
   }
 
+  public long getEventTime() {
+    return eventTime;
+  }
+
+  public void setEventTime(long eventTime) {
+    this.eventTime = eventTime;
+  }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -132,8 +142,27 @@ public final class Auction {
                 type.equals(auction.type);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, currentPrice, reserve, privacy, sellerId, category, quantity, type, startTime, endTime);
-    }
+  @Override
+  public String toString() {
+    return "Auction{" +
+        "id=" + id +
+        ", currentPrice=" + currentPrice +
+        ", reserve=" + reserve +
+        ", privacy='" + privacy + '\'' +
+        ", sellerId=" + sellerId +
+        ", category=" + category +
+        ", quantity=" + quantity +
+        ", type='" + type + '\'' +
+        ", startTime=" + startTime +
+        ", endTime=" + endTime +
+        ", eventTime=" + eventTime +
+        '}';
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects
+        .hash(id, currentPrice, reserve, privacy, sellerId, category, quantity, type, startTime,
+            endTime, eventTime);
+  }
 }
