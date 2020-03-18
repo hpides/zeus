@@ -34,5 +34,10 @@ public abstract class TumblingWindow implements WindowAssigner<TimeWindow> {
     final long windowStart = watermark - (watermark + this.size) % this.size;
     return windowStart - this.size;
   }
+
+  @Override
+  public long maximumSliceSize() {
+    return this.size;
+  }
 }
 

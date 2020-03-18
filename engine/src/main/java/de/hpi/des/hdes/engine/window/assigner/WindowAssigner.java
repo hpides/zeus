@@ -7,4 +7,6 @@ public interface WindowAssigner<Window> {
   List<Window> assignWindows(long timestamp);
 
   long nextWindowStart(long watermark);
+
+  long maximumSliceSize();
 }

@@ -26,7 +26,7 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
   private final KeySelector<IN, KEY> keySelector;
   private final Map<Window, Map<KEY, Set<IN>>> state;
 
-  public StreamASource(final int triggerInterval, final KeySelector<IN, KEY> keySelector) {
+  public StreamASource(final long triggerInterval, final KeySelector<IN, KEY> keySelector) {
     this.sliceAssigner = TumblingWindow.ofEventTime(triggerInterval);
     this.keySelector = keySelector;
     this.state = new HashMap<>();

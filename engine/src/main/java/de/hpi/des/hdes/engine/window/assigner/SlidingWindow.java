@@ -49,4 +49,9 @@ public abstract class SlidingWindow implements WindowAssigner<TimeWindow> {
     final long windowStart = watermark - (watermark + this.slide + this.size) % this.size;
     return windowStart - this.slide;
   }
+
+  @Override
+  public long maximumSliceSize() {
+    return this.slide;
+  }
 }
