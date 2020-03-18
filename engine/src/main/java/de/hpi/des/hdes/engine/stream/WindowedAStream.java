@@ -16,14 +16,10 @@ import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.udf.Join;
 import de.hpi.des.hdes.engine.udf.KeySelector;
 import de.hpi.des.hdes.engine.udf.TimestampExtractor;
-import de.hpi.des.hdes.engine.window.Time;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
-import java.awt.desktop.OpenURIEvent;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import org.jetbrains.annotations.NotNull;
 
 public class WindowedAStream<In> extends AbstractAStream<In> {
 
@@ -91,18 +87,20 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
     final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>(this.windowAssigner);
     final StreamASink<In, Other, Out> sink = new StreamASink<>(join);
 
-    final ASourceNode<In, Key> sourceNode1 = new ASourceNode<>(this.node, source1);
-    final ASourceNode<Other, Key> sourceNode2 = new ASourceNode<>(other.getNode(), source2);
-
+    final ASourceNode<In, Key> sourceNode1;
+    final ASourceNode<Other, Key> sourceNode2;
     final AJoinNode<In, Other, Key> joinNode;
     final ASinkNode<In, Other, Out> sinkNode;
     if (name.isPresent()) {
+      sourceNode1 = new ASourceNode<>(name.get(), 1, source1);
+      sourceNode2 = new ASourceNode<>(name.get(), 2, source2);
       joinNode = new AJoinNode<>(name.get(), aJoin);
       sinkNode = new ASinkNode<>(name.get(), sink);
     } else {
-      joinNode = new AJoinNode<>(sourceNode1.getNodeId(),
-          sourceNode2.getNodeId(), aJoin);
-      sinkNode = new ASinkNode<>("A-", sink);
+      sourceNode1 = new ASourceNode<>(this.node, source1);
+      sourceNode2 = new ASourceNode<>(other.getNode(), source2);
+      joinNode = new AJoinNode<>(sourceNode1.getNodeId(), sourceNode2.getNodeId(), aJoin);
+      sinkNode = new ASinkNode<>(sink);
     }
 
     this.addGraphDependencies(other, sourceNode1, sourceNode2, joinNode, sinkNode);

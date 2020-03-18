@@ -12,6 +12,10 @@ public class ASourceNode<IN, KEY> extends UnaryOperationNode<IN, Bucket<KEY, IN>
     super(fromParentID(parent), operator);
   }
 
+  public ASourceNode(final String name, final int number, final StreamASource<IN, KEY> operator) {
+    super(String.format("ASource%d-%s", number, name), operator);
+  }
+
   private static String fromParentID(final Node parent) {
     final String nodeId = parent.getNodeId();
     return nodeId.substring(nodeId.length() / 2);

@@ -8,7 +8,11 @@ public class ASinkNode<IN1, IN2, OUT> extends UnaryOperationNode<IntersectedBuck
 
 
   public ASinkNode(final String name, final StreamASink<IN1, IN2, OUT> operator) {
-    super(name + operator.toString(), operator);
+    super("ASink-" + name + operator.toString(), operator);
+  }
+
+  public ASinkNode(final StreamASink<IN1, IN2, OUT> operator) {
+    super("ASink-" + operator.toString(), operator);
   }
 
 }

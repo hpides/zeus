@@ -56,7 +56,7 @@ public class ExecutionPlan {
     final Set<Node> newNodes = Sets.difference(queryTopology.getNodes(), topologyNodes);
     newNodes.forEach(node -> node.addAssociatedQuery(query));
     final LocalExecutionPlanBuilder planBuilder = new LocalExecutionPlanBuilder(executionPlan);
-    return planBuilder.build(Topology.of(newNodes));
+    return planBuilder.build(Topology.of(queryTopology.getNodes()));
   }
 
   public static ExecutionPlan createPlan(final Query query) {

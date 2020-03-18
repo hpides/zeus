@@ -62,7 +62,7 @@ class AJoinTest {
     final Query query = new Query(builder.build());
     engine.addQuery(query);
 
-    for (int i = 0; i < size * 2; i++) {
+    for (int i = 0; i < size * 3; i++) {
       TestUtil.runAndTick(engine.getPlan().getRunnableSlots());
     }
 
