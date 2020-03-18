@@ -3,6 +3,7 @@ package de.hpi.des.hdes.engine.execution.plan;
 import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.connector.Buffer;
+import de.hpi.des.hdes.engine.execution.slot.OneInputPullSlot;
 import de.hpi.des.hdes.engine.execution.slot.OneInputPushSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
@@ -77,16 +78,23 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
     final Node parentNode = unaryOperationNode.getParents().iterator().next();
     final Slot<IN> parentSlot = this.getParentSlot(parentNode);
 
-    final OneInputPushSlot<IN, OUT> slot = new OneInputPushSlot<>(parentSlot, operator,
-        unaryOperationNode);
+    final Slot<OUT> slot;
+    if (parentSlot instanceof SourceSlot) {
+      final Buffer<AData<IN>> input = Buffer.createADataBuffer();
+      slot = new OneInputPullSlot<>(unaryOperationNode, input);
+      parentSlot.addOutput(unaryOperationNode, input);
+
+    } else {
+      slot = new OneInputPushSlot<>(parentSlot, operator, unaryOperationNode);
+      parentSlot.addOutput(unaryOperationNode, operator);
+    }
 
     operator.init(slot);
 
+    parentSlot.addChild(slot);
+
     this.outputSlots.put(unaryOperationNode, slot);
     this.slots.add(slot);
-
-    parentSlot.addChild(slot);
-    parentSlot.addOutput(unaryOperationNode, operator);
   }
 
   @Override
