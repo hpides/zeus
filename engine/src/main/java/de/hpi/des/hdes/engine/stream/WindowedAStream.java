@@ -68,24 +68,37 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
   public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
       final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
       final Join<? super In, ? super Other, ? extends Out> join) {
-    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.empty());
+    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.empty(),
+        defaultExtractor(), defaultGenerator());
   }
 
   public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
       final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
       final Join<? super In, ? super Other, ? extends Out> join, final String name) {
-    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.of(name));
+    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.of(name),
+        defaultExtractor(), defaultGenerator());
+  }
+
+  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
+      final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
+      final Join<? super In, ? super Other, ? extends Out> join,
+      final TimestampExtractor<Out> timestampExtractor,
+      final WatermarkGenerator<Out> watermarkGenerator, final String name) {
+    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.of(name),
+        timestampExtractor, watermarkGenerator);
   }
 
   private <Other, Out, Key> AStream<Out> createAJoinAStream(final AStream<Other> other,
       final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
-      final Join<? super In, ? super Other, ? extends Out> join, final Optional<String> name) {
+      final Join<? super In, ? super Other, ? extends Out> join, final Optional<String> name,
+      final TimestampExtractor<Out> timestampExtractor,
+      final WatermarkGenerator<Out> generator) {
 
     final StreamASource<In, Key> source1 = new StreamASource<>(this.sliceSize(), inKeySelector);
     final StreamASource<Other, Key> source2 = new StreamASource<>(this.sliceSize(),
         otherKeySelector);
     final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>(this.windowAssigner);
-    final StreamASink<In, Other, Out> sink = new StreamASink<>(join);
+    final StreamASink<In, Other, Out> sink = new StreamASink<>(join, timestampExtractor, generator);
 
     final ASourceNode<In, Key> sourceNode1;
     final ASourceNode<Other, Key> sourceNode2;
@@ -121,4 +134,13 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
   private long sliceSize() {
     return this.windowAssigner.maximumSliceSize() / ASOURCE_SLICE_FRACTION;
   }
+
+  private static <Out> WatermarkGenerator<Out> defaultGenerator() {
+    return new WatermarkGenerator<>(0, 10_000);
+  }
+
+  private static <Out> TimestampExtractor<Out> defaultExtractor() {
+    return elem -> 0;
+  }
+
 }

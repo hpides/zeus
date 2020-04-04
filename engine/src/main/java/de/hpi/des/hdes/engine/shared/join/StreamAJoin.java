@@ -7,6 +7,7 @@ import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.ADataWatermark;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
+import de.hpi.des.hdes.engine.udf.TimestampExtractor;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.ArrayList;
