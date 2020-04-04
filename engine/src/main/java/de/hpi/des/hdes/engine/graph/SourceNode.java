@@ -5,6 +5,11 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Represents sources in the logical plan.
+ *
+ * @param <OUT> type of outgoing elements
+ */
 @Getter
 public class SourceNode<OUT> extends Node {
 

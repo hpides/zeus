@@ -11,30 +11,48 @@ import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 
-import java.util.function.Function;
-
+/**
+ * A stream that is windowed and keyed.
+ *
+ * The stream contains a {@link WindowAssigner} determining the window.
+ * A {@link KeySelector} is responsible for the keying.
+ *
+ * @param <IN>  type of the stream's elements
+ * @param <KEY> type of the key
+ */
 public class KeyedWindowedAStream<IN, KEY> extends AbstractAStream<IN> {
 
   private final WindowAssigner<? extends Window> windowAssigner;
   private final KeySelector<IN, KEY> keyselector;
 
-  public KeyedWindowedAStream(KeySelector<IN, KEY> keyselector, final TopologyBuilder builder, final Node node,
-                              final WindowAssigner<? extends Window> windowAssigner) {
+  public KeyedWindowedAStream(KeySelector<IN, KEY> keyselector, final TopologyBuilder builder,
+      final Node node,
+      final WindowAssigner<? extends Window> windowAssigner) {
     super(builder, node);
     this.windowAssigner = windowAssigner;
     this.keyselector = keyselector;
   }
 
+  /**
+   * Aggregates this stream by window and key.
+   *
+   * @param aggregator         the definition of the aggregation
+   * @param watermarkGenerator watermark generator for the resulting stream
+   * @param timestampExtractor timestamp extractor for the resulting stream
+   * @param <OUT>              type of the resulting stream
+   * @param <STATE>            type of the aggregation's state
+   * @return a stream of aggregated elements
+   */
   public <OUT, STATE> AStream<OUT> aggregate(
-    final Aggregator<IN, STATE, OUT> aggregator,
-    final WatermarkGenerator<OUT> watermarkGenerator,
-    final TimestampExtractor<OUT> timestampExtractor) {
+      final Aggregator<IN, STATE, OUT> aggregator,
+      final WatermarkGenerator<OUT> watermarkGenerator,
+      final TimestampExtractor<OUT> timestampExtractor) {
     StreamKeyedAggregation<IN, KEY, STATE, OUT> streamAgg = new StreamKeyedAggregation(
-      this.keyselector,
-      aggregator,
-      this.windowAssigner,
-      watermarkGenerator,
-      timestampExtractor);
+        this.keyselector,
+        aggregator,
+        this.windowAssigner,
+        watermarkGenerator,
+        timestampExtractor);
 
     final UnaryOperationNode<IN, OUT> child = new UnaryOperationNode<>(streamAgg);
     this.builder.addGraphNode(this.node, child);

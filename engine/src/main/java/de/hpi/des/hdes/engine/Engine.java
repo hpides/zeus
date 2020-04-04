@@ -8,6 +8,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * The engine is the main service of HDES.
+ *
+ * It is either running or not running. In both states it is possible to add or remove queries.
+ */
 @Slf4j
 public class Engine {
 
@@ -23,6 +28,9 @@ public class Engine {
     this.isRunning = false;
   }
 
+  /**
+   * Run the engine
+   */
   public void run() {
     if (this.isRunning) {
       throw new IllegalStateException("Engine already running");
@@ -35,10 +43,18 @@ public class Engine {
     }
   }
 
+  /**
+   * Add a new query to the execution
+   *
+   * Note: We synchronize this method to avoid problems when multiple queries are added or
+   * deleted at the same time
+   *
+   * @param query the new query
+   */
   public synchronized void addQuery(final Query query) {
-    // We synchronize this method to avoid problems when multiple queries are added or
-    // deleted at the same time
-    final ExecutionPlan extendedPlan = ExecutionPlan.extend(this.plan, query);;
+
+    final ExecutionPlan extendedPlan = ExecutionPlan.extend(this.plan, query);
+    ;
     if (this.isRunning) {
       extendedPlan.getRunnableSlots()
           .stream()
@@ -53,6 +69,14 @@ public class Engine {
     this.runningQueries.add(query);
   }
 
+  /**
+   * Deletes a query from the execution plan
+   *
+   * Note: We synchronize this method to avoid problems when multiple queries are added or
+   * deleted at the same time
+   *
+   * @param query the query to delete
+   */
   public synchronized void deleteQuery(final Query query) {
     // We synchronize this method to avoid problems when multiple queries are added or
     // deleted at the same time

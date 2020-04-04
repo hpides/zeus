@@ -2,6 +2,13 @@ package de.hpi.des.hdes.engine.graph;
 
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 
+/**
+ * Represents binary operations in the logical plan
+ *
+ * @param <IN1> type of elements in the first stream
+ * @param <IN2> type of elements in the second stream
+ * @param <OUT> type of elements in the resulting stream
+ */
 public class BinaryOperationNode<IN1, IN2, OUT> extends Node {
 
   @Override

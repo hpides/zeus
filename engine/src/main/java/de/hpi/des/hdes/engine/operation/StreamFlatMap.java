@@ -4,6 +4,12 @@ import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.FlatMapper;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Operator that flat maps the elements
+ *
+ * @param <IN>  the type of the input elements
+ * @param <OUT> the type of the output elements
+ */
 public class StreamFlatMap<IN, OUT> extends AbstractTopologyElement<OUT>
     implements OneInputOperator<IN, OUT> {
 

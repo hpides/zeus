@@ -21,16 +21,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.lambda.Seq;
 import org.jooq.lambda.tuple.Tuple2;
 
+/**
+ * StreamAJoin performs the set intersection of the index entries of two buckets.
+ *
+ * @param <IN1> the input type of the left stream
+ * @param <IN2> the input type of the right stream
+ * @param <KEY> the key type of the join operation
+ */
 @Slf4j
 public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<IntersectedBucket<IN1, IN2>>
     implements TwoInputOperator<Bucket<KEY, IN1>, Bucket<KEY, IN2>, IntersectedBucket<IN1, IN2>> {
 
-  // perform set intersection between the index entries of input buckets
-  // late materialization --> avoid performing the cross-product of intersection
   private final Map<Window, List<Bucket<KEY, IN1>>> state1 = new HashMap<>();
   private final Map<Window, List<Bucket<KEY, IN2>>> state2 = new HashMap<>();
   private final WindowAssigner<? extends Window> windowAssigner;
 
+  /**
+   * @param windowAssigner the window assigner of the join window
+   */
   public StreamAJoin(final WindowAssigner<? extends Window> windowAssigner) {
     this.windowAssigner = windowAssigner;
   }
@@ -40,6 +48,8 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
     final List<? extends Window> assignedWindows = this.windowAssigner
         .assignWindows(aData.getEventTime());
 
+    // add bucket two state
+    // todo incrementally merging
     for (final Window window : assignedWindows) {
       final List<Bucket<KEY, IN1>> windowState = this.state1
           .computeIfAbsent(window, w -> new ArrayList<>());
@@ -59,6 +69,8 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
     final List<? extends Window> assignedWindows = this.windowAssigner
         .assignWindows(aData.getEventTime());
 
+    // add bucket two state
+    // todo incrementally merging
     for (final Window window : assignedWindows) {
       final List<Bucket<KEY, IN2>> windowState = this.state2
           .computeIfAbsent(window, w -> new ArrayList<>());
@@ -73,6 +85,11 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
     }
   }
 
+  /**
+   * Creates intersected buckets for windows closed by the watermark timestamp
+   *
+   * @param timestamp the timestamp of the watermark
+   */
   private void trigger(final long timestamp) {
     for (final Entry<Window, List<Bucket<KEY, IN1>>> entry : this.state1.entrySet()) {
       final Window window = entry.getKey();
@@ -94,6 +111,13 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
     }
   }
 
+  /**
+   * Builds all set intersections of the current window
+   *
+   * @param in1Buckets buckets created by the first stream
+   * @param in2Buckets buckets created by the second stream
+   * @return List of IntersectedBuckets
+   */
   private Collection<IntersectedBucket<IN1, IN2>> buildIntersections(
       final Collection<Bucket<KEY, IN1>> in1Buckets,
       final Collection<Bucket<KEY, IN2>> in2Buckets) {
@@ -104,6 +128,12 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
         .toList();
   }
 
+  /**
+   * Creates a collection of intersected buckets for each key that both buckets have in common.
+   *
+   * @param bucketTuple tuple of buckets from the first and second stream respectivly
+   * @return collection of intersected buckets
+   */
   private Seq<IntersectedBucket<IN1, IN2>> getMergesEntries(
       final Tuple2<Bucket<KEY, IN1>, Bucket<KEY, IN2>> bucketTuple) {
     final Set<KEY> inKeySet1 = bucketTuple.v1.getSet().keySet();
@@ -112,6 +142,12 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
     return this.mergeEntries(index, bucketTuple.v1.getSet(), bucketTuple.v2.getSet());
   }
 
+  /**
+   * @param index    keys that both sets have in common
+   * @param entries1 values of the first stream
+   * @param entries2 values of the second stream
+   * @return Seq of intersected buckets for each key
+   */
   private Seq<IntersectedBucket<IN1, IN2>> mergeEntries(final Set<KEY> index,
       final Map<KEY, ? extends Set<IN1>> entries1, final Map<KEY, ? extends Set<IN2>> entries2) {
     return seq(index).map(i -> new IntersectedBucket<>(entries1.get(i), entries2.get(i)));

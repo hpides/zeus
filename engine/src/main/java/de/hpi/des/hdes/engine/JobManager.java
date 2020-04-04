@@ -7,6 +7,9 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * The job manager is a utility class to mock ad-hoc queries.
+ */
 @Slf4j
 public class JobManager {
 

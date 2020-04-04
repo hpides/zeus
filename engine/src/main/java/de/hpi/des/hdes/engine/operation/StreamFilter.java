@@ -3,6 +3,11 @@ package de.hpi.des.hdes.engine.operation;
 import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.udf.Filter;
 
+/**
+ * Operator that filters elements based on a predicate
+ *
+ * @param <IN> the type of the input elements
+ */
 public class StreamFilter<IN> extends AbstractTopologyElement<IN>
     implements OneInputOperator<IN, IN> {
 

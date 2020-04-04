@@ -6,6 +6,12 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.Value;
 
+/**
+ * A Bucket contains a mapping of index to values for a window.
+ *
+ * @param <K> the type of the key (index)
+ * @param <V> the type of the value in the set
+ */
 @Value
 public class Bucket<K, V> {
 

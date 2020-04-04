@@ -17,14 +17,29 @@ public abstract class TumblingWindow implements WindowAssigner<TimeWindow> {
     return List.of(new TimeWindow(windowStart, windowStart + this.size));
   }
 
+  /**
+   * Factory method for TumblingProcessingTimeWindow
+   *
+   * @see TumblingProcessingTimeWindow
+   */
   public static TumblingProcessingTimeWindow ofProcessingTime(final Time time) {
     return new TumblingProcessingTimeWindow(time.getNanos());
   }
 
+  /**
+   * Factory method for TumblingEventTimeWindow
+   *
+   * @see TumblingEventTimeWindow
+   */
   public static TumblingEventTimeWindow ofEventTime(final long time) {
     return new TumblingEventTimeWindow(time);
   }
 
+  /**
+   * Factory method for TumblingEventTimeWindow
+   *
+   * @see TumblingEventTimeWindow
+   */
   public static TumblingEventTimeWindow ofEventTime(final Time time) {
     return new TumblingEventTimeWindow(time.getNanos());
   }

@@ -5,6 +5,11 @@ import de.hpi.des.hdes.engine.execution.SlotProcessor;
 import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * A Buffer is used to connect two runnable slots.
+ *
+ * @param <IN> type of elements to buffer
+ */
 public interface Buffer<IN> extends SlotProcessor<IN> {
 
   static <IN> Buffer<AData<IN>> createADataBuffer() {

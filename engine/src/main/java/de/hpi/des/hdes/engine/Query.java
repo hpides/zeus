@@ -5,6 +5,9 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
 
+/**
+ * A query is a topology which can be uniquely defined.
+ */
 @Getter
 public class Query {
 

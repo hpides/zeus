@@ -18,6 +18,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * StreamASource creates indexed buckets of join elements.
+ *
+ * Note: This is not a {@link de.hpi.des.hdes.engine.operation.Source} but {@link OneInputOperator}.
+ * The name is based on the AJoin definition.
+ *
+ * @param <IN>  the input type of the stream elements
+ * @param <KEY> the key type of the join
+ */
 @Slf4j
 public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, IN>>
     implements OneInputOperator<IN, Bucket<KEY, IN>> {
@@ -26,14 +35,21 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
   private final KeySelector<IN, KEY> keySelector;
   private final Map<Window, Map<KEY, Set<IN>>> state;
 
+  /**
+   * @param triggerInterval the interval of the slices
+   * @param keySelector     the key selector of the join
+   */
   public StreamASource(final long triggerInterval, final KeySelector<IN, KEY> keySelector) {
     this.sliceAssigner = TumblingWindow.ofEventTime(triggerInterval);
     this.keySelector = keySelector;
     this.state = new HashMap<>();
   }
 
-  // 1. pull from external source
-  // 2. combine entries of last t time slots into a bucket
+  /**
+   * Updates state and triggers on watermark
+   *
+   * @param aData the input element
+   */
   @Override
   public void process(final AData<IN> aData) {
     final List<? extends Window> assignedWindows = this.sliceAssigner
@@ -51,6 +67,14 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
     }
   }
 
+  /**
+   * Sends windows closed by the watermark downstream
+   *
+   * For each closed window, this method creates a new bucket.
+   * The last bucket contains the watermark that lead to call of the method.
+   *
+   * @param watermarkTimestamp the timestamp of the watermark
+   */
   private void trigger(final long watermarkTimestamp) {
     final List<AData<Bucket<KEY, IN>>> output = new ArrayList<>(this.state.values().size());
     // we are using an iterator to remove state
@@ -77,6 +101,8 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
       return;
     }
 
+    // use last item as watermark
+    // that makes sure we sent it downstream
     final int lastIndex = output.size() - 1;
     final AData<Bucket<KEY, IN>> bucketAData = output.get(lastIndex);
     final ADataWatermark<Bucket<KEY, IN>> watermark = ADataWatermark

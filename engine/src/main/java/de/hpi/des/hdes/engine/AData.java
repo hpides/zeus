@@ -3,6 +3,13 @@ package de.hpi.des.hdes.engine;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * AData wraps all elements sent through HDES.
+ *
+ * It contains additional data like the extracted timestamp or watermark.
+ *
+ * @param <V> the type of the wrapped value
+ */
 @Getter
 public class AData<V> {
 

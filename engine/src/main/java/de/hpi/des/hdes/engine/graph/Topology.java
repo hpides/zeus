@@ -11,12 +11,18 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Stores the logical plan.
+ */
 @Slf4j
 @Getter
 public class Topology {
 
   private final Set<Node> nodes;
 
+  /**
+   * @param nodes nodes to build the topology
+   */
   public Topology(final Set<Node> nodes) {
     this.nodes = nodes;
   }
@@ -33,11 +39,22 @@ public class Topology {
     return new Topology(nodes);
   }
 
+  /**
+   * Extends the topology with another provided topology.
+   *
+   * @param other topology to extend the current topology with
+   * @return new topology
+   */
   public Topology extend(final Topology other) {
     final Set<Node> allNodes = Sets.union(this.nodes, other.getNodes());
     return new Topology(allNodes);
   }
 
+  /**
+   * Returns the topology nodes in topological ordering.
+   *
+   * @return topologically sorted nodes
+   */
   public List<Node> getTopologicalOrdering() {
     final Map<Node, Long> nodeToIncEdges = new HashMap<>();
     final List<Node> result = new LinkedList<>();

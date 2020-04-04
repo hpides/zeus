@@ -9,6 +9,17 @@ import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * StreamASink materializes the join of two buckets.
+ *
+ *
+ * Note: This is not a {@link de.hpi.des.hdes.engine.operation.Sink} but a {@link OneInputOperator}.
+ * The name is based on the AJoin definition.
+ *
+ * @param <IN1> the input type of the left stream
+ * @param <IN2> the input type of the right stream
+ * @param <OUT> the output type of the join operation
+ */
 @Slf4j
 public class StreamASink<IN1, IN2, OUT> extends AbstractTopologyElement<OUT> implements
     OneInputOperator<IntersectedBucket<IN1, IN2>, OUT> {
@@ -27,6 +38,11 @@ public class StreamASink<IN1, IN2, OUT> extends AbstractTopologyElement<OUT> imp
     this.generator = generator;
   }
 
+  /**
+   * Creates the cross product of the elements of both sets in the {@link IntersectedBucket}.
+   *
+   * @param aData an intersected bucket that contains the elements to join
+   */
   @Override
   public void process(@NotNull final AData<IntersectedBucket<IN1, IN2>> aData) {
     final var inBucket = aData.getValue();

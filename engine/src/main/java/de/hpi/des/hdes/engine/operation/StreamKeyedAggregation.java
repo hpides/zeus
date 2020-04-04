@@ -8,15 +8,21 @@ import de.hpi.des.hdes.engine.udf.TimestampExtractor;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Operator that aggregates the stream grouped by key
+ *
+ * @param <IN>    the type of the input elements
+ * @param <KEY>   the type of the key
+ * @param <STATE> the type of the state
+ * @param <OUT>   the type of output elements
+ */
 @Slf4j
 public class StreamKeyedAggregation<IN, KEY, STATE, OUT>
     extends AbstractTopologyElement<OUT>
@@ -31,10 +37,10 @@ public class StreamKeyedAggregation<IN, KEY, STATE, OUT>
   private long latestTimestamp = 0;
 
   public StreamKeyedAggregation(final KeySelector<IN, KEY> keyselector,
-                                final Aggregator<IN, STATE, OUT> aggregator,
-                                final WindowAssigner<Window> windowAssigner,
-                                final WatermarkGenerator<OUT> watermarkGenerator,
-                                final TimestampExtractor<OUT> timestampExtractor) {
+      final Aggregator<IN, STATE, OUT> aggregator,
+      final WindowAssigner<Window> windowAssigner,
+      final WatermarkGenerator<OUT> watermarkGenerator,
+      final TimestampExtractor<OUT> timestampExtractor) {
     this.keyselector = keyselector;
     this.aggregator = aggregator;
     this.windowAssigner = windowAssigner;
@@ -45,34 +51,35 @@ public class StreamKeyedAggregation<IN, KEY, STATE, OUT>
     aggregator.initialize();
   }
 
-  public void processWatermark(AData<IN> in) {
+  public void processWatermark(final AData<IN> in) {
     if (in.isWatermark()) {
-      long newTimestamp = ((ADataWatermark)(in)).getWatermarkTimestamp();
+      final long newTimestamp = ((ADataWatermark<?>) (in)).getWatermarkTimestamp();
       if (newTimestamp <= this.latestTimestamp) {
         return;
+      } else {
+        this.latestTimestamp = newTimestamp;
       }
-      else this.latestTimestamp = newTimestamp;
     } else {
       return;
     }
-    List<Window> removableWindows = new LinkedList<>();
+    final List<Window> removableWindows = new LinkedList<>();
     for (final Window window : this.windowToState.keySet()) {
       if (window.getMaxTimestamp() < this.latestTimestamp) {
         final Map<KEY, STATE> keyToState = this.windowToState.get(window);
         for (final STATE state : keyToState.values()) {
-          emitEvent(this.aggregator.getResult(state));
+          this.emitEvent(this.aggregator.getResult(state));
         }
         removableWindows.add(window);
       }
     }
-    for (Window removableWindow : removableWindows) {
+    for (final Window removableWindow : removableWindows) {
       this.windowToState.remove(removableWindow);
     }
   }
 
   @Override
   public void process(@NotNull final AData<IN> input) {
-    processWatermark(input);
+    this.processWatermark(input);
 
     final List<Window> activeWindows = this.windowAssigner.assignWindows(input.getEventTime());
     final IN value = input.getValue();
@@ -87,10 +94,10 @@ public class StreamKeyedAggregation<IN, KEY, STATE, OUT>
     }
   }
 
-  private void emitEvent(OUT event) {
-    long timestamp = timestampExtractor.apply(event);
-    AData<OUT> wrappedEvent = new AData<>(event, timestamp, false);
-    AData<OUT> watermarkedEvent = watermarkGenerator.apply(wrappedEvent);
+  private void emitEvent(final OUT event) {
+    final long timestamp = this.timestampExtractor.apply(event);
+    final AData<OUT> wrappedEvent = new AData<>(event, timestamp, false);
+    final AData<OUT> watermarkedEvent = this.watermarkGenerator.apply(wrappedEvent);
     this.collector.collect(watermarkedEvent);
   }
 }

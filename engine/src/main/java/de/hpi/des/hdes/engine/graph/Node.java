@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * A node represents an element in the topology of logical plan in HDES.
+ *
+ * There are different types of nodes, representing different operations.
+ */
 @Slf4j
 public abstract class Node {
 

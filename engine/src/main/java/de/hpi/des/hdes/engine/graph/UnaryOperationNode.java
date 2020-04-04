@@ -2,6 +2,12 @@ package de.hpi.des.hdes.engine.graph;
 
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 
+/**
+ * Represents a unary operation in the logical plan.
+ *
+ * @param <IN>  type of incoming elements
+ * @param <OUT> type of outgoing elements
+ */
 public class UnaryOperationNode<IN, OUT> extends Node {
 
   @Override

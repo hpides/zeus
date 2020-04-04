@@ -6,6 +6,9 @@ import de.hpi.des.hdes.engine.window.TimeWindow;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Assigns timestamps to a list of windows.
+ */
 public abstract class SlidingWindow implements WindowAssigner<TimeWindow> {
 
   private final long slide;
@@ -26,10 +29,20 @@ public abstract class SlidingWindow implements WindowAssigner<TimeWindow> {
     return timeWindows;
   }
 
+  /**
+   * Factory method for SlidingProcessingWindow.
+   *
+   * @see SlidingProcessingWindow
+   */
   public static SlidingProcessingWindow ofProcessingTime(final Time length, final Time slide) {
     return new SlidingProcessingWindow(slide.getNanos(), slide.getNanos());
   }
 
+  /**
+   * Factory method for SlidingEventWindow.
+   *
+   * @see SlidingEventWindow
+   */
   public static SlidingEventWindow ofEventTime(final Time length, final Time slide) {
     return new SlidingEventWindow(slide.getNanos(), length.getNanos());
   }

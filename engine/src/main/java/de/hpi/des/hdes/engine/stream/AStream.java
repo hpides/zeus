@@ -14,34 +14,73 @@ import de.hpi.des.hdes.engine.udf.Mapper;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 
+/**
+ * Plain AStream without any additional state.
+ *
+ * @param <In> type of the elements
+ */
 public class AStream<In> extends AbstractAStream<In> {
 
   public AStream(final TopologyBuilder builder, final Node node) {
     super(builder, node);
   }
 
+  /**
+   * Flat maps the elements of this stream.
+   *
+   * @param mapper the mapper
+   * @param <Out>  type of the outgoing elements
+   * @return the resulting stream with flat mapped elements
+   */
   public <Out> AStream<Out> flatMap(final FlatMapper<? super In, Out> mapper) {
     final UnaryOperationNode<In, Out> child = new UnaryOperationNode<>(new StreamFlatMap<>(mapper));
     this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
   }
 
+  /**
+   * Maps the elements of this stream.
+   *
+   * @param mapper the mapper
+   * @param <Out>  type of the outgoing elements
+   * @return the resulting stream with flat mapped elements
+   */
   public <Out> AStream<Out> map(final Mapper<In, Out> mapper) {
     final UnaryOperationNode<In, Out> child = new UnaryOperationNode<>(new StreamMap<>(mapper));
     this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
   }
 
+  /**
+   * Filters the elements of this stream.
+   *
+   * Only elements fulfilling the filter predicate remain in the stream.
+   *
+   * @param filter the predicate
+   * @return the filtered stream
+   */
   public AStream<In> filter(final Filter<? super In> filter) {
     final UnaryOperationNode<In, In> child = new UnaryOperationNode<>(new StreamFilter<>(filter));
     this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
   }
 
+  /**
+   * Windows this stream.
+   *
+   * @param window the window assigner for the window
+   * @return a streamed windowed by the window defined in the assigner
+   */
   public WindowedAStream<In> window(final WindowAssigner<? extends Window> window) {
     return new WindowedAStream<In>(this.builder, this.node, window);
   }
 
+  /**
+   * Writes the elements of this stream into a sink.
+   *
+   * @param sink the sink to write elements to
+   * @return the final builder
+   */
   public TopologyBuilder to(final Sink<? super In> sink) {
     final SinkNode<? super In> sinkNode = new SinkNode<>(sink);
     this.builder.addGraphNode(this.node, sinkNode);

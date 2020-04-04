@@ -20,6 +20,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Joins two input streams
+ *
+ * @param <IN1> the input type of the elements of the first stream
+ * @param <IN2> the input type of the elements of the second stream
+ * @param <KEY> the type of the join key
+ * @param <OUT> the type of the output elements
+ */
 @Slf4j
 public class StreamJoin<IN1, IN2, KEY, OUT> extends AbstractTopologyElement<OUT> implements
     TwoInputOperator<IN1, IN2, OUT> {

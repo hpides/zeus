@@ -14,6 +14,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Data;
 
+/**
+ * The execution plan describes the current way the engine operates.
+ *
+ * The plan is mainly based on two parts: a list of slots {@link Slot} and a mapping.
+ * The list of slots is used to execute all slots accordingly. The mapping allows for interaction
+ * between the {@link Topology} and the execution plan. For example, it allows the deletion of a
+ * node.
+ */
 @Data
 public class ExecutionPlan {
 
@@ -32,6 +40,9 @@ public class ExecutionPlan {
     this(Topology.emptyTopology(), Lists.newArrayList(), Maps.newHashMap());
   }
 
+  /**
+   * @return a list of runnable slots
+   */
   public List<RunnableSlot<?>> getRunnableSlots() {
     return this.getSlots().stream()
         .filter(slot -> slot instanceof RunnableSlot)
@@ -43,6 +54,13 @@ public class ExecutionPlan {
     return new ExecutionPlan();
   }
 
+  /**
+   * Extends an execution plan with a new query.
+   *
+   * @param executionPlan the plan to extend
+   * @param query         the new query
+   * @return a new plan
+   */
   public static ExecutionPlan extend(final ExecutionPlan executionPlan, final Query query) {
     final Set<Node> topologyNodes = executionPlan.getTopology().getNodes();
     final Topology queryTopology = query.getTopology();
@@ -59,10 +77,23 @@ public class ExecutionPlan {
     return planBuilder.build(Topology.of(queryTopology.getNodes()));
   }
 
+  /**
+   * Creates a execution plan with a single query.
+   *
+   * @param query the query to use
+   * @return a new execution plan
+   */
   public static ExecutionPlan createPlan(final Query query) {
     return extend(emptyExecutionPlan(), query);
   }
 
+  /**
+   * Deletes a query from an execution plan
+   *
+   * @param executionPlan the execution plan to delete the query from
+   * @param query         the query to delete
+   * @return a new execution plan
+   */
   public static ExecutionPlan delete(final ExecutionPlan executionPlan, final Query query) {
     final List<Slot<?>> slots = executionPlan.getSlots();
     final Set<Node> nodes = executionPlan.getTopology().getNodes();

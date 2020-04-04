@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * This execution plan builder builds an {@link ExecutionPlan} for one node environment.
+ */
 @Slf4j
 public class LocalExecutionPlanBuilder implements NodeVisitor {
 
