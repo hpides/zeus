@@ -40,7 +40,11 @@ public class JobManager {
   }
 
   public void runEngine() {
-    this.engine.run();
+    if (!this.engine.isRunning()) {
+      this.engine.run();
+    } else {
+      log.info("Engine is already running.");
+    }
   }
 
   public void shutdown() {

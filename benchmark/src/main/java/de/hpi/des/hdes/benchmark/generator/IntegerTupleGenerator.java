@@ -21,8 +21,7 @@ public class IntegerTupleGenerator extends UniformGenerator<Tuple2<Integer, Long
       int seed) {
     super(eventsPerSecond, timeInSeconds, executor);
     this.random = new Random(seed);
-//    values = IntStream.generate(() -> random.nextInt( 1_000_000)).limit(1_000).boxed()
-//        .collect(Collectors.toList());
+
     values = IntStream.generate(new IntSupplier() {
       int i = seed * 10_000;
 

@@ -15,16 +15,20 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class FileSink<E> implements Sink<E> {
     BufferedWriter out;
+    int writeEveryX;
+    int writtenTuples = 0;
 
-    public FileSink(String filePath) {
+    public FileSink(String name, int writeEveryXTuple) {
+        var filePath = System.getProperty("user.home") + File.separator + "sink_" + name + ".csv";
+        this.writeEveryX = writeEveryXTuple;
         try {
             Date date = Calendar.getInstance().getTime();
             DateFormat dateFormat = new SimpleDateFormat("hh-mm-ss");
             String strDate = dateFormat.format(date);
 
-            File file = new File(filePath.replace(".csv", "_") + strDate + ".csv");
+            File file = new File(filePath.replace(".csv", "_t") + strDate + ".csv");
             if (file.createNewFile()) {
-                this.out = new BufferedWriter(new FileWriter(file), 32768);
+                this.out = new BufferedWriter(new FileWriter(file));
                 this.out.write("eventTime,processingTime,ejectionTime\n");
             }
         } catch (IOException e) {
@@ -35,8 +39,22 @@ public class FileSink<E> implements Sink<E> {
     @Override
     public void process(AData<E> in) {
         try {
-            out.write(in.getValue().toString().replace(" ", "").replace("(", "").replace(")", ""));
-            out.newLine();
+            if(this.writtenTuples % writeEveryX == 0) {
+                out.write(
+                    in.getValue().toString().replace(" ", "").replace("(", "").replace(")", ""));
+                out.newLine();
+                this.writtenTuples = 0;
+            }
+            this.writtenTuples += 1;
+        } catch (IOException e) {
+            this.flush();
+            e.printStackTrace();
+        }
+    }
+
+    public void flush() {
+        try {
+            this.out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }

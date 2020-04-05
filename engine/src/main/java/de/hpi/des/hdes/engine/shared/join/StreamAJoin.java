@@ -7,7 +7,6 @@ import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.ADataWatermark;
 import de.hpi.des.hdes.engine.operation.AbstractTopologyElement;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
-import de.hpi.des.hdes.engine.udf.TimestampExtractor;
 import de.hpi.des.hdes.engine.window.Window;
 import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
 import java.util.ArrayList;
@@ -122,35 +121,20 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
       final Collection<Bucket<KEY, IN1>> in1Buckets,
       final Collection<Bucket<KEY, IN2>> in2Buckets) {
 
-    return seq(in1Buckets)
-        .crossJoin(in2Buckets)
-        .flatMap(this::getMergesEntries)
-        .toList();
-  }
+    final List<IntersectedBucket<IN1, IN2>> buckets = new ArrayList<>(in1Buckets.size());
 
-  /**
-   * Creates a collection of intersected buckets for each key that both buckets have in common.
-   *
-   * @param bucketTuple tuple of buckets from the first and second stream respectivly
-   * @return collection of intersected buckets
-   */
-  private Seq<IntersectedBucket<IN1, IN2>> getMergesEntries(
-      final Tuple2<Bucket<KEY, IN1>, Bucket<KEY, IN2>> bucketTuple) {
-    final Set<KEY> inKeySet1 = bucketTuple.v1.getSet().keySet();
-    final Set<KEY> inKeySet2 = bucketTuple.v2.getSet().keySet();
-    final Set<KEY> index = Sets.intersection(inKeySet1, inKeySet2);
-    return this.mergeEntries(index, bucketTuple.v1.getSet(), bucketTuple.v2.getSet());
-  }
+    for (final Bucket<KEY, IN1> in1Bucket : in1Buckets) {
+      for (final Bucket<KEY, IN2> in2Bucket : in2Buckets) {
+        final Map<KEY, Set<IN1>> in1BucketSet = in1Bucket.getSet();
+        final Map<KEY, Set<IN2>> in2BucketSet = in2Bucket.getSet();
+        final Set<KEY> index = Sets.intersection(in1BucketSet.keySet(), in2BucketSet.keySet());
+        for (final KEY key : index) {
+          buckets.add(new IntersectedBucket<>(in1BucketSet.get(key), in2BucketSet.get(key)));
+        }
 
-  /**
-   * @param index    keys that both sets have in common
-   * @param entries1 values of the first stream
-   * @param entries2 values of the second stream
-   * @return Seq of intersected buckets for each key
-   */
-  private Seq<IntersectedBucket<IN1, IN2>> mergeEntries(final Set<KEY> index,
-      final Map<KEY, ? extends Set<IN1>> entries1, final Map<KEY, ? extends Set<IN2>> entries2) {
-    return seq(index).map(i -> new IntersectedBucket<>(entries1.get(i), entries2.get(i)));
+      }
+    }
+    return buckets;
   }
 
   @Override

@@ -50,12 +50,6 @@ public class SizedChunkedBuffer<IN> extends ChunkedBuffer<IN> {
     if (pollResult != null) {
       this.currentSize.decrementAndGet();
     }
-//    if (this.size() <= this.maxSize - this.chunkSize) {
-//      // leave some space so we do not lock constantly
-//      synchronized (this) {
-//        this.notify();
-//      }
-//    }
     return pollResult;
   }
 }

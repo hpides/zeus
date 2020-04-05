@@ -1,13 +1,5 @@
 package de.hpi.des.hdes.benchmark;
 
-import static de.hpi.des.hdes.benchmark.nexmark.ObjectAuctionStreamGenerator.protobufAuctionToAuction;
-import static de.hpi.des.hdes.benchmark.nexmark.ObjectAuctionStreamGenerator.protobufBidtoBid;
-import static de.hpi.des.hdes.benchmark.nexmark.ObjectAuctionStreamGenerator.protobufPersonToPerson;
-
-import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
-import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
-import de.hpi.des.hdes.benchmark.nexmark.entities.Person;
-import de.hpi.des.hdes.benchmark.nexmark.protobuf.NextmarkScheme;
 import de.hpi.des.hdes.engine.execution.connector.SizedChunkedBuffer;
 import de.hpi.des.hdes.engine.operation.AbstractSource;
 import de.hpi.des.hdes.engine.operation.Source;
@@ -40,7 +32,7 @@ public class NetworkSource<E> extends AbstractSource<E> implements Source<E>, Ru
   public NetworkSource(int maxBufferSize, int port, AbstractSerializer<E> deserializer,
       String host, String serializer, Class<E> clazz,
       TimestampExtractor<E> timestampExtractor) {
-    super(timestampExtractor, WatermarkGenerator.milliseconds(1, 1_000));
+    super(timestampExtractor, WatermarkGenerator.milliseconds(1, 100_000));
     this.queue = new SizedChunkedBuffer<>(maxBufferSize);
     this.id = UUID.randomUUID();
     this.port = port;
@@ -95,13 +87,8 @@ public class NetworkSource<E> extends AbstractSource<E> implements Source<E>, Ru
               try {
                 Thread.sleep(100);
               } catch (InterruptedException e) {
-                //Thread.currentThread().interrupt();
                 return;
               }
-//              synchronized (queue) {
-//                log.trace("Engine Socket is going to wait for queue to free up");
-//                queue.wait(1_000);
-//              }
               log.trace("Engine Socket has finished waiting");
 
             }
@@ -110,22 +97,6 @@ public class NetworkSource<E> extends AbstractSource<E> implements Source<E>, Ru
           } catch (IllegalStateException e) {
             queue.drop();
             log.error("Dropped input buffer of {}", object.getClass());
-          }
-        }
-      } else if (serializer.equals("protobuf")) {
-        while (!exit) {
-          if (this.clazz.equals(Person.class)) {
-            Person person = protobufPersonToPerson(
-                NextmarkScheme.Person.parseDelimitedFrom(objectSocket.getInputStream()));
-            queue.add((E) person);
-          } else if (this.clazz.equals(Auction.class)) {
-            Auction auction = protobufAuctionToAuction(
-                NextmarkScheme.Auction.parseDelimitedFrom(objectSocket.getInputStream()));
-            queue.add((E) auction);
-          } else if (this.clazz.equals(Bid.class)) {
-            Bid bid = protobufBidtoBid(
-                NextmarkScheme.Bid.parseDelimitedFrom(objectSocket.getInputStream()));
-            queue.add((E) bid);
           }
         }
       } else {

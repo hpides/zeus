@@ -30,7 +30,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
   private final List<Slot<?>> children = new CopyOnWriteArrayList<>();
 
   /**
-   * Retrieve associated topology node.
+   * Retrieves associated topology node.
    */
   public abstract Node getTopologyNode();
 
@@ -48,7 +48,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
   /**
    * Adds a sink to route the output elements of the operator to.
    *
-   * @param node /TODO what is this
+   * @param node corresponding node
    * @param sink downstream sink
    */
   public void addOutput(final Node node, final Sink<OUT> sink) {
@@ -68,10 +68,15 @@ public abstract class Slot<OUT> implements Collector<OUT> {
     this.buffers.add(buffer);
   }
 
-  // TODO comment
-  private void addDownstreamElement(final Node node, final SlotProcessor<AData<OUT>> buffer) {
-    this.processorMap.put(node, buffer);
-    this.processors.add(buffer);
+  /**
+   * Registers a downstream processor as child
+   *
+   * @param node node of the downstream processor
+   * @param processor the processor to register
+   */
+  private void addDownstreamElement(final Node node, final SlotProcessor<AData<OUT>> processor) {
+    this.processorMap.put(node, processor);
+    this.processors.add(processor);
   }
 
   /**
@@ -87,7 +92,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
   }
 
   /**
-   * Add a downstream slot to the {@link Slot#children} build a slotgraph.
+   * Adds a downstream slot to the {@link Slot#children} build a slotgraph.
    *
    * @param slot child slot
    */
@@ -95,7 +100,11 @@ public abstract class Slot<OUT> implements Collector<OUT> {
     this.children.add(slot);
   }
 
-  // TODO comment
+  /**
+   * Removes a query from this slots
+   *
+   * @param query the query to remove
+   */
   public void remove(final Query query) {
     for (final Node node : this.processorMap.keySet()) {
       log.debug("Remove query {} for node {}", query, node);

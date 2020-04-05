@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
 
-  private boolean running = false;
+  private boolean enabled = false;
   private volatile boolean shutdownFlag = false;
 
   /**
@@ -20,18 +20,18 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
 
   @Override
   public void run() {
+    this.enabled = true;
     try {
-      this.running = true;
       while (!Thread.currentThread().isInterrupted() && !this.shutdownFlag) {
         this.runStep();
         this.tick();
       }
       log.debug("Stopped running {}", this);
-      this.running = false;
-    } catch (Exception e) {
+    } catch (final RuntimeException e) {
       log.error("Slot had an exception: ", e);
       throw e;
     } finally {
+      this.enabled = false;
       this.cleanUp();
     }
   }
@@ -51,8 +51,12 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
     return this.shutdownFlag;
   }
 
-  public boolean isRunning() {
-    return this.running;
+  public boolean isEnabled() {
+    return this.enabled;
+  }
+
+  public void setEnabled(final boolean enabled) {
+    this.enabled = enabled;
   }
 
 }

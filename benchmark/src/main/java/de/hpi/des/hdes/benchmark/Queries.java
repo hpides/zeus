@@ -1,12 +1,10 @@
 package de.hpi.des.hdes.benchmark;
 
-import de.hpi.des.hdes.benchmark.nexmark.entities.Auction;
-import de.hpi.des.hdes.benchmark.nexmark.entities.Bid;
-import de.hpi.des.hdes.benchmark.nexmark.entities.Person;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.Source;
+import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.udf.Filter;
 import de.hpi.des.hdes.engine.udf.Join;
 import de.hpi.des.hdes.engine.udf.Mapper;
@@ -16,7 +14,6 @@ import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 import java.util.function.Function;
 import org.jooq.lambda.tuple.Tuple;
-import org.jooq.lambda.tuple.Tuple1;
 import org.jooq.lambda.tuple.Tuple2;
 import org.jooq.lambda.tuple.Tuple3;
 import org.jooq.lambda.tuple.Tuple4;
@@ -44,8 +41,7 @@ public class Queries {
   public static <In, Other> Join<Tuple3<In, Long, Long>, Tuple3<Other, Long, Long>, Tuple3<Tuple2<In, Other>, Long, Long>> makeJoinF() {
     return (Tuple3<In, Long, Long> t1, Tuple3<Other, Long, Long> t2) -> new Tuple3<>(
         new Tuple2<>(t1.v1, t2.v1),
-        Math.max(t1.v2, t2.v2), Math.max(t1.v3, t2.v3));// you could also argue that these need
-    // to be synced so if the first is v2 the second should be too
+        Math.max(t1.v2, t2.v2), Math.max(t1.v3, t2.v3));
   }
 
   public static <T1, T2> Query makePlainJoin0Measured(Source<Tuple2<T1, Long>> source1,
@@ -60,6 +56,157 @@ public class Queries {
     return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
   }
 
+  public static Query makeNexmarkLightPlainJoinMeasured(
+      Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
+      Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2,
+      Sink<Tuple> sink) {
+    var tp = new TopologyBuilder();
+
+    var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
+    var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5)))
+        .join(s2, makeJoinF(), t1 -> t1.v1.v2, t2 -> t2.v1.v1, WatermarkGenerator.seconds(0, 1_000),
+            TimestampExtractor.currentTimeNS());
+    return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
+  }
+
+  public static Query makeNexmarkLightAJoinMeasured(
+      Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
+      Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2,
+      Sink<Tuple> sink) {
+    var tp = new TopologyBuilder();
+
+    var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
+    var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5)))
+        .ajoin(s2, t1 -> t1.v1.v2, t2 -> t2.v1.v1, makeJoinF(),"ajoin");
+    return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
+  }
+
+  public static Query makeNexmarkLightFilterMeasured(
+      Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource,
+      Sink<Tuple> auctionSink) {
+    var tp = new TopologyBuilder();
+
+    var s1 = tp.streamOf(auctionSource)
+        .map(Queries::prepare)
+        .filter(t2 -> t2.v1.v4 > 5000)
+        .map(Queries::setEjectTimestamp)
+        .to(auctionSink)
+        .buildAsQuery();
+
+    return s1;
+  }
+
+  public static Query makeNexmarkHottestCategory(
+      Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
+      Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2,
+      Sink<Tuple> sink) {
+    var tp = new TopologyBuilder();
+
+    var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
+    var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5)))
+        .ajoin(s2, t1 -> t1.v1.v2, t2 -> t2.v1.v1, makeJoinF(), e -> System.nanoTime(),
+            new WatermarkGenerator<>(0, 10), "ajoinHottestCategory");
+    return j1.window(TumblingWindow.ofEventTime(Time.seconds(5))).groupBy(t1 -> t1.v1.v2.v3)
+        .aggregate(new Aggregator<
+            Tuple3<Tuple2<Tuple4<Long, Long, Integer, Integer>, Tuple4<Long, Integer, Integer, Integer>>, Long, Long>,
+            Tuple3<Integer, Long, Long>,
+            Tuple3<Integer, Long, Long>>() {
+
+          @Override
+          public Tuple3<Integer, Long, Long> initialize() {
+            return new Tuple3<>(0, 0L, 0L);
+          }
+
+          @Override
+          public Tuple3<Integer, Long, Long> add(Tuple3<Integer, Long, Long> state,
+              Tuple3<Tuple2<Tuple4<Long, Long, Integer, Integer>, Tuple4<Long, Integer, Integer, Integer>>, Long, Long> input) {
+            return new Tuple3<>(state.v1 + 1, Math.max(state.v2, input.v2), Math.max(state.v3, input.v3));
+          }
+
+          @Override
+          public Tuple3<Integer, Long, Long> getResult(Tuple3<Integer, Long, Long> state) {
+            return state;
+          }
+        }, new WatermarkGenerator<>(0, 1), (e) -> System.nanoTime())
+        .window(TumblingWindow.ofEventTime(Time.seconds(5)))
+        .aggregate(new Aggregator<
+            Tuple3<Integer, Long, Long>,
+            Tuple3<Integer, Long, Long>,
+            Tuple3<Integer, Long, Long>>() {
+
+          @Override
+          public Tuple3<Integer, Long, Long> initialize() {
+            return new Tuple3<>(0, 0L, 0L);
+          }
+
+          @Override
+          public Tuple3<Integer, Long, Long> add(Tuple3<Integer, Long, Long> state,
+              Tuple3<Integer, Long, Long> input) {
+            if(state.v1 < input.v1) {
+              return input;
+            }
+            else {
+              return state;
+            }
+          }
+
+          @Override
+          public Tuple3<Integer, Long, Long> getResult(Tuple3<Integer, Long, Long> state) {
+            return state;
+          }
+        }, new WatermarkGenerator<>(0, 1), (e) -> System.nanoTime())
+        .map(Queries::setEjectTimestamp)
+        .to(sink).buildAsQuery();
+  }
+
+  public static Query makeNexmarkMaxiumPriceForAuction(
+      Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
+      Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2,
+      Sink<Tuple> sink) {
+    var tp = new TopologyBuilder();
+
+    var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
+    var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5)))
+        .ajoin(s2, t1 -> t1.v1.v2, t2 -> t2.v1.v1, makeJoinF(), e -> System.nanoTime(),
+            new WatermarkGenerator<>(0, 10), "ajoinMaximumPrice");
+    return j1
+        .filter(t2 -> t2.v1.v1.v4 > t2.v1.v2.v4)
+        .window(TumblingWindow.ofEventTime(Time.seconds(5)))
+        .groupBy(t1 -> t1.v1.v2.v1)
+        .aggregate(new Aggregator<
+            Tuple3<Tuple2<Tuple4<Long, Long, Integer, Integer>, Tuple4<Long, Integer, Integer, Integer>>, Long, Long>,
+            Tuple3<Integer, Long, Long>,
+            Tuple3<Integer, Long, Long>>() {
+
+          @Override
+          public Tuple3<Integer, Long, Long> initialize() {
+            return new Tuple3<>(0, 0L, 0L);
+          }
+
+          @Override
+          public Tuple3<Integer, Long, Long> add(Tuple3<Integer, Long, Long> state,
+              Tuple3<Tuple2<Tuple4<Long, Long, Integer, Integer>, Tuple4<Long, Integer, Integer, Integer>>, Long, Long> input) {
+            if(input.v1.v1.v4 > state.v1) {
+              return new Tuple3<>(input.v1.v1.v4, Math.max(state.v2, input.v2), Math.max(state.v3, input.v3));
+            }
+            else {
+              return new Tuple3<>(state.v1, Math.max(state.v2, input.v2), Math.max(state.v3, input.v3));
+            }
+          }
+
+          @Override
+          public Tuple3<Integer, Long, Long> getResult(Tuple3<Integer, Long, Long> state) {
+            return state;
+          }
+        }, new WatermarkGenerator<>(0, 1), (e) -> System.nanoTime())
+        .map(Queries::setEjectTimestamp)
+        .to(sink).buildAsQuery();
+  }
+
   public static <T1, T2> Query makeAJoin0Measured(Source<Tuple2<T1, Long>> source1,
       Source<Tuple2<T2, Long>> source2, Sink<Tuple> sink) {
     var tp = new TopologyBuilder();
@@ -67,13 +214,10 @@ public class Queries {
     var s1 = tp.streamOf(source1).map(Queries::prepare);
     var s2 = tp.streamOf(source2).map(Queries::prepare);
     var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5)))
-        .ajoin(s2, t1 -> t1.v1, t2 -> t2.v1, makeJoinF());
+        .ajoin(s2, t1 -> t1.v1, t2 -> t2.v1, makeJoinF(), "join0measured");
     return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
   }
 
-  public static <T> Tuple2<T, Long> prepare(T value) {
-    return new Tuple2<>(value, System.nanoTime());
-  }
 
   //value, event time, processing time
   public static <T> Tuple3<T, Long, Long> prepare(Tuple2<T, Long> value) {
@@ -100,108 +244,4 @@ public class Queries {
     return (Tuple2<T, Long> t) -> f.apply(t.v1);
   }
 
-  /**
-   * SELECT itemid, DOLTOEUR(price), bidderId, bidTime FROM bid;
-   */
-  public static Query makeQuery1(Source<Bid> bidSource,
-      Sink<Tuple> sink) {
-    return new Query(
-        new TopologyBuilder().streamOf(bidSource).map(Queries::prepare)
-            .map(makeMap(bid -> new Tuple4<>(bid.auctionId,
-                Queries.dollarToEuro(bid.bid), bid.betterId, bid.time)))
-            .map(Queries::calcDelta)
-            .to(sink).build());
-  }
-
-  public static Query makeQueryAgeFilter(Source<Person> personSource, Sink<Tuple> sink) {
-    return new Query(
-        new TopologyBuilder().streamOf(personSource).map(Queries::prepare)
-            .map(makeMap(
-                person -> new Tuple4<>(person.id, person.name, person.province, person.age)))
-            .filter(makeFilter(p -> Integer.parseInt(p.v4) > 1))
-            .map(Queries::calcDelta)
-            .to(sink).build());
-  }
-
-  public static Query makeSimpleAuctionQuery(Source<Auction> auctionSource, Sink<Tuple> sink) {
-    return new Query(
-        new TopologyBuilder().streamOf(auctionSource).map(Queries::prepare)
-            .map(makeMap(auction -> new Tuple4<>(auction.id, auction.quantity, auction.currentPrice,
-                auction.reserve)))
-            .filter(makeFilter(a -> a.v2 > 5))
-            .map(Queries::calcDelta)
-            .to(sink).build());
-  }
-
-  /**
-   * SELECT itemid, price FROM bid WHERE itemid = 1007 OR itemid = 1020 OR itemid = 2001 OR itemid =
-   * 2019 OR itemid = 1087;
-   */
-
-  public static Query makeQuery2(Source<Bid> bidSource,
-      BenchmarkingSink<Bid> sink) {
-    return new Query(new TopologyBuilder().streamOf(bidSource).filter(bid ->
-        bid.auctionId == 1007 || bid.auctionId == 1020 || bid.auctionId == 2001 ||
-            bid.auctionId == 2019 || bid.auctionId == 1087
-    ).to(sink).build());
-  }
-
-  /**
-   * SELECT person.name, person.city, person.state, open auction.id FROM open auction, person, item
-   * WHERE open auction.sellerId = person.id AND person.state = ‘OR’ AND open auction.itemid =
-   * item.id AND item.categoryId = 10;
-   */
-  public static Query makeQuery3(Source<Person> personSource,
-      Source<Auction> auctionSource, BenchmarkingSink<Tuple> sink) {
-    var builder = new TopologyBuilder();
-    var ps = builder.streamOf(personSource)
-        .filter(p -> p.province.equals("Oregon"));
-    // ein top builder per query
-    return
-        builder.streamOf(auctionSource).filter(a -> a.category == 10)
-            .window(TumblingWindow.ofEventTime(Time.seconds(5)))
-            .join(ps,
-                (a, p) -> new Tuple4<>(p.name, p.city, p.province, a.category),
-                a -> a.sellerId,
-                p -> p.id, WatermarkGenerator.seconds(0, 1),
-                TimestampExtractor.currentTimeNS()
-            ).to(sink).buildAsQuery();
-  }
-
-  /**
-   * Select person.name from bid, person where person.id = bid.betterid
-   */
-  public static Query makePlainJoin(Source<Auction> auctionSource,
-      Source<Bid> bidSource, BenchmarkingSink<Tuple> sink) {
-    var builder = new TopologyBuilder();
-    var as = builder.streamOf(auctionSource);
-    // ein top builder per query
-    return
-        builder.streamOf(bidSource).window(TumblingWindow.ofEventTime(Time.seconds(10)))
-            .join(as, (b, p) -> new Tuple1<>(p.id),
-                b -> b.auctionId, p -> p.id,
-                WatermarkGenerator.seconds(1, 10_000),
-                TimestampExtractor.currentTimeNS()
-            ).to(sink).buildAsQuery();
-  }
-
-  /**
-   * Select person.name from bid, person where person.id = bid.betterid
-   */
-  public static Query makeAJoin(Source<Person> personSource,
-      Source<Bid> bidSource, BenchmarkingSink<Tuple> sink) {
-    var builder = new TopologyBuilder();
-    var ps = builder.streamOf(personSource);
-    // ein top builder per query
-    return
-        builder.streamOf(bidSource)
-            .window(TumblingWindow.ofProcessingTime(Time.seconds(5)))
-            .ajoin(ps, b -> b.betterId, p -> p.id, (b, p) -> new Tuple1<>(p.name)
-            ).to(sink).buildAsQuery();
-  }
-
-
-  private static long dollarToEuro(long dollar) {
-    return (long) (1.1 * dollar);
-  }
 }

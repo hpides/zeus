@@ -1,0 +1,26 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="LOCAL - Genertaor Basic 2S" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="de.hpi.des.hdes.benchmark.MainNetworkDataGenerator" />
+    <module name="benchmark" />
+    <option name="PROGRAM_PARAMETERS" value="-eps=10000000 -tis=60 -seri=custom -t=basic -ams=2" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="de.hpi.des.hdes.benchmark.AbstractSerializer" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <extension name="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+      </ENTRIES>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

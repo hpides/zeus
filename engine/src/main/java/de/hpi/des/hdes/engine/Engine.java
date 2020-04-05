@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -20,6 +21,7 @@ public class Engine {
 
   private ExecutionPlan plan;
   private final ExecutorService executor;
+  @Getter
   private boolean isRunning;
 
   public Engine() {
@@ -32,6 +34,7 @@ public class Engine {
    * Run the engine
    */
   public void run() {
+    log.info("Starting Engine");
     if (this.isRunning) {
       throw new IllegalStateException("Engine already running");
     }
@@ -39,6 +42,7 @@ public class Engine {
     this.isRunning = true;
     for (final RunnableSlot<?> slot : this.plan.getRunnableSlots()) {
       log.debug("Slot {} submitted", slot);
+      slot.setEnabled(true);
       this.executor.submit(slot);
     }
   }
@@ -52,16 +56,15 @@ public class Engine {
    * @param query the new query
    */
   public synchronized void addQuery(final Query query) {
-
     final ExecutionPlan extendedPlan = ExecutionPlan.extend(this.plan, query);
-    ;
     if (this.isRunning) {
       extendedPlan.getRunnableSlots()
           .stream()
-          .filter(slot -> !slot.isRunning())
-          .forEach(task -> {
-            log.debug("Submitted slot {}", task);
-            this.executor.submit(task);
+          .filter(slot -> !slot.isEnabled())
+          .forEach(slot -> {
+            log.debug("Submitted slot {}", slot);
+            slot.setEnabled(true);
+            this.executor.submit(slot);
           });
     }
     this.plan = extendedPlan;

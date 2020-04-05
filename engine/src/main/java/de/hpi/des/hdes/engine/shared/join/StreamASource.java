@@ -89,9 +89,9 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
 
       // emit all closed windows
       final Bucket<KEY, IN> bucket = new Bucket<>(windowEntry.getValue(), window);
-      AData<Bucket<KEY, IN>> bucketAData = new AData<>(bucket,
-          window.getMaxTimestamp(), false);
-      // send watermark for last element
+      final AData<Bucket<KEY, IN>> bucketAData = new AData<>(bucket, window.getMaxTimestamp(),
+          false);
+
       output.add(bucketAData);
       iterator.remove();
     }
@@ -101,12 +101,10 @@ public class StreamASource<IN, KEY> extends AbstractTopologyElement<Bucket<KEY, 
       return;
     }
 
-    // use last item as watermark
-    // that makes sure we sent it downstream
+    // send watermark for last element
     final int lastIndex = output.size() - 1;
     final AData<Bucket<KEY, IN>> bucketAData = output.get(lastIndex);
-    final ADataWatermark<Bucket<KEY, IN>> watermark = ADataWatermark
-        .from(bucketAData, watermarkTimestamp);
+    final ADataWatermark<Bucket<KEY, IN>> watermark = ADataWatermark.from(bucketAData, watermarkTimestamp);
     output.set(lastIndex, watermark);
     output.forEach(this.collector::collect);
   }
