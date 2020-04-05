@@ -100,4 +100,5 @@ public class StreamKeyedAggregation<IN, KEY, STATE, OUT>
     final AData<OUT> watermarkedEvent = this.watermarkGenerator.apply(wrappedEvent);
     this.collector.collect(watermarkedEvent);
   }
+
 }

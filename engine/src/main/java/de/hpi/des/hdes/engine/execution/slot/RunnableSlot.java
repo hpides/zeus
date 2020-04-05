@@ -31,6 +31,8 @@ public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
     } catch (Exception e) {
       log.error("Slot had an exception: ", e);
       throw e;
+    } finally {
+      this.cleanUp();
     }
   }
 

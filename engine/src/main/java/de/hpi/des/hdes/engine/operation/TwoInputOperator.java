@@ -1,6 +1,7 @@
 package de.hpi.des.hdes.engine.operation;
 
 import de.hpi.des.hdes.engine.AData;
+import de.hpi.des.hdes.engine.execution.Closeable;
 
 /**
  * TwoInputOperator processes two streams.
@@ -9,7 +10,7 @@ import de.hpi.des.hdes.engine.AData;
  * @param <IN2> the input type of the right stream
  * @param <OUT> the output type of this operator
  */
-public interface TwoInputOperator<IN1, IN2, OUT> extends Operator<OUT> {
+public interface TwoInputOperator<IN1, IN2, OUT> extends Operator<OUT>, Closeable {
 
   /**
    * Processes the first stream.

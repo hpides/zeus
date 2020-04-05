@@ -130,6 +130,10 @@ public abstract class Slot<OUT> implements Collector<OUT> {
     }
   }
 
+  protected void cleanUp() {
+    this.buffers.forEach(Buffer::close);
+  }
+
   /**
    * Marks whether the slot has any children.
    *

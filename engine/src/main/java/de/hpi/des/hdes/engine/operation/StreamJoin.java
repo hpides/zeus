@@ -149,4 +149,12 @@ public class StreamJoin<IN1, IN2, KEY, OUT> extends AbstractTopologyElement<OUT>
     AData<OUT> watermarkedEvent = watermarkGenerator.apply(wrappedEvent);
     this.collector.collect(watermarkedEvent);
   }
+
+  @Override
+  public void close() {
+    this.state1.values().forEach(Multimap::clear);
+    this.state2.values().forEach(Multimap::clear);
+    this.state1.clear();
+    this.state2.clear();
+  }
 }

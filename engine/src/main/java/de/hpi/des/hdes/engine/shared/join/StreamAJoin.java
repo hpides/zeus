@@ -152,4 +152,10 @@ public class StreamAJoin<IN1, IN2, KEY> extends AbstractTopologyElement<Intersec
       final Map<KEY, ? extends Set<IN1>> entries1, final Map<KEY, ? extends Set<IN2>> entries2) {
     return seq(index).map(i -> new IntersectedBucket<>(entries1.get(i), entries2.get(i)));
   }
+
+  @Override
+  public void close() {
+    this.state1.clear();
+    this.state2.clear();
+  }
 }

@@ -1,6 +1,7 @@
 package de.hpi.des.hdes.engine.execution.connector;
 
 import de.hpi.des.hdes.engine.AData;
+import de.hpi.des.hdes.engine.execution.Closeable;
 import de.hpi.des.hdes.engine.execution.SlotProcessor;
 import java.util.List;
 import org.jetbrains.annotations.Nullable;
@@ -10,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
  *
  * @param <IN> type of elements to buffer
  */
-public interface Buffer<IN> extends SlotProcessor<IN> {
+public interface Buffer<IN> extends SlotProcessor<IN>, Closeable {
 
   static <IN> Buffer<AData<IN>> createADataBuffer() {
     return new BlockingSizedChunkedBuffer<>(250_000);

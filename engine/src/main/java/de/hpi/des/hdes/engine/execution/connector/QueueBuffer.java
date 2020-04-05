@@ -31,4 +31,9 @@ public class QueueBuffer<VAL> implements Buffer<VAL> {
   public void add(final VAL val) {
     this.queue.add(val);
   }
+
+  @Override
+  public void close() {
+    queue.clear();
+  }
 }

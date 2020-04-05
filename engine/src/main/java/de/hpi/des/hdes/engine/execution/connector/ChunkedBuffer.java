@@ -92,4 +92,8 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
     return flattenedQueue;
   }
 
+  @Override
+  public void close() {
+    this.queue.clear();
+  }
 }
