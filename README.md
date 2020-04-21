@@ -1,5 +1,7 @@
 # HDES - A Dynamic Stream Processing Engine
 
+![HDES CI](https://github.com/hpides/HDES/workflows/HDES%20CI/badge.svg)
+
 We present HDES, a novel stream processing engine (SPE). The proposed engine focuses on enabling ad-hoc queries to allow end-users to dynamically add and remove queries. While other approaches added ad-hoc functionality on top of common open-source SPEs, such as AStream and AJoin, HDES aims to make dynamicity a first-class citizen. This change in perspective allows us to optimize this use-case upfront and elevates the performance of ad-hoc usage.
 
 Moreover, we include several resource sharing optimizations into HDES to increase the performance of join-operations.
