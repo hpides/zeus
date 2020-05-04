@@ -75,7 +75,7 @@ public class BenchmarkJob implements Runnable {
     DateFormat dateFormat = new SimpleDateFormat("hh-mm-ss");
     String strDate = dateFormat.format(date);
 
-    return System.getProperty("user.home") + File.separator + "sink_flink_" + id + "_" + name +
+    return System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_flink_" + id + "_" + name +
         "_f%"
         + this.fixedQueries + "%" + "_t" + strDate + ".csv";
   }

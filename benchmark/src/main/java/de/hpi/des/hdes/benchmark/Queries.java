@@ -23,6 +23,11 @@ public class Queries {
   private Queries() {
   }
 
+  
+  //Microbenchmark Queries
+  public static Query makeFilter0Measured(Source<Tuple2<Integer, Long>> source, Sink<Tuple> sink){
+    return new TopologyBuilder().streamOf(source).map(t -> t.v1).filter(e -> e % 2 == 0).flatProfiling().to(sink).buildAsQuery();
+  }
 
   /**
    * Nooop query
@@ -96,6 +101,40 @@ public class Queries {
         .buildAsQuery();
 
     return s1;
+  }
+
+  public static Query makeNexmarkLightAJoinCapacityMeasured(
+    Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
+    Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2, Sink<Tuple> sink) {
+    var tp = new TopologyBuilder();
+
+    var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
+    var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5))).ajoin(s2, t1 -> t1.v1.v2, t2 -> t2.v1.v1,
+        makeJoinF(), (e) -> System.nanoTime(), new WatermarkGenerator<>(0, 1), "ajoin");
+    return j1.map(Queries::setEjectTimestamp).window(TumblingWindow.ofEventTime(Time.seconds(5))).aggregate(
+        new Aggregator<Tuple3<Long, Long, Long>, Tuple4<Integer, Double, Double, Double>, Tuple4<Integer, Double, Double, Double>>() {
+          @Override
+          public Tuple4<Integer, Double, Double, Double> initialize() {
+            return new Tuple4<Integer, Double, Double, Double>(0, 0.0, 0.0, 0.0);
+          }
+
+          @Override
+          public Tuple4<Integer, Double, Double, Double> add(Tuple4<Integer, Double, Double, Double> state,
+              Tuple3<Long, Long, Long> input) {
+            int old_count = state.v1;
+            int new_count = state.v1 + 1;
+            return new Tuple4<Integer, Double, Double, Double>(new_count,
+                (double) (((state.v2 * old_count) + (int) (input.v3 - input.v1)) / new_count),
+                (double) (((state.v3 * old_count) + (int) (input.v3 - input.v2)) / new_count),
+                (double) (((state.v4 * old_count) + (int) (input.v2 - input.v1)) / new_count));
+          }
+
+          @Override
+          public Tuple4<Integer, Double, Double, Double> getResult(Tuple4<Integer, Double, Double, Double> state) {
+            return state;
+          }
+        }, new WatermarkGenerator<>(0, 1), (e) -> System.nanoTime()).to(sink).buildAsQuery();
   }
 
   public static Query makeNexmarkHottestCategory(

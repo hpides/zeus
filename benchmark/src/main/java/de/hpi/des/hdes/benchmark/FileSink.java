@@ -19,7 +19,8 @@ public class FileSink<E> implements Sink<E> {
     int writtenTuples = 0;
 
     public FileSink(String name, int writeEveryXTuple) {
-        var filePath = System.getProperty("user.home") + File.separator + "sink_" + name + ".csv";
+        var filePath = System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_" + name + ".csv";
+        System.out.println(filePath.toString());
         this.writeEveryX = writeEveryXTuple;
         try {
             Date date = Calendar.getInstance().getTime();
@@ -28,7 +29,7 @@ public class FileSink<E> implements Sink<E> {
 
             File file = new File(filePath.replace(".csv", "_t") + strDate + ".csv");
             if (file.createNewFile()) {
-                this.out = new BufferedWriter(new FileWriter(file));
+                this.out = new BufferedWriter(new FileWriter(file), 10_000_000);
                 this.out.write("eventTime,processingTime,ejectionTime\n");
             }
         } catch (IOException e) {
@@ -60,3 +61,4 @@ public class FileSink<E> implements Sink<E> {
         }
     }
 }
+

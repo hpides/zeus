@@ -39,6 +39,16 @@
       <artifactId>commons-math3</artifactId>
       <version>3.6.1</version>
     </dependency>
+      <dependency>
+          <groupId>org.openjdk.jmh</groupId>
+          <artifactId>jmh-core</artifactId>
+          <version>1.23</version>
+      </dependency>
+      <dependency>
+          <groupId>org.openjdk.jmh</groupId>
+          <artifactId>jmh-generator-annprocess</artifactId>
+          <version>1.23</version>
+      </dependency>
   </dependencies>
 
 
@@ -73,7 +83,7 @@
             <configuration>
               <archive>
                 <manifest>
-                  <mainClass>de.hpi.des.hdes.benchmark.MainNetworkEngine</mainClass>
+                  <mainClass>de.hpi.des.hdes.benchmark.MainNetworkRunner</mainClass>
                 </manifest>
                 <manifestEntries>
                   <Multi-Release>true</Multi-Release> <!-- to fix WARNING: sun.reflect.Reflection

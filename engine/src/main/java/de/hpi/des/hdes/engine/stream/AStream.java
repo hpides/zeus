@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.stream;
 
+import org.jooq.lambda.tuple.Tuple3;
+
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.SinkNode;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
@@ -9,6 +11,7 @@ import de.hpi.des.hdes.engine.operation.StreamFilter;
 import de.hpi.des.hdes.engine.operation.StreamFlatMap;
 import de.hpi.des.hdes.engine.operation.StreamMap;
 import de.hpi.des.hdes.engine.udf.Filter;
+import de.hpi.des.hdes.engine.operation.StreamFlatProfilingMap;
 import de.hpi.des.hdes.engine.udf.FlatMapper;
 import de.hpi.des.hdes.engine.udf.Mapper;
 import de.hpi.des.hdes.engine.window.Window;
@@ -47,6 +50,13 @@ public class AStream<In> extends AbstractAStream<In> {
    */
   public <Out> AStream<Out> map(final Mapper<In, Out> mapper) {
     final UnaryOperationNode<In, Out> child = new UnaryOperationNode<>(new StreamMap<>(mapper));
+    this.builder.addGraphNode(this.node, child);
+    return new AStream<>(this.builder, child);
+  }
+
+  public AStream<Tuple3<Long, Long, Long>> flatProfiling() {
+    final UnaryOperationNode<In, Tuple3<Long, Long, Long>> child = new UnaryOperationNode<>(
+        new StreamFlatProfilingMap<>());
     this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
   }

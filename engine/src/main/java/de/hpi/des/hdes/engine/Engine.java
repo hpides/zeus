@@ -93,6 +93,8 @@ public class Engine {
   public void shutdown() {
     this.isRunning = false;
     this.plan.getRunnableSlots().forEach(RunnableSlot::shutdown);
+    // TODO: Do Sinks also require a shutdown function (e.g. flush a FileSink)? Possible solution: getSlotProcessor() function in exectution plan and add a shutdown function to the SlotProcessor interface
+
     this.executor.shutdownNow();
   }
 

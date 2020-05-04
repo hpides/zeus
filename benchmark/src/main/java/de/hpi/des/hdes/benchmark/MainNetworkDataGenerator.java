@@ -99,7 +99,7 @@ public class MainNetworkDataGenerator implements Runnable {
 
         try {
             AbstractSerializer<Tuple2<Integer, Long>> serializerInstance = getSerializer("basic");
-            String socket1File = System.getProperty("user.home") + File.separator + "socket1.csv";
+            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator + "socket1.csv";
             var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds);
             s1.waitForConnection();
             long startTime = System.nanoTime();
@@ -127,8 +127,8 @@ public class MainNetworkDataGenerator implements Runnable {
         try {
             AbstractSerializer<Tuple2<Integer, Long>> serializerInstance = getSerializer("basic");
 
-            String socket1File = System.getProperty("user.home") + File.separator + "socket1.csv";
-            String socket2File = System.getProperty("user.home") + File.separator + "socket2.csv";
+            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator + "socket1.csv";
+            String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
             var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File,
@@ -161,7 +161,7 @@ public class MainNetworkDataGenerator implements Runnable {
         try {
             var auctionSerializerInstance = new NexmarkLightAuctionSerializer();
 
-            String socket1File = System.getProperty("user.home") + File.separator + "socket1.csv";
+            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator + "socket1.csv";
             log.info("{}", basicPort2);
             var auctionSocket = new BlockingSocket<>(basicPort2, auctionSerializerInstance,
                 socket1File, this.timeInSeconds);
@@ -190,8 +190,8 @@ public class MainNetworkDataGenerator implements Runnable {
             var bidSerializerInstance = new NexmarkLightBidSerializer();
             var auctionSerializerInstance = new NexmarkLightAuctionSerializer();
 
-            String socket1File = System.getProperty("user.home") + File.separator + "socket1.csv";
-            String socket2File = System.getProperty("user.home") + File.separator + "socket2.csv";
+            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator + "socket1.csv";
+            String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
             var bidSocket = new BlockingSocket<>(basicPort1, bidSerializerInstance, socket1File,

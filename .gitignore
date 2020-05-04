@@ -2,6 +2,19 @@
 /.idea
 *.iml
 
+### VS Code ###
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+**/.classpath
+**/.project
+**/.settings
+**/.factorypath
+
 ### Java ###
 # Compiled class file
 *.class
@@ -49,7 +62,19 @@ Sessionx.vim
 # Temporary
 .netrwhist
 *~
+.DS_Store
+
 # Auto-generated tag files
 tags
 # Persistent undo
 [._]*.un~
+
+#virtualenv
+venv/
+
+#benchmark files
+output/
+hdes-data/
+
+# Local History for Visual Studio Code
+.history/
