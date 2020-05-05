@@ -18,20 +18,23 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.operation.Collector;
-import lombok.extern.slf4j.Slf4j;
 
 @State(Scope.Benchmark)
 public class MicroBenchmarkFilter {
 
+    public de.hpi.des.hdes.engine.indigenous.execution.operation.StreamFilter<Integer> jniFilterOperator;
     public de.hpi.des.hdes.engine.operation.StreamFilter<Integer> jvmFilterOperator;
+    public de.hpi.des.hdes.engine.graalvm.execution.operation.StreamFilter<Integer> graalFilterOperator;
     @Param({ "100000", "500000", "1000000", "5000000"})
     public int iterations;
 
     @Setup(Level.Invocation)
     public void setUp() throws IOException {
+      jniFilterOperator = new de.hpi.des.hdes.engine.indigenous.execution.operation.StreamFilter<Integer>(e -> e % 2 == 0);
       
       jvmFilterOperator = new de.hpi.des.hdes.engine.operation.StreamFilter<Integer>(e -> e % 2 == 0);
       
+     graalFilterOperator = new de.hpi.des.hdes.engine.graalvm.execution.operation.StreamFilter<Integer>(e -> e % 2 == 0);
       
     }
 
@@ -54,6 +57,40 @@ public class MicroBenchmarkFilter {
       }
     }
 
+    // @Benchmark
+    // @Fork(value = 1, warmups = 1)
+    // @BenchmarkMode({Mode.AverageTime})
+    // @Timeout(time=20)
+    // @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    // public void jniFilterBenchmark(MicroBenchmarkFilter plan, Blackhole bh) {
+    //   plan.jniFilterOperator.init(new Collector<Integer>(){
+
+    //     @Override
+    //     public void collect(AData<Integer> t) {
+    //       bh.consume(t);
+    //     }
+    //   });
+    //   for (int i = 1; i < plan.iterations; i++) {
+    //     plan.jniFilterOperator.sendDownstream(new AData<Integer>(0, 0, false));
+    //   }
+    // }
+
+    @Benchmark
+    @BenchmarkMode({Mode.AverageTime})
+    @Timeout(time=20)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    public void graalFilterBenchmark(MicroBenchmarkFilter plan, Blackhole bh) {
+      plan.graalFilterOperator.init(new Collector<Integer>(){
+
+        @Override
+        public void collect(AData<Integer> t) {
+          bh.consume(t);
+        }
+      });
+      for (int i = 1; i < plan.iterations; i++) {
+        plan.graalFilterOperator.sendDownstream(new AData<Integer>(0, 0, false));
+      }
+    }
 }
 
 

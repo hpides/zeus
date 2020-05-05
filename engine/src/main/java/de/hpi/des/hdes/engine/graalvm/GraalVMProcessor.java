@@ -11,7 +11,7 @@ public class GraalVMProcessor {
     static void process() throws IOException {
 
         Context context = Context.newBuilder().allowNativeAccess(true).build();
-        File file = new File(System.getProperty("user.dir") + "/../graalvm/StreamFilter.bc");
+        File file = new File("/Users/nils/Documents/MP/hdes_clone/graalvm/StreamFilter.bc");
         Source source = Source.newBuilder("llvm", file).build();
         Value cpart = context.eval(source);
         Value result = cpart.getMember("mul_add").execute(2, 4, 3);

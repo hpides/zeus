@@ -101,6 +101,24 @@
               <goal>single</goal>
             </goals>
           </execution>
+          <execution>
+            <configuration>
+              <archive>
+                <manifest>
+                  <mainClass>de.hpi.des.hdes.benchmark.MainMicroBenchmarkRunner</mainClass>
+                </manifest>
+              </archive>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <finalName>micro-benchmark</finalName>
+            </configuration>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <id>micro-benchmark</id>
+            <phase>package</phase>
+          </execution>
         </executions>
       </plugin>
     </plugins>

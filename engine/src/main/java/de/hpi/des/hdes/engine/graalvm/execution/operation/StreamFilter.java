@@ -30,7 +30,7 @@ public class StreamFilter<IN> extends AbstractTopologyElement<IN>
   public StreamFilter(final Filter<? super IN> filter) throws IOException {
     this.filter = filter;
     this.context = Context.newBuilder().allowNativeAccess(true).allowAllAccess(true).build();
-    File file = new File(System.getProperty("user.dir") + "/../graalvm/StreamFilter.bc");
+    File file = new File("/Users/nils/Documents/MP/hdes_clone/graalvm/StreamFilter.bc");
     this.source = Source.newBuilder("llvm", file).build();
     this.cpart = this.context.eval(this.source);
   }

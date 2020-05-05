@@ -10,6 +10,7 @@ import org.jooq.lambda.tuple.Tuple4;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +29,9 @@ public class MainNetworkEngine implements Runnable {
     "najoin_aggregated",
     "hotcat",
     "maxpric",
-    "filter"
+    "filter",
+    "ifilter",
+    "gfilter"
   );
 
   // CLI Options
@@ -270,6 +273,34 @@ public class MainNetworkEngine implements Runnable {
     executeQuery(
       (sink) -> Queries.makeFilter0Measured(source, sink),
       new FileSinkFactory("filter_jvm", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
+      List.of(source));
+  }
+
+  // JNIO Microbenchmark
+  private void nativeFilter() {
+    var source = this.prepareIntSources(basicPort1);
+    source.setProfilingEvents(true);
+    executeQuery(
+      (sink) -> Queries.makeNativeFilter0Measured(source, sink),
+      new FileSinkFactory("jni", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
+      List.of(source));
+  }
+  
+  // JNIO Microbenchmark
+  private void graalFilter() throws IOException {
+    var source = this.prepareIntSources(basicPort1);
+    source.setProfilingEvents(true);
+    executeQuery(
+      (sink) -> {
+          try {
+            return Queries.makeGraalFilter0Measured(source, sink);
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+              return null;
+        },
+      new FileSinkFactory("graal", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
       List.of(source));
   }
 
