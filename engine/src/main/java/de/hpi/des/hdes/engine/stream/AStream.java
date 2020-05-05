@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.stream;
 
+import java.io.IOException;
+
 import org.jooq.lambda.tuple.Tuple3;
 
 import de.hpi.des.hdes.engine.graph.Node;
@@ -71,6 +73,36 @@ public class AStream<In> extends AbstractAStream<In> {
    */
   public AStream<In> filter(final Filter<? super In> filter) {
     final UnaryOperationNode<In, In> child = new UnaryOperationNode<>(new StreamFilter<>(filter));
+    this.builder.addGraphNode(this.node, child);
+    return new AStream<>(this.builder, child);
+  }
+
+  /**
+   * Filters the elements of this stream.
+   *
+   * Only elements fulfilling the filter predicate remain in the stream.
+   *
+   * @param filter the predicate
+   * @return the filtered stream
+   */
+  public AStream<In> filterNative(final Filter<? super In> filter) {
+    final UnaryOperationNode<In, In> child = new UnaryOperationNode<>(
+        new de.hpi.des.hdes.engine.indigenous.execution.operation.StreamFilter<>(filter));
+    this.builder.addGraphNode(this.node, child);
+    return new AStream<>(this.builder, child);
+  }
+
+  /**
+   * Filters the elements of this stream.
+   *
+   * Only elements fulfilling the filter predicate remain in the stream.
+   *
+   * @param filter the predicate
+   * @return the filtered stream
+   * @throws IOException
+   */
+  public AStream<In> filterGraal(final Filter<? super In> filter) throws IOException {
+    final UnaryOperationNode<In, In> child = new UnaryOperationNode<>(new de.hpi.des.hdes.engine.graalvm.execution.operation.StreamFilter<>(filter));
     this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
   }

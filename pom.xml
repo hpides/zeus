@@ -28,6 +28,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>graal-sdk</artifactId>
+            <version>20.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
@@ -102,6 +107,10 @@
                 <version>3.8.1</version>
                 <configuration>
                     <release>${java.version}</release>
+                    <compilerArgs>
+                        <arg>-h</arg>
+                        <arg>indigenous</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
