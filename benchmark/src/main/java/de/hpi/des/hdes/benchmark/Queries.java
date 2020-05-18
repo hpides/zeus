@@ -13,7 +13,6 @@ import de.hpi.des.hdes.engine.window.Time;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;
 
-import java.io.IOException;
 import java.util.function.Function;
 import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple2;
@@ -29,16 +28,6 @@ public class Queries {
   public static Query makeFilter0Measured(Source<Tuple2<Integer, Long>> source, Sink<Tuple> sink) {
     return new TopologyBuilder().streamOf(source).map(t -> t.v1).filter(e -> e % 2 == 0).flatProfiling().to(sink)
         .buildAsQuery();
-  }
-
-  public static Query makeNativeFilter0Measured(Source<Tuple2<Integer, Long>> source, Sink<Tuple> sink) {
-    return new TopologyBuilder().streamOf(source).map(t -> t.v1).filterNative(e -> e % 2 == 0).flatProfiling().to(sink)
-        .buildAsQuery();
-  }
-
-  public static Query makeGraalFilter0Measured(Source<Tuple2<Integer, Long>> source, Sink<Tuple> sink)
-      throws IOException {
-    return new TopologyBuilder().streamOf(source).map(t -> t.v1).filterGraal(e -> e % 2 == 0).flatProfiling().to(sink).buildAsQuery();
   }
 
   /**

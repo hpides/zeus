@@ -78,36 +78,6 @@ public class AStream<In> extends AbstractAStream<In> {
   }
 
   /**
-   * Filters the elements of this stream.
-   *
-   * Only elements fulfilling the filter predicate remain in the stream.
-   *
-   * @param filter the predicate
-   * @return the filtered stream
-   */
-  public AStream<In> filterNative(final Filter<? super In> filter) {
-    final UnaryOperationNode<In, In> child = new UnaryOperationNode<>(
-        new de.hpi.des.hdes.engine.indigenous.execution.operation.StreamFilter<>(filter));
-    this.builder.addGraphNode(this.node, child);
-    return new AStream<>(this.builder, child);
-  }
-
-  /**
-   * Filters the elements of this stream.
-   *
-   * Only elements fulfilling the filter predicate remain in the stream.
-   *
-   * @param filter the predicate
-   * @return the filtered stream
-   * @throws IOException
-   */
-  public AStream<In> filterGraal(final Filter<? super In> filter) throws IOException {
-    final UnaryOperationNode<In, In> child = new UnaryOperationNode<>(new de.hpi.des.hdes.engine.graalvm.execution.operation.StreamFilter<>(filter));
-    this.builder.addGraphNode(this.node, child);
-    return new AStream<>(this.builder, child);
-  }
-
-  /**
    * Windows this stream.
    *
    * @param window the window assigner for the window
