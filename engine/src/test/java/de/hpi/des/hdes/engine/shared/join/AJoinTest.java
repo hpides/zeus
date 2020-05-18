@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.shared.join;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import de.hpi.des.hdes.engine.Engine;
+import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.TestUtil;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
@@ -51,14 +51,10 @@ class AJoinTest {
     final AStream<TestValue> stream = builder.streamOf(source);
     final AStream<TestValue> stream1 = builder.streamOf(source1);
 
-    stream.window(TumblingWindow.ofEventTime(300))
-        .ajoin(stream1,
-            TestValue::getId,
-            TestValue::getId,
-            TestResult::of)
+    stream.window(TumblingWindow.ofEventTime(300)).ajoin(stream1, TestValue::getId, TestValue::getId, TestResult::of)
         .to(sink);
 
-    final Engine engine = new Engine();
+    final VulcanoEngine engine = new VulcanoEngine();
     final Query query = new Query(builder.build());
     engine.addQuery(query);
 
@@ -66,10 +62,8 @@ class AJoinTest {
       TestUtil.runAndTick(engine.getPlan().getRunnableSlots());
     }
 
-    final List<TestResult> expected = Seq.seq(list)
-        .innerJoin(list2, (a, b) -> a.getId() == b.getId())
-        .map(t -> TestResult.of(t.v1, t.v2))
-        .toList();
+    final List<TestResult> expected = Seq.seq(list).innerJoin(list2, (a, b) -> a.getId() == b.getId())
+        .map(t -> TestResult.of(t.v1, t.v2)).toList();
 
     assertThat(result).containsExactlyInAnyOrderElementsOf(expected);
 
@@ -94,12 +88,7 @@ class AJoinTest {
     final Set<Integer> resultSet = new HashSet<>();
     final Sink<Integer> sink = i -> resultSet.add(i.getValue());
 
-    stream.window(TumblingWindow.ofEventTime(100))
-        .ajoin(stream2,
-            i -> i,
-            i -> i,
-            Integer::sum)
-        .to(sink);
+    stream.window(TumblingWindow.ofEventTime(100)).ajoin(stream2, i -> i, i -> i, Integer::sum).to(sink);
 
     // build query 2
     final TopologyBuilder query2Builder = new TopologyBuilder();
@@ -109,17 +98,13 @@ class AJoinTest {
     final Set<Integer> query2ResultSet = new HashSet<>();
     final Sink<Integer> query2Sink = i -> query2ResultSet.add(i.getValue());
 
-    query2Stream1.window(TumblingWindow.ofEventTime(100))
-        .ajoin(query2Stream2,
-            i -> i,
-            i -> i,
-            Integer::max)
+    query2Stream1.window(TumblingWindow.ofEventTime(100)).ajoin(query2Stream2, i -> i, i -> i, Integer::max)
         .to(query2Sink);
 
     final Query query = new Query(builder.build());
     final Query query2 = new Query(query2Builder.build());
 
-    final Engine engine = new Engine();
+    final VulcanoEngine engine = new VulcanoEngine();
     engine.addQuery(query);
     engine.addQuery(query2);
 
@@ -165,10 +150,8 @@ class AJoinTest {
 
       final TestResult other = (TestResult) obj;
 
-      return (this.leftTestValue.equals(other.leftTestValue) &&
-          this.rightTestValue.equals(other.rightTestValue)) ||
-          (this.leftTestValue.equals(other.rightTestValue) &&
-              this.rightTestValue.equals(other.leftTestValue));
+      return (this.leftTestValue.equals(other.leftTestValue) && this.rightTestValue.equals(other.rightTestValue))
+          || (this.leftTestValue.equals(other.rightTestValue) && this.rightTestValue.equals(other.leftTestValue));
 
     }
   }

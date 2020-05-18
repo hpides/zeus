@@ -1,6 +1,5 @@
 package de.hpi.des.hdes.engine;
 
-
 import java.time.temporal.ChronoUnit;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -13,11 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JobManager {
 
-  private final Engine engine;
+  private final VulcanoEngine engine;
   private final Timer timer;
 
   public JobManager() {
-    this.engine = new Engine();
+    this.engine = new VulcanoEngine();
     this.timer = new Timer("AddQueryTimer");
   }
 

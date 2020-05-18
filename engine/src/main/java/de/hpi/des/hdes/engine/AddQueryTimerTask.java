@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class AddQueryTimerTask extends TimerTask {
 
-  private final Engine engine;
+  private final VulcanoEngine engine;
   private final Query query;
 
   @Override
