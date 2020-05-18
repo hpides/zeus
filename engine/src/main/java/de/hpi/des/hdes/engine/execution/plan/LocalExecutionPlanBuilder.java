@@ -13,6 +13,7 @@ import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import de.hpi.des.hdes.engine.graph.SinkNode;
 import de.hpi.des.hdes.engine.graph.SourceNode;
 import de.hpi.des.hdes.engine.graph.Topology;
+import de.hpi.des.hdes.engine.graph.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.operation.Source;
@@ -23,7 +24,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This execution plan builder builds an {@link ExecutionPlan} for one node environment.
+ * This execution plan builder builds an {@link ExecutionPlan} for one node
+ * environment.
  */
 @Slf4j
 public class LocalExecutionPlanBuilder implements NodeVisitor {
@@ -104,14 +106,20 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
     parent1Slot.addOutput(binaryOperationNode, input1);
     parent2Slot.addOutput(binaryOperationNode, input2);
 
-    final TwoInputPullSlot<IN1, IN2, OUT> slot = new TwoInputPullSlot<>(operator, parent1Slot,
-        parent2Slot, input1, input2, binaryOperationNode);
+    final TwoInputPullSlot<IN1, IN2, OUT> slot = new TwoInputPullSlot<>(operator, parent1Slot, parent2Slot, input1,
+        input2, binaryOperationNode);
     parent1Slot.addChild(slot);
     parent2Slot.addChild(slot);
     operator.init(slot);
 
     this.outputSlots.put(binaryOperationNode, slot);
     this.slots.add(slot);
+  }
+
+  @Override
+  public <IN, OUT> void visit(UnaryGenerationNode<IN, OUT> unaryGenerationNode) {
+    // TODO Auto-generated method stub
+
   }
 
   @SuppressWarnings("unchecked")
