@@ -19,20 +19,8 @@ import java.util.function.Function;
 @Slf4j
 public class MainNetworkEngine implements Runnable {
 
-  private static final List<String> types = List.of(
-    "bmap",
-    "bjoin",
-    "bajoin",
-    "nfilter",
-    "njoin",
-    "najoin",
-    "najoin_aggregated",
-    "hotcat",
-    "maxpric",
-    "filter",
-    "ifilter",
-    "gfilter"
-  );
+  private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin",
+      "najoin_aggregated", "hotcat", "maxpric", "filter", "ifilter", "gfilter");
 
   // CLI Options
   @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "120")
@@ -59,7 +47,7 @@ public class MainNetworkEngine implements Runnable {
   private int fixedQueries;
   @Option(names = { "--type", "-t" }, defaultValue = "bmap")
   private String benchmarkType;
-  @Option(names = { "--networkBufferSize", "-nbs"}, defaultValue = "10")
+  @Option(names = { "--networkBufferSize", "-nbs" }, defaultValue = "10")
   private int bufferinK;
 
   // Calculated values
@@ -77,25 +65,31 @@ public class MainNetworkEngine implements Runnable {
   @Override
   public void run() {
     // Sanity checking parameters
-    if(!types.contains(benchmarkType)){
+    if (!types.contains(benchmarkType)) {
       log.error("No such benchmark type {}.", benchmarkType);
       log.info("You may use one of {}.", types.toString());
       System.exit(1);
     }
-    if(timeInSeconds < 1) timeInSeconds = 1;
-    if(batches < 0) batches = 0;
-    if(fixedQueries < 1) fixedQueries = 1;
-    log.info("Running Benchmark {} with {} queries for {} seconds with {} batches.", benchmarkType, fixedQueries, timeInSeconds, batches);
+    if (timeInSeconds < 1)
+      timeInSeconds = 1;
+    if (batches < 0)
+      batches = 0;
+    if (fixedQueries < 1)
+      fixedQueries = 1;
+    log.info("Running Benchmark {} with {} queries for {} seconds with {} batches.", benchmarkType, fixedQueries,
+        timeInSeconds, batches);
     log.info("Connection to {}.", generatorHost);
-    if(batches > 0){
-      waitSecondsBetweenBatches = (timeInSeconds/batches);
-      log.info("Adding {} queries per batch and removing {} queries per batch", newQueriesPerBatch, removeQueriesPerBatch);
-      if(newQueriesPerBatch < removeQueriesPerBatch){
-        log.error("Please do not remove any of the fixed queries. Choose at least the same amount of newQueries ofr deletedQueries");
+    if (batches > 0) {
+      waitSecondsBetweenBatches = (timeInSeconds / batches);
+      log.info("Adding {} queries per batch and removing {} queries per batch", newQueriesPerBatch,
+          removeQueriesPerBatch);
+      if (newQueriesPerBatch < removeQueriesPerBatch) {
+        log.error(
+            "Please do not remove any of the fixed queries. Choose at least the same amount of newQueries ofr deletedQueries");
         System.exit(1);
       }
     }
-    switch (benchmarkType){
+    switch (benchmarkType) {
       case "bmap": {
         basicAddDeleteMap();
       }
@@ -114,8 +108,8 @@ public class MainNetworkEngine implements Runnable {
       case "najoin": {
         nexmarkLightAddRemoveQueryAJoin();
       }
-      case "hotcat":{
-       nexmarkLightHottestCategory();
+      case "hotcat": {
+        nexmarkLightHottestCategory();
       }
       case "maxpric": {
         nexmarkLightHighestPricePerAuction();
@@ -130,178 +124,75 @@ public class MainNetworkEngine implements Runnable {
 
   private void basicAddDeleteMap() {
     var s1 = this.prepareIntSources(basicPort1);
-    executeQuery(
-      (sink) -> Queries.makeQuery0Measured(s1, sink),
-      new FileSinkFactory(
-        "basic_map",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1
-      ),
-      List.of(s1)
-    );
+    executeQuery((sink) -> Queries.makeQuery0Measured(s1, sink),
+        new FileSinkFactory("basic_map", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        List.of(s1));
   }
 
   private void basicAddDeleteJoin() {
     var s1 = this.prepareIntSources(basicPort1);
     var s2 = this.prepareIntSources(basicPort2);
-    executeQuery(
-      (sink) -> Queries.makePlainJoin0Measured(s1, s2, sink),
-      new FileSinkFactory(
-        "basic_join",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1
-      ),
-      List.of(s1, s2)
-    );
+    executeQuery((sink) -> Queries.makePlainJoin0Measured(s1, s2, sink),
+        new FileSinkFactory("basic_join", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        List.of(s1, s2));
   }
 
   private void basicAddDeleteAJoin() {
     var s1 = this.prepareIntSources(basicPort1);
     var s2 = this.prepareIntSources(basicPort2);
-    executeQuery(
-      (sink) -> Queries.makeAJoin0Measured(s1, s2, sink),
-      new FileSinkFactory(
-        "basic_ajoin",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1
-      ),
-      List.of(s1, s2)
-    );
+    executeQuery((sink) -> Queries.makeAJoin0Measured(s1, s2, sink),
+        new FileSinkFactory("basic_ajoin", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        List.of(s1, s2));
   }
 
   // ----- Nexmark Add Remove Query -----
   private void nexmarkLightAddRemoveQueryFilter() {
     var s1 = this.prepareAuctionSource(basicPort2);
-    executeQuery(
-      (sink) -> Queries.makeNexmarkLightFilterMeasured(s1, sink),
-      new FileSinkFactory(
-        "nexmark_filter",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1
-      ),
-      List.of(s1)
-    );
+    executeQuery((sink) -> Queries.makeNexmarkLightFilterMeasured(s1, sink),
+        new FileSinkFactory("nexmark_filter", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        List.of(s1));
   }
 
   private void nexmarkLightAddRemoveQueryPlainJoin() {
     var s1 = this.prepareBidSource(basicPort1);
     var s2 = this.prepareAuctionSource(basicPort2);
-    executeQuery(
-      (sink) -> Queries.makeNexmarkLightPlainJoinMeasured(s1, s2, sink),
-      new FileSinkFactory(
-        "nexmark_join",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1
-      ),
-      List.of(s1, s2)
-    );
+    executeQuery((sink) -> Queries.makeNexmarkLightPlainJoinMeasured(s1, s2, sink),
+        new FileSinkFactory("nexmark_join", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        List.of(s1, s2));
   }
 
   private void nexmarkLightAddRemoveQueryAJoin() {
     var s1 = this.prepareBidSource(basicPort1);
     var s2 = this.prepareAuctionSource(basicPort2);
-    executeQuery(
-      (sink) -> Queries.makeNexmarkLightAJoinMeasured(s1, s2, sink),
-      new FileSinkFactory(
-        "nexmark_ajoin",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1000
-      ),
-      List.of(s1, s2)
-    );
+    executeQuery((sink) -> Queries.makeNexmarkLightAJoinMeasured(s1, s2, sink),
+        new FileSinkFactory("nexmark_ajoin", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1000),
+        List.of(s1, s2));
   }
 
   // ----- Nextmark Semenatic Queries -----
   private void nexmarkLightHottestCategory() {
     var s1 = this.prepareBidSource(basicPort1);
     var s2 = this.prepareAuctionSource(basicPort2);
-    executeQuery(
-      (sink) -> Queries.makeNexmarkHottestCategory(s1, s2, sink),
-      new FileSinkFactory(
-        "nexmark_hotcat",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1
-      ),
-      List.of(s1, s2),
-      1
-    );
+    executeQuery((sink) -> Queries.makeNexmarkHottestCategory(s1, s2, sink),
+        new FileSinkFactory("nexmark_hotcat", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        List.of(s1, s2), 1);
   }
 
   private void nexmarkLightHighestPricePerAuction() {
     var s1 = this.prepareBidSource(basicPort1);
     var s2 = this.prepareAuctionSource(basicPort2);
-    executeQuery(
-      (sink) -> Queries.makeNexmarkMaxiumPriceForAuction(s1, s2, sink),
-      new FileSinkFactory(
-        "nexmark_maxpri",
-        fixedQueries,
-        batches,
-        newQueriesPerBatch,
-        removeQueriesPerBatch,
-        1
-      ),
-      List.of(s1, s2),
-      1
-    );
+    executeQuery((sink) -> Queries.makeNexmarkMaxiumPriceForAuction(s1, s2, sink),
+        new FileSinkFactory("nexmark_maxpri", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        List.of(s1, s2), 1);
   }
 
   // JNIO Microbenchmark
   private void filter() {
     var source = this.prepareIntSources(basicPort1);
     source.setProfilingEvents(true);
-    executeQuery(
-      (sink) -> Queries.makeFilter0Measured(source, sink),
-      new FileSinkFactory("filter_jvm", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
-      List.of(source));
-  }
-
-  // JNIO Microbenchmark
-  private void nativeFilter() {
-    var source = this.prepareIntSources(basicPort1);
-    source.setProfilingEvents(true);
-    executeQuery(
-      (sink) -> Queries.makeNativeFilter0Measured(source, sink),
-      new FileSinkFactory("jni", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
-      List.of(source));
-  }
-  
-  // JNIO Microbenchmark
-  private void graalFilter() throws IOException {
-    var source = this.prepareIntSources(basicPort1);
-    source.setProfilingEvents(true);
-    executeQuery(
-      (sink) -> {
-          try {
-            return Queries.makeGraalFilter0Measured(source, sink);
-          } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-              return null;
-        },
-      new FileSinkFactory("graal", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
-      List.of(source));
+    executeQuery((sink) -> Queries.makeFilter0Measured(source, sink),
+        new FileSinkFactory("filter_jvm", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
+        List.of(source));
   }
 
   private AbstractSerializer getSerializer(String dataType) {
@@ -321,8 +212,8 @@ public class MainNetworkEngine implements Runnable {
 
   private NetworkSource<Tuple2<Integer, Long>> prepareIntSources(int port) {
     AbstractSerializer<Tuple2<Integer, Long>> serializerInstance = getSerializer("basic");
-    NetworkSource<Tuple2<Integer, Long>> s1 = new NetworkSource<>(1000*bufferinK, port, serializerInstance, generatorHost,
-        this.serializer, null, t2 -> TimeUnit.MILLISECONDS.toNanos(t2.v2));
+    NetworkSource<Tuple2<Integer, Long>> s1 = new NetworkSource<>(1000 * bufferinK, port, serializerInstance,
+        generatorHost, this.serializer, null, t2 -> TimeUnit.MILLISECONDS.toNanos(t2.v2));
     new Thread(s1).start();
     return s1;
   }
@@ -330,7 +221,7 @@ public class MainNetworkEngine implements Runnable {
   private NetworkSource<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> prepareBidSource(int port) {
     var serializerInstance = new NexmarkLightBidDeSerializer();
 
-    var s1 = new NetworkSource<>(1000*bufferinK, port, serializerInstance, generatorHost, this.serializer, null,
+    var s1 = new NetworkSource<>(1000 * bufferinK, port, serializerInstance, generatorHost, this.serializer, null,
         t5 -> TimeUnit.MILLISECONDS.toNanos(t5.v2));
     new Thread(s1).start();
     return s1;
@@ -339,27 +230,29 @@ public class MainNetworkEngine implements Runnable {
   private NetworkSource<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> prepareAuctionSource(int port) {
     var serializerInstance = new NexmarkLightAuctionDeSerializer();
 
-    var s1 = new NetworkSource<>(1000*bufferinK, port, serializerInstance, generatorHost, this.serializer, null,
+    var s1 = new NetworkSource<>(1000 * bufferinK, port, serializerInstance, generatorHost, this.serializer, null,
         t5 -> TimeUnit.MILLISECONDS.toNanos(t5.v2));
     new Thread(s1).start();
     return s1;
   }
 
-  private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory, List<NetworkSource> sources) {
+  private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,
+      List<NetworkSource> sources) {
     executeQuery(makeQuery, factory, sources, fixedQueries);
   }
 
-  private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory, List<NetworkSource> sources, int fileSinksAmount) {
+  private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,
+      List<NetworkSource> sources, int fileSinksAmount) {
     try {
       // Query Array
       ArrayDeque<Query> queries = new ArrayDeque<>();
       // Creating a JobManager
       JobManager manager = new JobManager();
       // Adding fixed queries
-      for(int i = 0; i< fixedQueries; i++) {
+      for (int i = 0; i < fixedQueries; i++) {
         Sink sink;
         // Create Sink
-        if(fileSinksAmount > factory.getSinkAmount()){
+        if (fileSinksAmount > factory.getSinkAmount()) {
           sink = factory.createFileSink(i);
         } else {
           sink = new NoOpSink();
@@ -370,13 +263,13 @@ public class MainNetworkEngine implements Runnable {
       }
       // Running engine
       manager.runEngine();
-      if(batches == 0){
+      if (batches == 0) {
         Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
       }
       // Adding and removing batches of queries
-      for(int i = 0; i < batches; i++){
+      for (int i = 0; i < batches; i++) {
         // Adding queries per batch
-        for(int j = 0; j < newQueriesPerBatch; j++){
+        for (int j = 0; j < newQueriesPerBatch; j++) {
           NoOpSink noop = new NoOpSink();
           Query q = makeQuery.apply(noop);
           queries.add(q);
@@ -385,7 +278,7 @@ public class MainNetworkEngine implements Runnable {
         // Waiting for specified time
         Thread.sleep(TimeUnit.SECONDS.toMillis(waitSecondsBetweenBatches));
         // Removing queries per batch
-        for(int j = 0; j < removeQueriesPerBatch; j++){
+        for (int j = 0; j < removeQueriesPerBatch; j++) {
           Query q = queries.pop();
           manager.deleteQuery(q);
         }
@@ -399,7 +292,7 @@ public class MainNetworkEngine implements Runnable {
       // Flushing ech sink
       factory.flushSinks();
       System.exit(0);
-    } catch (InterruptedException e){
+    } catch (InterruptedException e) {
       e.printStackTrace();
     }
   }
