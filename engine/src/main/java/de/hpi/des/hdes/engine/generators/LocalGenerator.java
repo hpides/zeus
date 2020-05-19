@@ -1,86 +1,86 @@
 package de.hpi.des.hdes.engine.generators;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 import java.util.UUID;
+
+import com.github.mustachejava.Mustache;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.io.StringWriter;
+import lombok.Getter;
 
 import de.hpi.des.hdes.engine.Query;
-import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
+import de.hpi.des.hdes.engine.graph.BinaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.NodeVisitor;
-import de.hpi.des.hdes.engine.graph.SinkNode;
+import de.hpi.des.hdes.engine.graph.Pipeline;
 import de.hpi.des.hdes.engine.graph.SourceNode;
-import de.hpi.des.hdes.engine.graph.Topology;
+import de.hpi.des.hdes.engine.graph.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.UnaryGenerationNode;
-import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
 
-public class LocalGenerator implements NodeVisitor {
+public class LocalGenerator {
 
-    private final Topology topology;
-    private String query;
+    private final PipelineTopology pipelineTopology;
+    private String implementation = "";
 
-    public LocalGenerator(final Topology topology) {
-        this.topology = topology;
-        try {
-            String query = Files.readString(Paths.get(System.getProperty("user.dir"),
-                    "src/main/java/de/hpi/des/hdes/engine/generators/templates/Query.java.template"));
-            String uuid = UUID.randomUUID().toString();
-            this.query = String.format(query, "Query", "%s");
-        } catch (IOException e) {
-            System.exit(1);
-        }
+    private final StringWriter writer = new StringWriter();
 
-    }
+    @Getter
+    private class SourceData {
+        private String className;
+        private String implementation;
 
-    public void build(final Topology queryTopology) {
-        final List<Node> sortedNodes = queryTopology.getTopologicalOrdering();
-        for (final Node node : sortedNodes) {
-            if (!this.topology.getNodes().contains(node)) {
-                node.accept(this);
-            }
-        }
-        try {
-            Files.writeString(Paths.get("final_query.java"), query);
-        } catch (IOException e) {
-            System.exit(1);
+        public SourceData(String uuid, String implementation) {
+            this.className = uuid;
+            this.implementation = implementation;
         }
     }
 
-    public void build(final Query query) {
-        this.build(query.getTopology());
+    public LocalGenerator(final PipelineTopology pipelineTopology) {
+        this.pipelineTopology = pipelineTopology;
     }
 
-    @Override
-    public <OUT> void visit(SourceNode<OUT> sourceNode) {
-        // TODO Auto-generated method stub
-
+    public void build(final PipelineTopology queryTopology) {
+        for (Pipeline pipeline : queryTopology.getPipelines()) {
+            this.buildPipeline(pipeline);
+        }
     }
 
-    @Override
-    public <IN> void visit(SinkNode<IN> sinkNode) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public <IN, OUT> void visit(UnaryOperationNode<IN, OUT> unaryOperationNode) {
-        // TODO Auto-generated method stub
+    public void buildPipeline(Pipeline pipeline) {
 
     }
 
-    @Override
-    public <IN, OUT> void visit(UnaryGenerationNode<IN, OUT> unaryGenerationNode) {
-        // TODO Auto-generated method stub
-        String filter = unaryGenerationNode.getOperator().generate();
-        query = String.format(query, filter);
-    }
+    /*
+     * TODO do this for pipeline topology public void build(final Query query) {
+     * this.build(query.getTopology()); }
+     */
 
-    @Override
-    public <IN1, IN2, OUT> void visit(BinaryOperationNode<IN1, IN2, OUT> binaryOperationNode) {
-        // TODO Auto-generated method stub
-
-    }
-
+    /*
+     * See if this can be reused.
+     * 
+     * @Override public <OUT> void visit(SourceNode<OUT> sourceNode) { String uuid =
+     * "c".concat(UUID.randomUUID().toString().replaceAll("-", "")); try { Mustache
+     * template =
+     * MustacheFactorySingleton.getInstance().compile("Source.java.mustache");
+     * template.execute(writer, new SourceData(uuid, implementation)).flush();
+     * implementation = writer.toString(); Files.writeString(Paths.get(uuid +
+     * ".java"), implementation); this.uuids.push(uuid); } catch (IOException e) {
+     * System.exit(1); } }
+     * 
+     * @Override public <IN, OUT> void visit(UnaryGenerationNode<IN, OUT>
+     * unaryGenerationNode) { implementation =
+     * unaryGenerationNode.getOperator().generate(implementation); }
+     * 
+     * @Override public <IN1, IN2, OUT> void visit(BinaryGenerationNode<IN1, IN2,
+     * OUT> binaryGenerationNode) { final JoinGenerator<IN1, IN2, OUT> operator =
+     * binaryGenerationNode.getOperator(); final Iterator<Node> parents =
+     * binaryGenerationNode.getParents().iterator(); final Node parentNode1 =
+     * parents.next(); final Node parentNode2 = parents.next();
+     * 
+     * System.err.println(String.format("Node from type %s is not known.",
+     * node.getClass())); }
+     */
 }

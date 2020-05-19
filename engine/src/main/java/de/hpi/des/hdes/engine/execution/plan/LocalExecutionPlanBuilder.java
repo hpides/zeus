@@ -13,7 +13,6 @@ import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import de.hpi.des.hdes.engine.graph.SinkNode;
 import de.hpi.des.hdes.engine.graph.SourceNode;
 import de.hpi.des.hdes.engine.graph.Topology;
-import de.hpi.des.hdes.engine.graph.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.operation.Source;
@@ -114,12 +113,6 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
 
     this.outputSlots.put(binaryOperationNode, slot);
     this.slots.add(slot);
-  }
-
-  @Override
-  public <IN, OUT> void visit(UnaryGenerationNode<IN, OUT> unaryGenerationNode) {
-    // TODO Auto-generated method stub
-
   }
 
   @SuppressWarnings("unchecked")

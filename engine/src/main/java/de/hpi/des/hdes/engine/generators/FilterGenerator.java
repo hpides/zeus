@@ -1,23 +1,38 @@
 package de.hpi.des.hdes.engine.generators;
 
+import lombok.Getter;
+
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.StringWriter;
+
+import com.github.mustachejava.Mustache;
 
 public class FilterGenerator<IN> implements Generatable {
 
     private final String filter;
+    private final StringWriter writer = new StringWriter();
 
     public FilterGenerator(final String filter) {
         this.filter = filter;
     }
 
+    @Getter
+    private class TemplateData {
+        private String condition;
+        private String execution;
+
+        public TemplateData(String condition, String execution) {
+            this.condition = condition;
+            this.execution = execution;
+        }
+    }
+
     @Override
-    public String generate() {
+    public String generate(String execution) {
         try {
-            String template = Files.readString(Paths.get(System.getProperty("user.dir"),
-                    "src/main/java/de/hpi/des/hdes/engine/generators/templates/Filter.java.template"));
-            return String.format(template, filter, "%s");
+            Mustache template = MustacheFactorySingleton.getInstance().compile("Filter.java.mustache");
+            template.execute(writer, new TemplateData(filter, execution)).flush();
+            return writer.toString();
         } catch (IOException e) {
             System.out.println(e);
         }

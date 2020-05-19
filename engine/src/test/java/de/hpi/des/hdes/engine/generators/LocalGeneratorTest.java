@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.Stack;
 import java.util.ArrayList;
 
 import java.io.IOException;
@@ -28,10 +29,13 @@ public class LocalGeneratorTest {
         UnaryGenerationNode<Integer, Integer> node = new UnaryGenerationNode<Integer, Integer>(filter);
         builder.addGraphNode(builder.getNodes().get(0), node);
         LocalGenerator generator = new LocalGenerator(new Topology());
-        generator.build(builder.build());
+        Stack<String> pipelineUuids = generator.build(builder.build());
+        String uuid = pipelineUuids.pop();
         try {
-            String result = Files.readString(Paths.get("final_query.java"));
-            assertEquals("class Query { if ( element % 4 == 0 ) { %s } }", result.replace("\n", "").replace("\r", ""));
+            String result = Files.readString(Paths.get(uuid + ".java"));
+            assertEquals(
+                    String.format("class %s {void pipeline(AData<> element) {if ( element %% 4 == 0 ) { }}}", uuid, ""),
+                    result.replaceAll("( ){2,}|\n|\r", ""));
         } catch (IOException e) {
             System.out.println(e.getMessage());
             System.exit(1);

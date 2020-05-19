@@ -10,11 +10,6 @@ import de.hpi.des.hdes.engine.generators.FilterGenerator;
  */
 public class UnaryGenerationNode<IN, OUT> extends Node {
 
-    @Override
-    public void accept(final NodeVisitor visitor) {
-        visitor.visit(this);
-    }
-
     private final FilterGenerator<IN> operator;
 
     public UnaryGenerationNode(final FilterGenerator<IN> operator) {
@@ -29,5 +24,11 @@ public class UnaryGenerationNode<IN, OUT> extends Node {
 
     public FilterGenerator<IN> getOperator() {
         return this.operator;
+    }
+
+    @Override
+    public void accept(NodeVisitor visitor) {
+        // TODO Auto-generated method stub
+
     }
 }
