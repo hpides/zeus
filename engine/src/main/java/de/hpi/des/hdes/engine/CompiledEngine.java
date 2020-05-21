@@ -1,10 +1,12 @@
 package de.hpi.des.hdes.engine;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import de.hpi.des.hdes.engine.execution.plan.CompiledExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.CompiledRunnableSlot;
+import de.hpi.des.hdes.engine.graph.RunnablePipeline;
 import de.hpi.des.hdes.engine.graph.Topology;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +34,9 @@ public class CompiledEngine implements Engine {
         }
 
         this.isRunning = true;
-        for (final CompiledRunnableSlot slot : this.plan.getRunnableSlots()) {
-            log.debug("Slot {} submitted", slot);
-            this.executor.submit(slot);
+        for (final Runnable pipeline : this.plan.getRunnablePiplines()) {
+            log.debug("Pipeline {} submitted", pipeline);
+            this.executor.submit(pipeline);
         }
 
     }
@@ -44,23 +46,26 @@ public class CompiledEngine implements Engine {
         Topology topology = query.getTopology();
         this.plan = CompiledExecutionPlan.extend(this.plan, topology);
 
-        for (CompiledRunnableSlot slot : this.plan.getSlots()) {
-            this.executor.submit(slot);
+        for (final Runnable pipeline : this.plan.getRunnablePiplines()) {
+            log.debug("Pipeline {} submitted", pipeline);
+            this.executor.submit(pipeline);
         }
 
-        // TODO keep track of running slots
+        // TODO keep track of running pipeline
 
     }
 
     @Override
     public void deleteQuery(Query query) {
-        // TODO Auto-generated method stub
-
+        // TODO engine: what about Pipelines with shared operators?
+        List<RunnablePipeline> pipelinesToShutdown = this.plan.getRunnablePiplinesFor(query);
+        this.plan = CompiledExecutionPlan.delete(this.plan, query);
+        pipelinesToShutdown.forEach(RunnablePipeline::shutdown);
     }
 
     @Override
     public void shutdown() {
-        this.plan.getRunnableSlots().forEach(CompiledRunnableSlot::shutdown);
+        this.plan.getRunnablePiplines().forEach(RunnablePipeline::shutdown);
 
         this.executor.shutdownNow();
     }

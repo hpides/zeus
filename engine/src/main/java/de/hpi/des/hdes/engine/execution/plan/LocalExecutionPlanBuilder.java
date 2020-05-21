@@ -23,13 +23,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
-<<<<<<< HEAD
  * This execution plan builder builds an {@link VulcanoExecutionPlan} for one
  * node environment.
-=======
- * This execution plan builder builds an {@link ExecutionPlan} for one node
- * environment.
->>>>>>> origin/mp20/feature/code-generation
  */
 @Slf4j
 public class LocalExecutionPlanBuilder implements NodeVisitor {

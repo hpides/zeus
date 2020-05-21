@@ -12,4 +12,10 @@ public class PipelineTopology {
     public PipelineTopology(final List<Pipeline> pipelines) {
         this.pipelines = pipelines;
     }
+
+    public List<RunnablePipeline> getRunnablePiplines() {
+        // TODO engine Return all objects that implement RunnablePipeline (source
+        // pipelines and buffered sources)
+        return null;
+    }
 }

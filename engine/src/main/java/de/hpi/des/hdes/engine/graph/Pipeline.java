@@ -1,14 +1,27 @@
 package de.hpi.des.hdes.engine.graph;
 
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
+@Slf4j
 public class Pipeline {
+    private Class pipelineKlass;
 
     private final List<Node> nodes;
     private final String pipelineId;
@@ -30,7 +43,24 @@ public class Pipeline {
         pipeline.setChild(this);
     }
 
-    void loadPipeline() {
+    private String getFilePath() {
+        // TODO code-generation: Define path to files in a central place
+        return "";
+    }
 
+    // TODO code-generation: call after file was generated
+    void loadPipeline() {
+        Path javaFile = Paths.get(this.getFilePath());
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        compiler.run(null, null, null, javaFile.toFile().getAbsolutePath());
+        Path javaClass = javaFile.getParent().resolve(this.pipelineId);
+        URL classUrl;
+        try {
+            classUrl = javaClass.getParent().toFile().toURI().toURL();
+            URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { classUrl });
+            pipelineKlass = Class.forName(this.pipelineId, true, classLoader);
+        } catch (MalformedURLException | ReflectiveOperationException | RuntimeException e) {
+            log.error("Slot had an exception during class load: ", e);
+        }
     }
 }

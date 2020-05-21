@@ -6,7 +6,12 @@ import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.slot.CompiledRunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
+import de.hpi.des.hdes.engine.generators.LocalGenerator;
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.Pipeline;
+import de.hpi.des.hdes.engine.graph.PipelineTopology;
+import de.hpi.des.hdes.engine.graph.PipelineTopologyBuilder;
+import de.hpi.des.hdes.engine.graph.RunnablePipeline;
 import de.hpi.des.hdes.engine.graph.Topology;
 
 import java.util.Arrays;
@@ -17,6 +22,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import lombok.Data;
 
+// TODO engine: Maybe make this an interface only? The pipelineTopology stores the queries as well and could use a Helper Class (e.g. PipelineTopologyBuilder) to extend itself.
 /**
  * The execution plan describes the current way the engine operates.
  *
@@ -28,31 +34,28 @@ import lombok.Data;
 @Data
 public class CompiledExecutionPlan {
     private final Topology topology;
-    private final List<CompiledRunnableSlot> slots;
-
-    private final List<Pipeline> pipelines;
+    private final PipelineTopology pipelineTopology;
     // oder
     // private final PipelineTopology pipelineTopology;
 
-    public CompiledExecutionPlan(final Topology topology, final List<Pipeline> pipelines) {
+    public CompiledExecutionPlan(final Topology topology, final PipelineTopology pipelineTopology) {
         this.topology = topology;
-        this.pipelines = pipelines;
-        this.slots = slots;
+        this.pipelineTopology = pipelineTopology;
     }
 
     private CompiledExecutionPlan() {
-        this(Topology.emptyTopology(), Lists.newArrayList(), Lists.newArrayList());
+        this(Topology.emptyTopology(), new PipelineTopology(Lists.newArrayList()));
     }
 
     /**
      * @return a list of runnable slots
      */
-    public List<CompiledRunnableSlot> getRunnableSlots() {
-        return slots;
+    public List<RunnablePipeline> getRunnablePiplines() {
+        return pipelineTopology.getRunnablePiplines();
     }
 
     public boolean isEmpty() {
-        return this.topology.getNodes().isEmpty() && this.slots.isEmpty();
+        return this.topology.getNodes().isEmpty() && this.pipelineTopology.getPipelines().isEmpty();
     }
 
     public static CompiledExecutionPlan emptyExecutionPlan() {
@@ -69,11 +72,14 @@ public class CompiledExecutionPlan {
     public static CompiledExecutionPlan extend(final CompiledExecutionPlan executionPlan,
             final Topology queryTopology) {
         if (executionPlan.isEmpty()) {
-            List<Pipeline> pipelineTopology = CodeGenerator.generate(queryTopology);
-            // Call code generator for topology and get Pipelines back
-            // Translate Pipelines into Slots
-            // return new object
-            return new CompiledExecutionPlan(queryTopology, pipelineTopology);
+            PipelineTopology newPipelineTopology = PipelineTopologyBuilder.pipelineTopologyOf(queryTopology);
+
+            LocalGenerator generator = new LocalGenerator(newPipelineTopology);
+            generator.build(newPipelineTopology);
+
+            return new CompiledExecutionPlan(queryTopology, newPipelineTopology);
+        } else {
+            // TODO engine
         }
 
         return null;
@@ -97,7 +103,12 @@ public class CompiledExecutionPlan {
      * @return a new execution plan
      */
     public static CompiledExecutionPlan delete(final CompiledExecutionPlan executionPlan, final Query query) {
+        // TODO engine
+        return null;
+    }
 
+    public List<RunnablePipeline> getRunnablePiplinesFor(Query query) {
+        // TODO engine
         return null;
     }
 }
