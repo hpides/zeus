@@ -11,13 +11,13 @@ import org.jetbrains.annotations.Nullable;
  *
  * @param <IN> type of elements to buffer
  */
-public interface Buffer<IN> extends SlotProcessor<IN>, Closeable {
+public interface SlotBuffer<IN> extends SlotProcessor<IN>, Closeable {
 
-  static <IN> Buffer<AData<IN>> createADataBuffer() {
+  static <IN> SlotBuffer<AData<IN>> createADataBuffer() {
     return new BlockingSizedChunkedBuffer<>(250_000);
   }
 
-  static <IN> Buffer<IN> create() {
+  static <IN> SlotBuffer<IN> create() {
     return new ChunkedBuffer<>();
   }
 
@@ -28,8 +28,8 @@ public interface Buffer<IN> extends SlotProcessor<IN>, Closeable {
   IN poll();
 
   /**
-   * @return All the values currently in the buffer. This might, however, not be thread save and
-   * should only be used with cation in testing.
+   * @return All the values currently in the buffer. This might, however, not be
+   *         thread save and should only be used with cation in testing.
    */
   List<IN> unsafePollAll();
 

@@ -3,7 +3,7 @@ package de.hpi.des.hdes.engine.execution.slot;
 import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.SlotProcessor;
-import de.hpi.des.hdes.engine.execution.connector.Buffer;
+import de.hpi.des.hdes.engine.execution.connector.SlotBuffer;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.operation.Collector;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
@@ -16,7 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * A slot wraps an operator and executes it. The output of the operator is routed to the outputs.
+ * A slot wraps an operator and executes it. The output of the operator is
+ * routed to the outputs.
  *
  * @param <OUT> output type of the wrapped operator
  */
@@ -26,7 +27,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
 
   private final Map<Node, SlotProcessor<AData<OUT>>> processorMap = new ConcurrentHashMap<>();
   private final List<SlotProcessor<AData<OUT>>> processors = new CopyOnWriteArrayList<>();
-  private final List<Buffer<AData<OUT>>> buffers = new CopyOnWriteArrayList<>();
+  private final List<SlotBuffer<AData<OUT>>> buffers = new CopyOnWriteArrayList<>();
   private final List<Slot<?>> children = new CopyOnWriteArrayList<>();
 
   /**
@@ -62,7 +63,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
    * @param node
    * @param buffer downstream buffer
    */
-  public void addOutput(final Node node, final Buffer<AData<OUT>> buffer) {
+  public void addOutput(final Node node, final SlotBuffer<AData<OUT>> buffer) {
     log.debug("Add buffer {} for node {} in slot {}", buffer, node, this);
     this.addDownstreamElement(node, buffer);
     this.buffers.add(buffer);
@@ -71,7 +72,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
   /**
    * Registers a downstream processor as child
    *
-   * @param node node of the downstream processor
+   * @param node      node of the downstream processor
    * @param processor the processor to register
    */
   private void addDownstreamElement(final Node node, final SlotProcessor<AData<OUT>> processor) {
@@ -117,7 +118,6 @@ public abstract class Slot<OUT> implements Collector<OUT> {
     }
   }
 
-
   /**
    * Marks whether the slot is shutdown
    *
@@ -140,7 +140,7 @@ public abstract class Slot<OUT> implements Collector<OUT> {
   }
 
   protected void cleanUp() {
-    this.buffers.forEach(Buffer::close);
+    this.buffers.forEach(SlotBuffer::close);
   }
 
   /**

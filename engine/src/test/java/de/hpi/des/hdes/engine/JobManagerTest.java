@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
+import de.hpi.des.hdes.engine.VulcanoEngine;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -29,31 +30,25 @@ public class JobManagerTest {
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
     final var builderQ1 = new TopologyBuilder();
-    builderQ1.streamOf(sourceIntQ1)
-        .map(i -> i + 1)
-        .to(sinkQ1);
+    builderQ1.streamOf(sourceIntQ1).map(i -> i + 1).to(sinkQ1);
     Query Q1 = new Query(builderQ1.build());
 
     // Query 2 Definition
     final LinkedList<Integer> resultsQ2 = new LinkedList<>();
     final var sinkQ2 = new ListSink<>(resultsQ2);
     final var builderQ2 = new TopologyBuilder();
-    builderQ2.streamOf(sourceIntQ1)
-        .map(i -> i * 2)
-        .to(sinkQ2);
+    builderQ2.streamOf(sourceIntQ1).map(i -> i * 2).to(sinkQ2);
     Query Q2 = new Query(builderQ2.build());
 
     // Query 3 Definition
     final LinkedList<Integer> resultsQ3 = new LinkedList<>();
     final var sinkQ3 = new ListSink<>(resultsQ3);
     final var builderQ3 = new TopologyBuilder();
-    builderQ3.streamOf(sourceIntQ1)
-        .map(i -> i * 10)
-        .to(sinkQ3);
+    builderQ3.streamOf(sourceIntQ1).map(i -> i * 10).to(sinkQ3);
     Query Q3 = new Query(builderQ3.build());
 
     // Run the Queries
-    JobManager jobManager = new JobManager();
+    JobManager jobManager = new JobManager(new VulcanoEngine());
     jobManager.addQuery(Q1);
     jobManager.runEngine();
     sleep(10);

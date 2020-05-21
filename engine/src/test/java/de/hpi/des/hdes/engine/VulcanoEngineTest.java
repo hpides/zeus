@@ -4,7 +4,7 @@ import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
-import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
+import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.graph.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
@@ -209,8 +209,8 @@ class EngineTest {
     sleep(20);
     engine.deleteQuery(Q1);
     sleep(20);
-    final List<RunnableSlot<?>> runnableSlots = engine.getPlan().getRunnableSlots();
-    assertThat(runnableSlots).allMatch(RunnableSlot::isShutdown);
+    final List<VulcanoRunnableSlot<?>> runnableSlots = engine.getPlan().getRunnableSlots();
+    assertThat(runnableSlots).allMatch(VulcanoRunnableSlot::isShutdown);
   }
 
   @Test

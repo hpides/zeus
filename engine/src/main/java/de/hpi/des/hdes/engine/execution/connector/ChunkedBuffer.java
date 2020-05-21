@@ -9,8 +9,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public class ChunkedBuffer<IN> implements Buffer<IN> {
-
+public class ChunkedBuffer<IN> implements SlotBuffer<IN> {
 
   protected int chunkSize = ExecutionConfig.getConfig().getChunkSize();
   protected final long flushIntervall = ExecutionConfig.getConfig().getFlushIntervallNS(); // in ns
@@ -18,7 +17,6 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
   protected ArrayDeque<IN> inChunk;
   protected ArrayDeque<IN> outChunk;
   protected long nextFlushTime;
-
 
   public ChunkedBuffer() {
     this.inChunk = new ArrayDeque<>(this.chunkSize);
@@ -32,9 +30,8 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
       return this.outChunk.poll();
     } else {
       try {
-        final var newChunk = this.queue
-            .poll(ExecutionConfig.getConfig().getFlushIntervallMS() / 3 + 1,
-                TimeUnit.MILLISECONDS);
+        final var newChunk = this.queue.poll(ExecutionConfig.getConfig().getFlushIntervallMS() / 3 + 1,
+            TimeUnit.MILLISECONDS);
         // We wait for a limited time to assure that operations
         // downstream can continue
         if (newChunk != null) {
@@ -78,11 +75,11 @@ public class ChunkedBuffer<IN> implements Buffer<IN> {
     }
   }
 
-
   /**
    * Exists just for test purposes. Contains race conditions
    *
-   * @return List of all elements in the Buffer, including those in the internal buffers and queue.
+   * @return List of all elements in the Buffer, including those in the internal
+   *         buffers and queue.
    */
   @Override
   public List<IN> unsafePollAll() {

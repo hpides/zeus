@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.execution.plan;
 
 import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.Query;
-import de.hpi.des.hdes.engine.execution.connector.Buffer;
+import de.hpi.des.hdes.engine.execution.connector.SlotBuffer;
 import de.hpi.des.hdes.engine.execution.slot.OneInputPushSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
@@ -23,7 +23,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This execution plan builder builds an {@link ExecutionPlan} for one node environment.
+ * This execution plan builder builds an {@link VulcanoExecutionPlan} for one
+ * node environment.
  */
 @Slf4j
 public class LocalExecutionPlanBuilder implements NodeVisitor {
@@ -39,11 +40,11 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
     this.outputSlots = outputSlots;
   }
 
-  public LocalExecutionPlanBuilder(final ExecutionPlan oldPlan) {
+  public LocalExecutionPlanBuilder(final VulcanoExecutionPlan oldPlan) {
     this(oldPlan.getTopology(), oldPlan.getSlots(), oldPlan.getOutputSlotMap());
   }
 
-  public ExecutionPlan build(final Topology queryTopology) {
+  public VulcanoExecutionPlan build(final Topology queryTopology) {
     final List<Node> sortedNodes = queryTopology.getTopologicalOrdering();
     for (final Node node : sortedNodes) {
       if (!this.topology.getNodes().contains(node)) {
@@ -51,10 +52,10 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
       }
     }
     final Topology updated = this.topology.extend(queryTopology);
-    return new ExecutionPlan(updated, this.slots, this.outputSlots);
+    return new VulcanoExecutionPlan(updated, this.slots, this.outputSlots);
   }
 
-  public ExecutionPlan build(final Query query) {
+  public VulcanoExecutionPlan build(final Query query) {
     return this.build(query.getTopology());
   }
 
@@ -99,13 +100,13 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
     final Node parentNode2 = parents.next();
     final Slot<IN1> parent1Slot = this.getParentSlot(parentNode1);
     final Slot<IN2> parent2Slot = this.getParentSlot(parentNode2);
-    final Buffer<AData<IN1>> input1 = Buffer.createADataBuffer();
-    final Buffer<AData<IN2>> input2 = Buffer.createADataBuffer();
+    final SlotBuffer<AData<IN1>> input1 = SlotBuffer.createADataBuffer();
+    final SlotBuffer<AData<IN2>> input2 = SlotBuffer.createADataBuffer();
     parent1Slot.addOutput(binaryOperationNode, input1);
     parent2Slot.addOutput(binaryOperationNode, input2);
 
-    final TwoInputPullSlot<IN1, IN2, OUT> slot = new TwoInputPullSlot<>(operator, parent1Slot,
-        parent2Slot, input1, input2, binaryOperationNode);
+    final TwoInputPullSlot<IN1, IN2, OUT> slot = new TwoInputPullSlot<>(operator, parent1Slot, parent2Slot, input1,
+        input2, binaryOperationNode);
     parent1Slot.addChild(slot);
     parent2Slot.addChild(slot);
     operator.init(slot);

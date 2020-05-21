@@ -8,4 +8,6 @@ public interface Engine {
     public void deleteQuery(final Query query);
 
     public void shutdown();
+
+    public boolean isRunning();
 }

@@ -2,6 +2,7 @@ package de.hpi.des.hdes.benchmark;
 
 import de.hpi.des.hdes.engine.JobManager;
 import de.hpi.des.hdes.engine.Query;
+import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.operation.Sink;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.lambda.tuple.Tuple;
@@ -247,7 +248,7 @@ public class MainNetworkEngine implements Runnable {
       // Query Array
       ArrayDeque<Query> queries = new ArrayDeque<>();
       // Creating a JobManager
-      JobManager manager = new JobManager();
+      JobManager manager = new JobManager(new VulcanoEngine());
       // Adding fixed queries
       for (int i = 0; i < fixedQueries; i++) {
         Sink sink;

@@ -4,13 +4,14 @@ import de.hpi.des.hdes.engine.Query;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class RunnableSlot<OUT> extends Slot<OUT> implements Runnable {
+public abstract class VulcanoRunnableSlot<OUT> extends Slot<OUT> implements Runnable {
 
   private boolean enabled = false;
   private volatile boolean shutdownFlag = false;
 
   /**
-   * runStep should never block indefinitely as outgoing buffers might not have been flushed yet.
+   * runStep should never block indefinitely as outgoing buffers might not have
+   * been flushed yet.
    */
   public abstract void runStep();
 

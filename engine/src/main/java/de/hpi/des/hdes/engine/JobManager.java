@@ -12,11 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JobManager {
 
-  private final VulcanoEngine engine;
+  private final Engine engine;
   private final Timer timer;
 
-  public JobManager() {
-    this.engine = new VulcanoEngine();
+  public JobManager(Engine engine) {
+    this.engine = engine;
     this.timer = new Timer("AddQueryTimer");
   }
 

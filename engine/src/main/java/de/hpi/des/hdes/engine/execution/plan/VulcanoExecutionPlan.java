@@ -4,8 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
-import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
+import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.Topology;
 import java.util.List;
@@ -17,41 +17,39 @@ import lombok.Data;
 /**
  * The execution plan describes the current way the engine operates.
  *
- * The plan is mainly based on two parts: a list of slots {@link Slot} and a mapping.
- * The list of slots is used to execute all slots accordingly. The mapping allows for interaction
- * between the {@link Topology} and the execution plan. For example, it allows the deletion of a
- * node.
+ * The plan is mainly based on two parts: a list of slots {@link Slot} and a
+ * mapping. The list of slots is used to execute all slots accordingly. The
+ * mapping allows for interaction between the {@link Topology} and the execution
+ * plan. For example, it allows the deletion of a node.
  */
 @Data
-public class ExecutionPlan {
+public class VulcanoExecutionPlan {
 
   private final Topology topology;
   private final List<Slot<?>> slots;
   private final Map<Node, Slot<?>> outputSlotMap;
 
-  public ExecutionPlan(final Topology topology, final List<Slot<?>> slots,
+  public VulcanoExecutionPlan(final Topology topology, final List<Slot<?>> slots,
       final Map<Node, Slot<?>> outputSlotMap) {
     this.topology = topology;
     this.slots = slots;
     this.outputSlotMap = outputSlotMap;
   }
 
-  private ExecutionPlan() {
+  private VulcanoExecutionPlan() {
     this(Topology.emptyTopology(), Lists.newArrayList(), Maps.newHashMap());
   }
 
   /**
    * @return a list of runnable slots
    */
-  public List<RunnableSlot<?>> getRunnableSlots() {
-    return this.getSlots().stream()
-        .filter(slot -> slot instanceof RunnableSlot)
-        .map(slot -> (RunnableSlot<?>) slot)
-        .collect(Collectors.toList());
+  public List<VulcanoRunnableSlot<?>> getRunnableSlots() {
+    return this.getSlots().stream().filter(slot -> slot instanceof VulcanoRunnableSlot)
+        .map(slot -> (VulcanoRunnableSlot<?>) slot).collect(Collectors.toList());
   }
 
-  public static ExecutionPlan emptyExecutionPlan() {
-    return new ExecutionPlan();
+  public static VulcanoExecutionPlan emptyExecutionPlan() {
+    return new VulcanoExecutionPlan();
   }
 
   /**
@@ -61,12 +59,13 @@ public class ExecutionPlan {
    * @param query         the new query
    * @return a new plan
    */
-  public static ExecutionPlan extend(final ExecutionPlan executionPlan, final Query query) {
+  public static VulcanoExecutionPlan extend(final VulcanoExecutionPlan executionPlan, final Query query) {
     final Set<Node> topologyNodes = executionPlan.getTopology().getNodes();
     final Topology queryTopology = query.getTopology();
     topologyNodes.forEach(node -> {
       // store associated query in node for later deletion
-      // only works this way cause we have to change the actual nodes in the current topology
+      // only works this way cause we have to change the actual nodes in the current
+      // topology
       if (queryTopology.getNodes().contains(node)) {
         node.addAssociatedQuery(query);
       }
@@ -83,7 +82,7 @@ public class ExecutionPlan {
    * @param query the query to use
    * @return a new execution plan
    */
-  public static ExecutionPlan createPlan(final Query query) {
+  public static VulcanoExecutionPlan createPlan(final Query query) {
     return extend(emptyExecutionPlan(), query);
   }
 
@@ -94,25 +93,22 @@ public class ExecutionPlan {
    * @param query         the query to delete
    * @return a new execution plan
    */
-  public static ExecutionPlan delete(final ExecutionPlan executionPlan, final Query query) {
+  public static VulcanoExecutionPlan delete(final VulcanoExecutionPlan executionPlan, final Query query) {
     final List<Slot<?>> slots = executionPlan.getSlots();
     final Set<Node> nodes = executionPlan.getTopology().getNodes();
 
     // this will shutdown a slot when there are no more associated queries
     slots.forEach(slot -> slot.remove(query));
-    final List<Slot<?>> runningSlots = slots.stream()
-        .filter(slot -> !slot.isShutdown())
-        .collect(Collectors.toList());
+    final List<Slot<?>> runningSlots = slots.stream().filter(slot -> !slot.isShutdown()).collect(Collectors.toList());
 
     // keep only nodes associated with a query
-    final Set<Node> currentNodes = nodes.stream()
-        .filter(node -> !node.getAssociatedQueries().isEmpty())
+    final Set<Node> currentNodes = nodes.stream().filter(node -> !node.getAssociatedQueries().isEmpty())
         .collect(Collectors.toSet());
 
     // keep only the outputs of members of the topology
     final Map<Node, Slot<?>> outputSlotMap = Maps.newHashMap(executionPlan.getOutputSlotMap());
     outputSlotMap.keySet().retainAll(currentNodes);
 
-    return new ExecutionPlan(Topology.of(currentNodes), runningSlots, outputSlotMap);
+    return new VulcanoExecutionPlan(Topology.of(currentNodes), runningSlots, outputSlotMap);
   }
 }

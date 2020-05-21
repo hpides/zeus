@@ -1,24 +1,23 @@
 package de.hpi.des.hdes.engine.execution.slot;
 
 import de.hpi.des.hdes.engine.AData;
-import de.hpi.des.hdes.engine.execution.connector.Buffer;
+import de.hpi.des.hdes.engine.execution.connector.SlotBuffer;
 import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TwoInputPullSlot<IN1, IN2, OUT> extends RunnableSlot<OUT> {
+public class TwoInputPullSlot<IN1, IN2, OUT> extends VulcanoRunnableSlot<OUT> {
 
   private final Slot<IN1> parent1;
   private final Slot<IN2> parent2;
-  private final Buffer<AData<IN1>> input1;
-  private final Buffer<AData<IN2>> input2;
+  private final SlotBuffer<AData<IN1>> input1;
+  private final SlotBuffer<AData<IN2>> input2;
   private final TwoInputOperator<IN1, IN2, OUT> operator;
   private final BinaryOperationNode<IN1, IN2, OUT> binaryOperationNode;
 
-  public TwoInputPullSlot(final TwoInputOperator<IN1, IN2, OUT> operator,
-      final Slot<IN1> parent1, final Slot<IN2> parent2,
-      final Buffer<AData<IN1>> input1, final Buffer<AData<IN2>> input2,
+  public TwoInputPullSlot(final TwoInputOperator<IN1, IN2, OUT> operator, final Slot<IN1> parent1,
+      final Slot<IN2> parent2, final SlotBuffer<AData<IN1>> input1, final SlotBuffer<AData<IN2>> input2,
       final BinaryOperationNode<IN1, IN2, OUT> binaryOperationNode) {
     this.operator = operator;
     this.parent1 = parent1;

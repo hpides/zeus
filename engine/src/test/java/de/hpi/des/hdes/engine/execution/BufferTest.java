@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.execution;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import de.hpi.des.hdes.engine.execution.connector.Buffer;
+import de.hpi.des.hdes.engine.execution.connector.SlotBuffer;
 import de.hpi.des.hdes.engine.execution.connector.ChunkedBuffer;
 import de.hpi.des.hdes.engine.execution.connector.QueueBuffer;
 import de.hpi.des.hdes.engine.execution.connector.SizedChunkedBuffer;
@@ -17,11 +17,11 @@ import org.opentest4j.AssertionFailedError;
 public class BufferTest {
 
   @ParameterizedTest
-  @ValueSource(classes = {ChunkedBuffer.class, SizedChunkedBuffer.class, QueueBuffer.class})
-  void keepsOrderAndPassesAllElements(Class<Buffer<Integer>> clazz)
+  @ValueSource(classes = { ChunkedBuffer.class, SizedChunkedBuffer.class, QueueBuffer.class })
+  void keepsOrderAndPassesAllElements(Class<SlotBuffer<Integer>> clazz)
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
-    Buffer<Integer> buffer = clazz.getDeclaredConstructor().newInstance();
+    SlotBuffer<Integer> buffer = clazz.getDeclaredConstructor().newInstance();
     int max = 100_000;
     Runnable r1 = () -> {
       for (var i = 1; i <= max; i++) {
@@ -51,11 +51,11 @@ public class BufferTest {
   }
 
   @ParameterizedTest
-  @ValueSource(classes = {ChunkedBuffer.class, SizedChunkedBuffer.class, QueueBuffer.class})
-  void flushesBufferOnTimeout(Class<Buffer<Integer>> clazz)
+  @ValueSource(classes = { ChunkedBuffer.class, SizedChunkedBuffer.class, QueueBuffer.class })
+  void flushesBufferOnTimeout(Class<SlotBuffer<Integer>> clazz)
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
-    Buffer<Integer> buffer = clazz.getDeclaredConstructor().newInstance();
+    SlotBuffer<Integer> buffer = clazz.getDeclaredConstructor().newInstance();
     Runnable r1 = () -> {
       for (var i = 1; i < ExecutionConfig.getConfig().getChunkSize(); i++) {
         buffer.add(i);
@@ -83,8 +83,9 @@ public class BufferTest {
   }
 
   /**
-   * Because we assert in a Callable object we need to check for potential assertion in its future's
-   * results. As exceptions in threads are not immediately passed to the parent thread.
+   * Because we assert in a Callable object we need to check for potential
+   * assertion in its future's results. As exceptions in threads are not
+   * immediately passed to the parent thread.
    *
    */
   private void awaitCompletion(Runnable r1, Runnable r2) {
@@ -104,6 +105,3 @@ public class BufferTest {
     }
   }
 }
-
-
-

@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.engine;
 
-import de.hpi.des.hdes.engine.execution.plan.ExecutionPlan;
-import de.hpi.des.hdes.engine.execution.slot.RunnableSlot;
+import de.hpi.des.hdes.engine.execution.plan.VulcanoExecutionPlan;
+import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -16,17 +16,17 @@ import lombok.extern.slf4j.Slf4j;
  * remove queries.
  */
 @Slf4j
-public class VulcanoEngine {
+public class VulcanoEngine implements Engine {
 
   private final List<Query> runningQueries = new ArrayList<>();
 
-  private ExecutionPlan plan;
+  private VulcanoExecutionPlan plan;
   private final ExecutorService executor;
   @Getter
   private boolean isRunning;
 
   public VulcanoEngine() {
-    this.plan = ExecutionPlan.emptyExecutionPlan();
+    this.plan = VulcanoExecutionPlan.emptyExecutionPlan();
     this.executor = Executors.newCachedThreadPool();
     this.isRunning = false;
   }
@@ -41,7 +41,7 @@ public class VulcanoEngine {
     }
 
     this.isRunning = true;
-    for (final RunnableSlot<?> slot : this.plan.getRunnableSlots()) {
+    for (final VulcanoRunnableSlot<?> slot : this.plan.getRunnableSlots()) {
       log.debug("Slot {} submitted", slot);
       slot.setEnabled(true);
       this.executor.submit(slot);
@@ -57,7 +57,7 @@ public class VulcanoEngine {
    * @param query the new query
    */
   public synchronized void addQuery(final Query query) {
-    final ExecutionPlan extendedPlan = ExecutionPlan.extend(this.plan, query);
+    final VulcanoExecutionPlan extendedPlan = VulcanoExecutionPlan.extend(this.plan, query);
     if (this.isRunning) {
       extendedPlan.getRunnableSlots().stream().filter(slot -> !slot.isEnabled()).forEach(slot -> {
         log.debug("Submitted slot {}", slot);
@@ -85,13 +85,13 @@ public class VulcanoEngine {
     if (this.plan.getTopology().getNodes().isEmpty()) {
       throw new UnsupportedOperationException("There are no queries");
     }
-    this.plan = ExecutionPlan.delete(this.plan, query);
+    this.plan = VulcanoExecutionPlan.delete(this.plan, query);
     this.runningQueries.remove(query);
   }
 
   public void shutdown() {
     this.isRunning = false;
-    this.plan.getRunnableSlots().forEach(RunnableSlot::shutdown);
+    this.plan.getRunnableSlots().forEach(VulcanoRunnableSlot::shutdown);
     // TODO: Do Sinks also require a shutdown function (e.g. flush a FileSink)?
     // Possible solution: getSlotProcessor() function in exectution plan and add a
     // shutdown function to the SlotProcessor interface
@@ -99,7 +99,7 @@ public class VulcanoEngine {
     this.executor.shutdownNow();
   }
 
-  public ExecutionPlan getPlan() {
+  public VulcanoExecutionPlan getPlan() {
     return this.plan;
   }
 }

@@ -4,7 +4,7 @@ import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.SourceNode;
 import de.hpi.des.hdes.engine.operation.Source;
 
-public class SourceSlot<OUT> extends RunnableSlot<OUT> {
+public class SourceSlot<OUT> extends VulcanoRunnableSlot<OUT> {
 
   private final Source<OUT> source;
   private final SourceNode<OUT> topologyNode;
