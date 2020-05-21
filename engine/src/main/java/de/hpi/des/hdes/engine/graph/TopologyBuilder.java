@@ -4,6 +4,8 @@ import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.operation.Source;
 import de.hpi.des.hdes.engine.stream.AStream;
+import lombok.Getter;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
  */
 public class TopologyBuilder {
 
+  @Getter
   private final List<Node> nodes = new LinkedList<>();
 
   /**

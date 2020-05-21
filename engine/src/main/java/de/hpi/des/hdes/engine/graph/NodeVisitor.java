@@ -1,7 +1,8 @@
 package de.hpi.des.hdes.engine.graph;
 
 /**
- * A NodeVisitor can be implemented to iterate through a collection of node with type safety.
+ * A NodeVisitor can be implemented to iterate through a collection of node with
+ * type safety.
  *
  */
 public interface NodeVisitor {
@@ -13,5 +14,7 @@ public interface NodeVisitor {
   <IN, OUT> void visit(UnaryOperationNode<IN, OUT> unaryOperationNode);
 
   <IN1, IN2, OUT> void visit(BinaryOperationNode<IN1, IN2, OUT> binaryOperationNode);
+
+  <IN, OUT> void visit(UnaryGenerationNode<IN, OUT> unaryGenerationNode);
 
 }
