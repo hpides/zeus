@@ -1,6 +1,0 @@
-#include "{0}.h"
-
-JNIEXPORT void JNICALL Java_{0}_process
-  (JNIEnv * env, jobject thisObject, {1}) '{'
-      {2}
-  '}'

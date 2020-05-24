@@ -1,0 +1,12 @@
+for (; windowStart <= timestamp; windowStart += slide) {
+    final Multimap<Integer, Integer> state = this.stateLeft.computeIfAbsent(windowStart,
+            w -> ArrayListMultimap.create());
+    state.put(key, value);
+    this.stateLeft.put(windowStart, state);
+    Multimap<Integer, Integer> rightState = stateRight.get(windowStart);
+    if (rightState != null && rightState.containsKey(key)) {
+        for (Integer rightValue : rightState.get(key)) {
+            {{{execution}}}
+        }
+    }
+}
