@@ -6,7 +6,7 @@ import de.hpi.des.hdes.engine.aggregators.SumAggregator;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.execution.plan.VulcanoExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
-import de.hpi.des.hdes.engine.graph.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Sink;

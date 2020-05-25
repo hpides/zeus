@@ -1,7 +1,8 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.vulcano;
 
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
+import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.operation.Source;
 import de.hpi.des.hdes.engine.stream.AStream;
 import lombok.Getter;

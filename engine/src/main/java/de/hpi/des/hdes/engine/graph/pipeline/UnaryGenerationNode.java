@@ -1,6 +1,8 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.pipeline;
 
 import de.hpi.des.hdes.engine.generators.FilterGenerator;
+import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.NodeVisitor;
 
 /**
  * Represents a unary operation in the logical plan.

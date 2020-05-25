@@ -6,7 +6,7 @@ import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.TestUtil;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
-import de.hpi.des.hdes.engine.graph.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.Source;

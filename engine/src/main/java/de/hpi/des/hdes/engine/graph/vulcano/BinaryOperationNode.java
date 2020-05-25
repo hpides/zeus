@@ -1,5 +1,7 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.vulcano;
 
+import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 
 /**
@@ -22,8 +24,7 @@ public class BinaryOperationNode<IN1, IN2, OUT> extends Node {
     this.operator = operator;
   }
 
-  public BinaryOperationNode(final String identifier,
-      final TwoInputOperator<IN1, IN2, OUT> operator) {
+  public BinaryOperationNode(final String identifier, final TwoInputOperator<IN1, IN2, OUT> operator) {
     super(identifier);
     this.operator = operator;
   }

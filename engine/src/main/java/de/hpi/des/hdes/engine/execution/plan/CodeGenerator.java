@@ -5,7 +5,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import de.hpi.des.hdes.engine.graph.Topology;
+import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 
 public class CodeGenerator {
 

@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.shared.join.node;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
-import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.shared.join.Bucket;
 import de.hpi.des.hdes.engine.shared.join.StreamASource;
 

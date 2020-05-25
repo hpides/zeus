@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.engine.stream;
 
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
 
 /**
  * Base class for all AStream types.

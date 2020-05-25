@@ -1,4 +1,4 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.pipeline;
 
 import java.util.List;
 

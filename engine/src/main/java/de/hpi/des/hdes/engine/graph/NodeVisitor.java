@@ -1,5 +1,11 @@
 package de.hpi.des.hdes.engine.graph;
 
+import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
+import de.hpi.des.hdes.engine.graph.vulcano.SourceNode;
+import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
+
 /**
  * A NodeVisitor can be implemented to iterate through a collection of node with
  * type safety.

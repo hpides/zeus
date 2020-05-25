@@ -1,5 +1,7 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.vulcano;
 
+import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import de.hpi.des.hdes.engine.operation.Source;
 import java.util.UUID;
 import lombok.Getter;

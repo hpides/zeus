@@ -1,8 +1,9 @@
 package de.hpi.des.hdes.engine;
 
-import de.hpi.des.hdes.engine.graph.Topology;
 import java.util.Objects;
 import java.util.UUID;
+
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import lombok.Getter;
 
 /**

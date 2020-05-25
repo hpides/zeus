@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.execution.slot;
 
 import de.hpi.des.hdes.engine.AData;
 import de.hpi.des.hdes.engine.execution.connector.SlotBuffer;
-import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
 import lombok.extern.slf4j.Slf4j;
 

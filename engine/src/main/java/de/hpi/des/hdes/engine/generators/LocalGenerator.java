@@ -14,12 +14,9 @@ import java.io.StringWriter;
 import lombok.Getter;
 
 import de.hpi.des.hdes.engine.Query;
-import de.hpi.des.hdes.engine.graph.BinaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.Pipeline;
-import de.hpi.des.hdes.engine.graph.SourceNode;
-import de.hpi.des.hdes.engine.graph.PipelineTopology;
-import de.hpi.des.hdes.engine.graph.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 
 public class LocalGenerator {
 

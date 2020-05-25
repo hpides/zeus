@@ -1,9 +1,9 @@
 package de.hpi.des.hdes.engine.stream;
 
-import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.TopologyBuilder;
-import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.StreamAggregation;
 import de.hpi.des.hdes.engine.operation.StreamJoin;
 import de.hpi.des.hdes.engine.shared.join.StreamAJoin;
@@ -24,8 +24,9 @@ import java.util.Optional;
 /**
  * A windowed AStream.
  *
- * A WindowedAStream should only be created by {@link AStream#window(WindowAssigner)}.
- * The window is defined by a {@link WindowAssigner}.
+ * A WindowedAStream should only be created by
+ * {@link AStream#window(WindowAssigner)}. The window is defined by a
+ * {@link WindowAssigner}.
  *
  * @param <In> the elements of the stream
  */
@@ -57,21 +58,15 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
    * @param <Out>              type of the resulting stream elements
    * @return the resulting AStream
    */
-  public <Other, Key, Out> AStream<Out> join(final AStream<Other> other,
-      final Join<In, Other, Out> join,
-      final KeySelector<In, Key> keyselector1,
-      final KeySelector<Other, Key> keyselector2,
-      final WatermarkGenerator<Out> watermarkGenerator,
-      final TimestampExtractor<Out> timestampExtractor
-  ) {
-    final BinaryOperationNode<In, Other, Out> child = new BinaryOperationNode<>(
-        new StreamJoin<>(join, keyselector1, keyselector2, this.windowAssigner, watermarkGenerator,
-            timestampExtractor));
+  public <Other, Key, Out> AStream<Out> join(final AStream<Other> other, final Join<In, Other, Out> join,
+      final KeySelector<In, Key> keyselector1, final KeySelector<Other, Key> keyselector2,
+      final WatermarkGenerator<Out> watermarkGenerator, final TimestampExtractor<Out> timestampExtractor) {
+    final BinaryOperationNode<In, Other, Out> child = new BinaryOperationNode<>(new StreamJoin<>(join, keyselector1,
+        keyselector2, this.windowAssigner, watermarkGenerator, timestampExtractor));
     this.builder.addGraphNode(this.node, child);
     this.builder.addGraphNode(other.getNode(), child);
     return new AStream<>(this.builder, child);
   }
-
 
   /**
    * Groups this stream by a key.
@@ -95,11 +90,9 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
    * @return the resulting AStream
    */
   public <Out, State> AStream<Out> aggregate(final Aggregator<In, State, Out> aggregator,
-      final WatermarkGenerator<Out> watermarkGenerator,
-      final TimestampExtractor<Out> timestampExtractor) {
+      final WatermarkGenerator<Out> watermarkGenerator, final TimestampExtractor<Out> timestampExtractor) {
     final UnaryOperationNode<In, Out> child = new UnaryOperationNode<>(
-        new StreamAggregation<>(aggregator, this.windowAssigner, watermarkGenerator,
-            timestampExtractor));
+        new StreamAggregation<>(aggregator, this.windowAssigner, watermarkGenerator, timestampExtractor));
 
     this.builder.addGraphNode(this.node, child);
     return new AStream<>(this.builder, child);
@@ -108,11 +101,11 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
   /**
    * Performs a shared join with another stream.
    *
-   * This method uses default watermark generator and extractor. If you apply downstream windowing,
-   * this might not work. See {@link #ajoin(AStream, KeySelector, KeySelector, Join,
-   * TimestampExtractor, WatermarkGenerator, String)} for custom definitions.
-   * Furthermore, this relies on automatic id generation. See the other methods for manual
-   * assignment.
+   * This method uses default watermark generator and extractor. If you apply
+   * downstream windowing, this might not work. See
+   * {@link #ajoin(AStream, KeySelector, KeySelector, Join, TimestampExtractor, WatermarkGenerator, String)}
+   * for custom definitions. Furthermore, this relies on automatic id generation.
+   * See the other methods for manual assignment.
    *
    * @param other            the other stream
    * @param inKeySelector    join key selector for the this stream
@@ -123,19 +116,19 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
    * @param <Out>            type of the resulting stream elements
    * @return a stream of joined elements
    */
-  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
-      final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
-      final Join<? super In, ? super Other, ? extends Out> join) {
-    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.empty(),
-        defaultExtractor(), defaultGenerator());
+  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other, final KeySelector<In, Key> inKeySelector,
+      final KeySelector<Other, Key> otherKeySelector, final Join<? super In, ? super Other, ? extends Out> join) {
+    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.empty(), defaultExtractor(),
+        defaultGenerator());
   }
 
   /**
    * Performs a shared join with another stream.
    *
-   * This method uses default watermark generator and extractor. If you apply downstream windowing,
-   * this might not work. See {@link #ajoin(AStream, KeySelector, KeySelector, Join,
-   * TimestampExtractor, WatermarkGenerator, String)} for custom definitions.
+   * This method uses default watermark generator and extractor. If you apply
+   * downstream windowing, this might not work. See
+   * {@link #ajoin(AStream, KeySelector, KeySelector, Join, TimestampExtractor, WatermarkGenerator, String)}
+   * for custom definitions.
    *
    * This version uses manual id assigment. Joins with the same id are shared.
    *
@@ -149,11 +142,11 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
    * @param <Out>            type of the resulting stream elements
    * @return a stream of joined elements
    */
-  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
-      final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
-      final Join<? super In, ? super Other, ? extends Out> join, final String name) {
-    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.of(name),
-        defaultExtractor(), defaultGenerator());
+  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other, final KeySelector<In, Key> inKeySelector,
+      final KeySelector<Other, Key> otherKeySelector, final Join<? super In, ? super Other, ? extends Out> join,
+      final String name) {
+    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.of(name), defaultExtractor(),
+        defaultGenerator());
   }
 
   /**
@@ -173,13 +166,12 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
    * @param <Out>              type of the resulting stream elements
    * @return a stream of joined elements
    */
-  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other,
-      final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
-      final Join<? super In, ? super Other, ? extends Out> join,
-      final TimestampExtractor<Out> timestampExtractor,
-      final WatermarkGenerator<Out> watermarkGenerator, final String name) {
-    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.of(name),
-        timestampExtractor, watermarkGenerator);
+  public <Other, Out, Key> AStream<Out> ajoin(final AStream<Other> other, final KeySelector<In, Key> inKeySelector,
+      final KeySelector<Other, Key> otherKeySelector, final Join<? super In, ? super Other, ? extends Out> join,
+      final TimestampExtractor<Out> timestampExtractor, final WatermarkGenerator<Out> watermarkGenerator,
+      final String name) {
+    return this.createAJoinAStream(other, inKeySelector, otherKeySelector, join, Optional.of(name), timestampExtractor,
+        watermarkGenerator);
   }
 
   /**
@@ -191,7 +183,8 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
    * @param join               the join selection definition
    * @param watermarkGenerator watermark generator for the resulting stream
    * @param timestampExtractor timestamp extractor for the resulting stream
-   * @param name               the id of this ajoin. If empty, automatic assigment is used.
+   * @param name               the id of this ajoin. If empty, automatic assigment
+   *                           is used.
    * @param <Other>            type of other streams elements
    * @param <Key>              type of the join key
    * @param <Out>              type of the resulting stream elements
@@ -200,15 +193,12 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
   private <Other, Out, Key> AStream<Out> createAJoinAStream(final AStream<Other> other,
       final KeySelector<In, Key> inKeySelector, final KeySelector<Other, Key> otherKeySelector,
       final Join<? super In, ? super Other, ? extends Out> join, final Optional<String> name,
-      final TimestampExtractor<Out> timestampExtractor,
-      final WatermarkGenerator<Out> watermarkGenerator) {
+      final TimestampExtractor<Out> timestampExtractor, final WatermarkGenerator<Out> watermarkGenerator) {
 
     final StreamASource<In, Key> source1 = new StreamASource<>(this.sliceSize(), inKeySelector);
-    final StreamASource<Other, Key> source2 = new StreamASource<>(this.sliceSize(),
-        otherKeySelector);
+    final StreamASource<Other, Key> source2 = new StreamASource<>(this.sliceSize(), otherKeySelector);
     final StreamAJoin<In, Other, Key> aJoin = new StreamAJoin<>(this.windowAssigner);
-    final StreamASink<In, Other, Out> sink = new StreamASink<>(join, timestampExtractor,
-        watermarkGenerator);
+    final StreamASink<In, Other, Out> sink = new StreamASink<>(join, timestampExtractor, watermarkGenerator);
 
     final ASourceNode<In, Key> sourceNode1;
     final ASourceNode<Other, Key> sourceNode2;

@@ -7,12 +7,10 @@ import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.slot.CompiledRunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.generators.LocalGenerator;
-import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.Pipeline;
-import de.hpi.des.hdes.engine.graph.PipelineTopology;
-import de.hpi.des.hdes.engine.graph.PipelineTopologyBuilder;
-import de.hpi.des.hdes.engine.graph.RunnablePipeline;
-import de.hpi.des.hdes.engine.graph.Topology;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopologyBuilder;
+import de.hpi.des.hdes.engine.graph.pipeline.RunnablePipeline;
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 
 import java.util.Arrays;
 import java.util.List;

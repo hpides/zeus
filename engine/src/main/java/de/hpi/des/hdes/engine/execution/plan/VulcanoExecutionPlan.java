@@ -7,7 +7,7 @@ import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.Topology;
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

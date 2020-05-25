@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.window.assigner;
 
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.aggregators.SumAggregator;
-import de.hpi.des.hdes.engine.graph.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.stream.AStream;
@@ -25,7 +25,6 @@ public class Example {
     private String objectId;
   }
 
-
   @NoArgsConstructor
   @Data
   class Purchase {
@@ -44,22 +43,12 @@ public class Example {
 
     TopologyBuilder builder = TopologyBuilder.newQuery();
     AStream<Purchase> purchaseStream = builder.streamOf(purchaseSource);
-    builder.streamOf(sessionSource)
-        .filter(session -> session.getDuration() > MIN_DURATION)
+    builder.streamOf(sessionSource).filter(session -> session.getDuration() > MIN_DURATION)
         .window(TumblingWindow.ofEventTime(Time.seconds(20)))
-        .join(purchaseStream,
-            (view, purchase) -> purchase,
-            Session::getUserId,
-            Purchase::getUserId,
-            new WatermarkGenerator<>(0, 0),
-            Purchase::getTimestamp)
-        .window(TumblingWindow.ofEventTime(Time.seconds(20)))
-        .groupBy(i -> i)
-        .aggregate(
-            new CountAggregator<>(),
-            new WatermarkGenerator<>(0, 0),
-            i -> i
-        );
+        .join(purchaseStream, (view, purchase) -> purchase, Session::getUserId, Purchase::getUserId,
+            new WatermarkGenerator<>(0, 0), Purchase::getTimestamp)
+        .window(TumblingWindow.ofEventTime(Time.seconds(20))).groupBy(i -> i)
+        .aggregate(new CountAggregator<>(), new WatermarkGenerator<>(0, 0), i -> i);
     Query query = builder.buildAsQuery();
   }
 
@@ -80,6 +69,5 @@ public class Example {
       return state;
     }
   }
-
 
 }

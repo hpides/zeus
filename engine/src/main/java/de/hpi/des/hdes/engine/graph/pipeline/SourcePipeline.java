@@ -1,7 +1,8 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.pipeline;
 
 import java.util.List;
 
+import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.io.Buffer;
 import lombok.extern.slf4j.Slf4j;
 

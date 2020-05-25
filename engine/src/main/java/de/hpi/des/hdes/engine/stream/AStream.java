@@ -5,9 +5,9 @@ import java.io.IOException;
 import org.jooq.lambda.tuple.Tuple3;
 
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.SinkNode;
-import de.hpi.des.hdes.engine.graph.TopologyBuilder;
-import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
+import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.StreamFilter;
 import de.hpi.des.hdes.engine.operation.StreamFlatMap;

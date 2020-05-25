@@ -1,6 +1,9 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.vulcano;
 
 import com.google.common.collect.Sets;
+
+import de.hpi.des.hdes.engine.graph.Node;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -93,7 +96,8 @@ public class Topology {
   /**
    * Decreases the amount of inc. edges for all the children of the node.
    *
-   * @param nodeToIncEdges A map of the remaining unsorted nodes and their remaining inc edge count.
+   * @param nodeToIncEdges A map of the remaining unsorted nodes and their
+   *                       remaining inc edge count.
    * @param node           node that was just added to the sort output
    */
   private void topSortReduceCount(final Map<Node, Long> nodeToIncEdges, final Node node) {

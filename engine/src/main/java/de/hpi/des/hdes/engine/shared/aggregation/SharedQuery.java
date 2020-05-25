@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.shared.aggregation;
 
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.Topology;
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.udf.Filter;
 import java.util.Map;

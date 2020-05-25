@@ -3,6 +3,11 @@ package de.hpi.des.hdes.engine.graph;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
+
+import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.SourceNode;
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
+import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.operation.Source;
@@ -31,21 +36,13 @@ class TopologyTest {
     StreamMap<Integer, Integer> map2 = new StreamMap<>(x -> x + 2);
     UnaryOperationNode<Integer, Integer> mapNode2 = new UnaryOperationNode<>(map2);
 
-    StreamJoin<Integer, Integer, Integer, Integer> join = new StreamJoin<>(
-      Integer::sum,
-      x -> x,
-      x -> x,
-      new TumblingEventTimeWindow(0),
-      new WatermarkGenerator<Integer>(0, 0),
-      x -> System.nanoTime()
-    );
+    StreamJoin<Integer, Integer, Integer, Integer> join = new StreamJoin<>(Integer::sum, x -> x, x -> x,
+        new TumblingEventTimeWindow(0), new WatermarkGenerator<Integer>(0, 0), x -> System.nanoTime());
 
     BinaryOperationNode<Integer, Integer, Integer> joinNode = new BinaryOperationNode<>(join);
 
     /*
-     * sourceNode1 --> mapNode1
-     *                           joinNode --> MapNode2
-     * sourceNode2 ----------->
+     * sourceNode1 --> mapNode1 joinNode --> MapNode2 sourceNode2 ----------->
      */
 
     sourceNode1.addChild(mapNode1);
@@ -53,13 +50,7 @@ class TopologyTest {
     sourceNode2.addChild(joinNode);
     joinNode.addChild(mapNode2);
 
-    List<Node> unorderedNodes = List.of(
-        sourceNode1,
-        sourceNode2,
-        mapNode1,
-        mapNode2,
-        joinNode
-    );
+    List<Node> unorderedNodes = List.of(sourceNode1, sourceNode2, mapNode1, mapNode2, joinNode);
 
     Topology topology = new Topology(Sets.newHashSet(unorderedNodes));
     final List<Node> nodes = topology.getTopologicalOrdering();

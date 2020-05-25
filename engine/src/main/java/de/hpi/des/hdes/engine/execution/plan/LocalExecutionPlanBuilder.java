@@ -7,13 +7,14 @@ import de.hpi.des.hdes.engine.execution.slot.OneInputPushSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
 import de.hpi.des.hdes.engine.execution.slot.TwoInputPullSlot;
-import de.hpi.des.hdes.engine.graph.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
-import de.hpi.des.hdes.engine.graph.SinkNode;
-import de.hpi.des.hdes.engine.graph.SourceNode;
-import de.hpi.des.hdes.engine.graph.Topology;
-import de.hpi.des.hdes.engine.graph.UnaryOperationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
+import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
+import de.hpi.des.hdes.engine.graph.vulcano.SourceNode;
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
+import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.OneInputOperator;
 import de.hpi.des.hdes.engine.operation.Source;
 import de.hpi.des.hdes.engine.operation.TwoInputOperator;
@@ -118,5 +119,11 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
   @SuppressWarnings("unchecked")
   private <IN> Slot<IN> getParentSlot(final Node parent) {
     return (Slot<IN>) this.outputSlots.get(parent);
+  }
+
+  @Override
+  public <IN, OUT> void visit(UnaryGenerationNode<IN, OUT> unaryGenerationNode) {
+    // TODO Auto-generated method stub
+
   }
 }

@@ -6,8 +6,8 @@ import java.util.concurrent.Executors;
 
 import de.hpi.des.hdes.engine.execution.plan.CompiledExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.CompiledRunnableSlot;
-import de.hpi.des.hdes.engine.graph.RunnablePipeline;
-import de.hpi.des.hdes.engine.graph.Topology;
+import de.hpi.des.hdes.engine.graph.pipeline.RunnablePipeline;
+import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

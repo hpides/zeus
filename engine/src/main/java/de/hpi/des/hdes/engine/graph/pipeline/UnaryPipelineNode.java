@@ -1,6 +1,6 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-public class UnaryPipelineNode <IN extends Pipeline, OUT> extends Node {
+public class UnaryPipelineNode<IN extends Pipeline, OUT> {
     private Pipeline pipeline;
 
     UnaryPipelineNode(Pipeline pipeline) {
