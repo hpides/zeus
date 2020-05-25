@@ -15,11 +15,10 @@ import java.io.StringWriter;
 import lombok.Getter;
 
 import de.hpi.des.hdes.engine.Query;
-import de.hpi.des.hdes.engine.graph.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
-import de.hpi.des.hdes.engine.graph.UnaryPipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.BinaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;

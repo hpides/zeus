@@ -3,13 +3,13 @@ package de.hpi.des.hdes.engine;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import de.hpi.des.hdes.engine.astream.AStream;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
-import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.window.assigner.TumblingWindow;

@@ -7,7 +7,7 @@ import java.io.StringWriter;
 
 import com.github.mustachejava.Mustache;
 
-public class FilterGenerator<IN> implements Generatable {
+public class FilterGenerator implements Generatable {
 
     private final String filter;
     private final StringWriter writer = new StringWriter();

@@ -2,10 +2,10 @@ package de.hpi.des.hdes.engine.window.assigner;
 
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.aggregators.SumAggregator;
+import de.hpi.des.hdes.engine.astream.AStream;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
-import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.window.Time;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;

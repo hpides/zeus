@@ -2,9 +2,12 @@ package de.hpi.des.hdes.engine.graph.vulcano;
 
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
+import de.hpi.des.hdes.engine.astream.AStream;
+import de.hpi.des.hdes.engine.cstream.CStream;
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourceNode;
 import de.hpi.des.hdes.engine.operation.Source;
-import de.hpi.des.hdes.engine.stream.AStream;
 import lombok.Getter;
 
 import java.util.LinkedList;
@@ -49,6 +52,18 @@ public class VulcanoTopologyBuilder {
     final SourceNode<V> sourceNode = new SourceNode<>(source);
     this.nodes.add(sourceNode);
     return new AStream<>(this, sourceNode);
+  }
+
+  /**
+   * The entry point for the definition of queries in HDES.
+   *
+   * @param source a source to read data from
+   * @return a new a stream
+   */
+  public CStream streamOfC(BufferedSource source) {
+    final BufferedSourceNode sourceNode = new BufferedSourceNode(source);
+    this.nodes.add(sourceNode);
+    return new CStream(this, sourceNode);
   }
 
   public Topology build() {

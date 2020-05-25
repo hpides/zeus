@@ -1,10 +1,11 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.pipeline;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
+import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import lombok.Getter;
 
 public class UnaryPipeline extends Pipeline {

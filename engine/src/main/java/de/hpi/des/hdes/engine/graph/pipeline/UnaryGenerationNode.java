@@ -1,6 +1,5 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import de.hpi.des.hdes.engine.generators.FilterGenerator;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import de.hpi.des.hdes.engine.generators.Generatable;
@@ -11,7 +10,7 @@ import de.hpi.des.hdes.engine.generators.Generatable;
  * @param <IN>  type of incoming elements
  * @param <OUT> type of outgoing elements
  */
-public class UnaryGenerationNode<IN, OUT> extends Node {
+public class UnaryGenerationNode extends Node {
 
     private final Generatable operator;
 

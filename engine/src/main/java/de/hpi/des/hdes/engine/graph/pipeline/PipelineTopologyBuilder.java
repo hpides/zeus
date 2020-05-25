@@ -10,9 +10,7 @@ import java.util.Stack;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import de.hpi.des.hdes.engine.graph.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.vulcano.SourceNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.udf.Aggregator;
@@ -32,7 +30,7 @@ public class PipelineTopologyBuilder {
         Map<Node, Stack<List<Node>>> nodeToOperatorList = new HashMap<Node, Stack<List<Node>>>();
 
         for (Node node : Lists.reverse(nodes)) {
-            // TODO: Add isPipelinebreaker to interfaecs
+            // TODO: Add isPipelinebreaker to interfaces
             if (node instanceof UnaryGenerationNode) {
                 Pipeline currentPipeline;
                 List<Node> operatorList;
@@ -46,10 +44,13 @@ public class PipelineTopologyBuilder {
                         childPipeline.getParents().add(currentPipeline);
                     }
                     operatorList = ((UnaryPipeline) currentPipeline).getNodes();
-                } else {
+                } else if (!node.getChildren().isEmpty()) {
                     Node childNode = (Node) node.getChildren().toArray()[0];
                     operatorList = nodeToOperatorList.get(childNode).pop();
                     currentPipeline = nodeToPipeline.get(node.getChildren().toArray()[0]);
+                } else {
+                    currentPipeline = new UnaryPipeline();
+                    operatorList = ((UnaryPipeline) currentPipeline).getNodes();
                 }
                 operatorList.add(node);
                 nodeToPipeline.put(node, currentPipeline);
@@ -58,7 +59,7 @@ public class PipelineTopologyBuilder {
                 nodeToOperatorList.put(node, listStack);
             } else if (node instanceof BinaryGenerationNode) {
                 // Binary Operator
-                Pipeline currentPipeline = new BinaryPipeline();
+                Pipeline currentPipeline = new BinaryPipeline((BinaryGenerationNode) node);
                 pipelines.add(currentPipeline);
                 if (!node.getChildren().isEmpty()) {
                     Pipeline childPipeline = nodeToPipeline.get(node.getChildren().toArray()[0]);

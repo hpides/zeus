@@ -7,7 +7,7 @@ import com.github.mustachejava.Mustache;
 
 import lombok.Getter;
 
-abstract public class JoinGenerator<IN1, IN2, OUT> implements BinaryGeneratable {
+public class JoinGenerator implements BinaryGeneratable {
 
     private final StringWriter writer = new StringWriter();
 

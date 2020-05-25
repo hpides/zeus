@@ -3,6 +3,7 @@ package de.hpi.des.hdes.engine;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import de.hpi.des.hdes.engine.aggregators.SumAggregator;
+import de.hpi.des.hdes.engine.astream.AStream;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.execution.plan.VulcanoExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
@@ -11,7 +12,6 @@ import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.Source;
-import de.hpi.des.hdes.engine.stream.AStream;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import de.hpi.des.hdes.engine.window.Time;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;

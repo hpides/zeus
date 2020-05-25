@@ -1,4 +1,4 @@
-package de.hpi.des.hdes.engine.stream;
+package de.hpi.des.hdes.engine.astream;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;

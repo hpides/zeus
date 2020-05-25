@@ -11,30 +11,65 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import de.hpi.des.hdes.engine.astream.AStream;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
+import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopologyBuilder;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
+import de.hpi.des.hdes.engine.io.Buffer;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
-import de.hpi.des.hdes.engine.stream.AStream;
 
 public class LocalGeneratorTest {
-    /*
-     * @Test public void generateForModuloFilter() { TopologyBuilder builder = new
-     * TopologyBuilder(); final List<Integer> listS1 = new ArrayList<>(); final
-     * ListSource<Integer> source = new ListSource<>(listS1, new
-     * WatermarkGenerator<>(-1, -1), e -> e); AStream<Integer> aStream =
-     * builder.streamOf(source); FilterGenerator<Integer> filter = new
-     * FilterGenerator<Integer>("element % 4 == 0"); UnaryGenerationNode<Integer,
-     * Integer> node = new UnaryGenerationNode<Integer, Integer>(filter);
-     * builder.addGraphNode(builder.getNodes().get(0), node); LocalGenerator
-     * generator = new LocalGenerator(new Topology()); Stack<String> pipelineUuids =
-     * generator.build(builder.build()); String uuid = pipelineUuids.pop(); try {
-     * String result = Files.readString(Paths.get(uuid + ".java")); assertEquals(
-     * String.
-     * format("class %s {void pipeline(AData<> element) {if ( element %% 4 == 0 ) { }}}"
-     * , uuid, ""), result.replaceAll("( ){2,}|\n|\r", "")); } catch (IOException e)
-     * { System.out.println(e.getMessage()); System.exit(1); } }
-     */
 
+    @Test
+    public void generateForModuloFilter() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        final List<Integer> listS1 = new ArrayList<>();
+        final ListSource<Integer> source = new ListSource<>(listS1, new WatermarkGenerator<>(-1, -1), e -> e);
+        AStream<Integer> aStream = builder.streamOf(source);
+        FilterGenerator filter = new FilterGenerator("element % 4 == 0");
+        UnaryGenerationNode node = new UnaryGenerationNode(filter);
+        builder.addGraphNode(builder.getNodes().get(0), node);
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology(new ArrayList<Pipeline>()));
+        generator.extend(PipelineTopologyBuilder.pipelineTopologyOf(builder.build()));
+        // try {
+        // String result = Files.readString(Paths.get(uuid + ".java"));
+        // assertEquals(
+        // String.format("class %s {void pipeline(AData<> element) {if ( element %% 4 ==
+        // 0 ) { }}}", uuid, ""),
+        // result.replaceAll("( ){2,}|\n|\r", ""));
+        // } catch (IOException e) {
+        // System.out.println(e.getMessage());
+        // System.exit(1);
+        // }
+    }
+
+    @Test
+    public void testCStream() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        builder.streamOfC(new BufferedSource(){
+        
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                
+            }
+        
+            @Override
+            public void shutdown() {
+                // TODO Auto-generated method stub
+                
+            }
+        
+            @Override
+            public Buffer getInputBuffer() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        })
+    }
 }

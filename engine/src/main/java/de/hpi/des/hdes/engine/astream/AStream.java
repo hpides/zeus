@@ -1,4 +1,4 @@
-package de.hpi.des.hdes.engine.stream;
+package de.hpi.des.hdes.engine.astream;
 
 import java.io.IOException;
 
