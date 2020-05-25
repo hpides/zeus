@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 
 public class {{{className}}} {
 
+    private final {{{nextClassName}}} nextPipeline;
     private final HashMap<Long, Multimap<Integer, Integer>> stateLeft;
     private final HashMap<Long, Multimap<Integer, Integer>> stateRight;
     private final long length = {{{length}}};
@@ -14,19 +15,20 @@ public class {{{className}}} {
     private long latestTimestampLeft;
     private long latestTimestampRight;
 
-    public {{{className}}}() {
+    public {{{className}}}(final {{{nextClassName}}} nextPipeline) {
+        this.nextPipeline = nextPipeline;
         this.stateLeft = new HashMap<>();
         this.stateRight = new HashMap<>();
         this.latestTimestampLeft = 0;
         this.latestTimestampRight = 0;
     }
 
-    public void joinLeftPipeline(final AData<> event) {
+    public void joinLeftPipeline(final AData element) {
         final long timestamp = event.getEventTime();
         final int key = event.getValue();
         final int value = event.getValue();
-        latestTimestampLeft = timestamp;
-        long windowStart = timestamp - (timestamp % length);
+        latestTimestampLeft = event.getEventTime();
+        long windowStart = event.getEventTime() - (event.getEventTime() % length);
         if (earliestOpenWindowJoin > windowStart) {
             earliestOpenWindowJoin = windowStart;
         }
@@ -44,9 +46,9 @@ public class {{{className}}} {
         }
     }
 
-    public void joinRightPipeline(final long timestamp, final int key, final int value) {
-        latestTimestampRight = timestamp;
-        long windowStart = timestamp - (timestamp % length);
+    public void joinRightPipeline(final AData element) {
+        latestTimestampRight = event.getEventTime();
+        long windowStart = event.getEventTime() - (event.getEventTime() % length);
         if (earliestOpenWindowJoin > windowStart) {
             earliestOpenWindowJoin = windowStart;
         }

@@ -6,7 +6,7 @@ for (; windowStart <= timestamp; windowStart += slide) {
     Multimap<Integer, Integer> leftState = stateLeft.get(windowStart);
     if (leftState != null && leftState.containsKey(key)) {
         for (Integer leftValue : leftState.get(key)) {
-            {{{execution}}}
+           this.nextPipeline.process({{{identifier}}});
         }
     }
 }

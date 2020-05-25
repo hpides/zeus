@@ -52,11 +52,15 @@ public class LocalGenerator implements PipelineVisitor {
     @Getter
     private class AggregationData {
         private String className;
+        private long slide;
+        private long length;
         private String implementation;
         private String execution;
 
-        public AggregationData(String className, String implementation, String execution) {
+        public AggregationData(String className, long slide, long length, String implementation, String execution) {
             this.className = className;
+            this.slide = slide;
+            this.length = length;
             this.implementation = implementation;
             this.execution = execution;
         }
@@ -66,19 +70,19 @@ public class LocalGenerator implements PipelineVisitor {
         this.pipelineTopology = pipelineTopology;
     }
 
-    public static LocalGenerator build(final PipelineTopology queryTopology) {
-        return new LocalGenerator(queryTopology);
+    public static LocalGenerator build(final PipelineTopology pipelineTopology) {
+        return new LocalGenerator(pipelineTopology);
     }
 
-    public void extend(final PipelineTopology queryTopology) {
-        for (Pipeline pipeline : queryTopology.getPipelines()) {
+    public void extend(final PipelineTopology pipelineTopology) {
+        for (Pipeline pipeline : pipelineTopology.getPipelines()) {
             pipeline.accept(this);
         }
     }
 
     @Override
     public void visit(UnaryPipeline unaryPipeline) {
-        String execution = unaryPipeline.getChild().getPipelineId() + ".process(AData<> element);";
+        String execution = unaryPipeline.getChild().getPipelineId() + ".process(element);";
         String implementation = "";
         for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
@@ -90,35 +94,35 @@ public class LocalGenerator implements PipelineVisitor {
 
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
-            template.execute(writer, new AggregationData(unaryPipeline.getPipelineId(), implementation, execution))
+            template.execute(writer,
+                    new AggregationData(unaryPipeline.getPipelineId(), 1000, 1000, implementation, execution))
+                    // TODO: Set length and slide
                     .flush();
             implementation = writer.toString();
             Files.writeString(Paths.get(unaryPipeline.getPipelineId() + ".java"), implementation);
         } catch (IOException e) {
             System.exit(1);
         }
-
     }
 
     @Override
     public void visit(BinaryPipeline binaryPipeline) {
-        String leftImplementation = binaryPipeline.getChild().getPipelineId() + ".process(AData<> element);";
+        String leftImplementation = "";
+        leftImplementation = binaryPipeline.getBinaryNode().getOperator().generate(leftImplementation, true);
+
         for (Node node : Lists.reverse(binaryPipeline.getLeftNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 leftImplementation = ((UnaryGenerationNode) node).getOperator().generate(leftImplementation);
-            } else if (node instanceof BinaryGenerationNode) {
-                leftImplementation = ((BinaryGenerationNode) node).getOperator().generate(leftImplementation, true);
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
         }
 
-        String rightImplementation = binaryPipeline.getChild().getPipelineId() + ".process(AData<> element);";
+        String rightImplementation = binaryPipeline.getChild().getPipelineId() + ".process(element);";
+        rightImplementation = binaryPipeline.getBinaryNode().getOperator().generate(rightImplementation, false);
         for (Node node : Lists.reverse(binaryPipeline.getRightNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 rightImplementation = ((UnaryGenerationNode) node).getOperator().generate(rightImplementation);
-            } else if (node instanceof BinaryGenerationNode) {
-                rightImplementation = ((BinaryGenerationNode) node).getOperator().generate(rightImplementation, false);
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
