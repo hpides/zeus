@@ -1,0 +1,29 @@
+public class {{{className}}} {
+
+    private final HashMap<Long, Integer> windowToState;
+    private final long length = {{length}};
+    private final long slide = {{slide}};
+    private long earliestOpenWindow = Long.MAX_VALUE;
+
+    public {{{className}}}() {
+        this.windowToState = new HashMap<>();
+    }
+
+    @Override
+    public void process(final AData<> event) {
+        final long timestamp, final int value
+        long windowStart = event.getEventTime() - (event.getEventTime() % length);
+        if (earliestOpenWindow > windowStart) {
+            earliestOpenWindow = windowStart;
+        }
+
+        {{implementation}}
+        
+        for (; earliestOpenWindow + length <= event.getEventTime(); earliestOpenWindow += slide) {
+            if (windowToState.containsKey(earliestOpenWindow)) {
+                {{{execution}}}
+                this.windowToState.remove(earliestOpenWindow);
+            }
+        }
+    }
+}

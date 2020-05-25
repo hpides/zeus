@@ -49,6 +49,19 @@ public class LocalGenerator implements PipelineVisitor {
         }
     }
 
+    @Getter
+    private class AggregationData {
+        private String className;
+        private String implementation;
+        private String execution;
+
+        public AggregationData(String className, String implementation, String execution) {
+            this.className = className;
+            this.implementation = implementation;
+            this.execution = execution;
+        }
+    }
+
     public LocalGenerator(final PipelineTopology pipelineTopology) {
         this.pipelineTopology = pipelineTopology;
     }
@@ -65,7 +78,25 @@ public class LocalGenerator implements PipelineVisitor {
 
     @Override
     public void visit(UnaryPipeline unaryPipeline) {
-        // TODO Auto-generated method stub
+        String execution = unaryPipeline.getChild().getPipelineId() + ".process(AData<> element);";
+        String implementation = "";
+        for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
+            if (node instanceof UnaryGenerationNode) {
+                implementation = ((UnaryGenerationNode) node).getOperator().generate(implementation);
+            } else {
+                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+            }
+        }
+
+        try {
+            Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
+            template.execute(writer, new AggregationData(unaryPipeline.getPipelineId(), implementation, execution))
+                    .flush();
+            implementation = writer.toString();
+            Files.writeString(Paths.get(unaryPipeline.getPipelineId() + ".java"), implementation);
+        } catch (IOException e) {
+            System.exit(1);
+        }
 
     }
 
