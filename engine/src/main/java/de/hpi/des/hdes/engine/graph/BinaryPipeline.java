@@ -12,20 +12,18 @@ public class BinaryPipeline extends Pipeline {
 
     private final List<Node> leftNodes;
     private final List<Node> rightNodes;
+    private final BinaryGenerationNode binaryNode;
 
-    protected BinaryPipeline(List<Node> leftNodes, List<Node> rightNodes) {
+    protected BinaryPipeline(List<Node> leftNodes, List<Node> rightNodes, BinaryGenerationNode binaryNode) {
         super();
         this.leftNodes = leftNodes;
         this.rightNodes = rightNodes;
+        this.binaryNode = binaryNode;
     }
 
-    public BinaryPipeline() {
-        this.leftNodes = Lists.newArrayList();
-        this.rightNodes = Lists.newArrayList();
-    }
-
-    public static BinaryPipeline of(final List<Node> leftNodes, List<Node> rightNodes) {
-        return new BinaryPipeline(leftNodes, rightNodes);
+    public static BinaryPipeline of(final List<Node> leftNodes, List<Node> rightNodes,
+            BinaryGenerationNode binaryNode) {
+        return new BinaryPipeline(leftNodes, rightNodes, binaryNode);
     }
 
     @Override
