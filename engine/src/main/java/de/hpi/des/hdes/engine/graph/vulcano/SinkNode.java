@@ -1,4 +1,4 @@
-package de.hpi.des.hdes.engine.graph;
+package de.hpi.des.hdes.engine.graph.vulcano;
 
 import de.hpi.des.hdes.engine.operation.Sink;
 import lombok.Getter;
