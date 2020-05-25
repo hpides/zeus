@@ -20,7 +20,4 @@ public interface NodeVisitor {
   <IN, OUT> void visit(UnaryOperationNode<IN, OUT> unaryOperationNode);
 
   <IN1, IN2, OUT> void visit(BinaryOperationNode<IN1, IN2, OUT> binaryOperationNode);
-
-  <IN, OUT> void visit(UnaryGenerationNode<IN, OUT> unaryGenerationNode);
-
 }

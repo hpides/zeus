@@ -11,6 +11,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,28 +23,24 @@ import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Slf4j
-public class Pipeline {
-    private Class pipelineKlass;
+public abstract class Pipeline {
 
-    private final List<Node> nodes;
+    private Class pipelineKlass;
     private final String pipelineId;
     private final List<Pipeline> parents = new ArrayList<>();
     @Setter
     private Pipeline child;
 
-    protected Pipeline(final List<Node> nodes) {
-        this.nodes = nodes;
+    protected Pipeline() {
         this.pipelineId = "c".concat(UUID.randomUUID().toString().replaceAll("-", ""));
-    }
-
-    public static Pipeline of(final List<Node> nodes) {
-        return new Pipeline(nodes);
     }
 
     void addParent(Pipeline pipeline) {
         this.parents.add(pipeline);
         pipeline.setChild(this);
     }
+
+    public abstract void accept(PipelineVisitor visitor);
 
     private String getFilePath() {
         // TODO code-generation: Define path to files in a central place

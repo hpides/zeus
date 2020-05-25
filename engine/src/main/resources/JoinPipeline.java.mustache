@@ -1,0 +1,66 @@
+import java.util.HashMap;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
+public class {{{className}}} {
+
+    private final HashMap<Long, Multimap<Integer, Integer>> stateLeft;
+    private final HashMap<Long, Multimap<Integer, Integer>> stateRight;
+    private final long length = {{{length}}};
+    private final long slide = {{{slide}}};
+
+    private long earliestOpenWindowJoin = Long.MAX_VALUE;
+    private long latestTimestampLeft;
+    private long latestTimestampRight;
+
+    public {{{className}}}() {
+        this.stateLeft = new HashMap<>();
+        this.stateRight = new HashMap<>();
+        this.latestTimestampLeft = 0;
+        this.latestTimestampRight = 0;
+    }
+
+    public void joinLeftPipeline(final AData<> event) {
+        final long timestamp = event.getEventTime();
+        final int key = event.getValue();
+        final int value = event.getValue();
+        latestTimestampLeft = timestamp;
+        long windowStart = timestamp - (timestamp % length);
+        if (earliestOpenWindowJoin > windowStart) {
+            earliestOpenWindowJoin = windowStart;
+        }
+
+        {{{leftImplementation}}}
+
+        for (; earliestOpenWindowJoin + length <= latestTimestampLeft
+                && earliestOpenWindowJoin + length <= latestTimestampRight; earliestOpenWindowJoin += slide) {
+            if (stateLeft.containsKey(earliestOpenWindowJoin)) {
+                stateLeft.remove(earliestOpenWindowJoin);
+            }
+            if (stateRight.containsKey(earliestOpenWindowJoin)) {
+                stateRight.remove(earliestOpenWindowJoin);
+            }
+        }
+    }
+
+    public void joinRightPipeline(final long timestamp, final int key, final int value) {
+        latestTimestampRight = timestamp;
+        long windowStart = timestamp - (timestamp % length);
+        if (earliestOpenWindowJoin > windowStart) {
+            earliestOpenWindowJoin = windowStart;
+        }
+
+        {{{rightImplementation}}}
+
+        for (; earliestOpenWindowJoin + length <= latestTimestampLeft
+                && earliestOpenWindowJoin + length <= latestTimestampRight; earliestOpenWindowJoin += slide) {
+            if (stateLeft.containsKey(earliestOpenWindowJoin)) {
+                stateLeft.remove(earliestOpenWindowJoin);
+            }
+            if (stateRight.containsKey(earliestOpenWindowJoin)) {
+                stateRight.remove(earliestOpenWindowJoin);
+            }
+        }
+    }
+}
