@@ -6,7 +6,7 @@ import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.TestUtil;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.Source;
@@ -47,7 +47,7 @@ class AJoinTest {
     final List<TestResult> result = new ArrayList<>();
     final Sink<TestResult> sink = i -> result.add(i.getValue());
 
-    final TopologyBuilder builder = new TopologyBuilder();
+    final VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
     final AStream<TestValue> stream = builder.streamOf(source);
     final AStream<TestValue> stream1 = builder.streamOf(source1);
 
@@ -81,7 +81,7 @@ class AJoinTest {
     final ListSource<Integer> source2 = new ListSource<>(listSource2, generator1, e -> e * 100);
 
     // build query 1
-    final TopologyBuilder builder = new TopologyBuilder();
+    final VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
     final AStream<Integer> stream = builder.streamOf(source);
     final AStream<Integer> stream2 = builder.streamOf(source2);
 
@@ -91,7 +91,7 @@ class AJoinTest {
     stream.window(TumblingWindow.ofEventTime(100)).ajoin(stream2, i -> i, i -> i, Integer::sum).to(sink);
 
     // build query 2
-    final TopologyBuilder query2Builder = new TopologyBuilder();
+    final VulcanoTopologyBuilder query2Builder = new VulcanoTopologyBuilder();
     final AStream<Integer> query2Stream1 = query2Builder.streamOf(source);
     final AStream<Integer> query2Stream2 = query2Builder.streamOf(source2);
 

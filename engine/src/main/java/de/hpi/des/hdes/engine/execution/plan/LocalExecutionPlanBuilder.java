@@ -120,10 +120,4 @@ public class LocalExecutionPlanBuilder implements NodeVisitor {
   private <IN> Slot<IN> getParentSlot(final Node parent) {
     return (Slot<IN>) this.outputSlots.get(parent);
   }
-
-  @Override
-  public <IN, OUT> void visit(UnaryGenerationNode<IN, OUT> unaryGenerationNode) {
-    // TODO Auto-generated method stub
-
-  }
 }

@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.benchmark;
 
 import de.hpi.des.hdes.engine.Query;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.Source;
 import de.hpi.des.hdes.engine.udf.Aggregator;
@@ -26,7 +26,7 @@ public class Queries {
 
   // Microbenchmark Queries
   public static Query makeFilter0Measured(Source<Tuple2<Integer, Long>> source, Sink<Tuple> sink) {
-    return new TopologyBuilder().streamOf(source).map(t -> t.v1).filter(e -> e % 2 == 0).flatProfiling().to(sink)
+    return new VulcanoTopologyBuilder().streamOf(source).map(t -> t.v1).filter(e -> e % 2 == 0).flatProfiling().to(sink)
         .buildAsQuery();
   }
 
@@ -34,12 +34,12 @@ public class Queries {
    * Nooop query
    */
   public static <T> Query makeQuery0(Source<T> source, Sink<T> sink) {
-    return new Query(new TopologyBuilder().streamOf(source).map(e -> e).to(sink).build());
+    return new Query(new VulcanoTopologyBuilder().streamOf(source).map(e -> e).to(sink).build());
   }
 
   public static <T> Query makeQuery0Measured(Source<Tuple2<T, Long>> source, Sink<Tuple> sink) {
-    return new TopologyBuilder().streamOf(source).map(Queries::prepare).map(e -> e).map(Queries::setEjectTimestamp)
-        .to(sink).buildAsQuery();
+    return new VulcanoTopologyBuilder().streamOf(source).map(Queries::prepare).map(e -> e)
+        .map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
   }
 
   public static <In, Other> Join<Tuple3<In, Long, Long>, Tuple3<Other, Long, Long>, Tuple3<Tuple2<In, Other>, Long, Long>> makeJoinF() {
@@ -49,7 +49,7 @@ public class Queries {
 
   public static <T1, T2> Query makePlainJoin0Measured(Source<Tuple2<T1, Long>> source1,
       Source<Tuple2<T2, Long>> source2, Sink<Tuple> sink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(source1).map(Queries::prepare);
     var s2 = tp.streamOf(source2).map(Queries::prepare);
@@ -61,7 +61,7 @@ public class Queries {
   public static Query makeNexmarkLightPlainJoinMeasured(
       Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
       Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2, Sink<Tuple> sink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
     var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
@@ -73,7 +73,7 @@ public class Queries {
   public static Query makeNexmarkLightAJoinMeasured(
       Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
       Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2, Sink<Tuple> sink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
     var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
@@ -84,7 +84,7 @@ public class Queries {
 
   public static Query makeNexmarkLightFilterMeasured(
       Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource, Sink<Tuple> auctionSink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(auctionSource).map(Queries::prepare).filter(t2 -> t2.v1.v4 > 5000)
         .map(Queries::setEjectTimestamp).to(auctionSink).buildAsQuery();
@@ -95,7 +95,7 @@ public class Queries {
   public static Query makeNexmarkLightAJoinCapacityMeasured(
       Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
       Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2, Sink<Tuple> sink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
     var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
@@ -128,7 +128,7 @@ public class Queries {
 
   public static Query makeNexmarkHottestCategory(Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
       Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2, Sink<Tuple> sink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
     var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
@@ -182,7 +182,7 @@ public class Queries {
   public static Query makeNexmarkMaxiumPriceForAuction(
       Source<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> bidSource1,
       Source<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> auctionSource2, Sink<Tuple> sink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(bidSource1).map(Queries::prepare);
     var s2 = tp.streamOf(auctionSource2).map(Queries::prepare);
@@ -217,7 +217,7 @@ public class Queries {
 
   public static <T1, T2> Query makeAJoin0Measured(Source<Tuple2<T1, Long>> source1, Source<Tuple2<T2, Long>> source2,
       Sink<Tuple> sink) {
-    var tp = new TopologyBuilder();
+    var tp = new VulcanoTopologyBuilder();
 
     var s1 = tp.streamOf(source1).map(Queries::prepare);
     var s2 = tp.streamOf(source2).map(Queries::prepare);

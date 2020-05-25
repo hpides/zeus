@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.engine.stream;
 
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.StreamKeyedAggregation;
 import de.hpi.des.hdes.engine.udf.Aggregator;
@@ -25,7 +25,7 @@ public class KeyedWindowedAStream<IN, KEY> extends AbstractAStream<IN> {
   private final WindowAssigner<? extends Window> windowAssigner;
   private final KeySelector<IN, KEY> keyselector;
 
-  public KeyedWindowedAStream(KeySelector<IN, KEY> keyselector, final TopologyBuilder builder, final Node node,
+  public KeyedWindowedAStream(KeySelector<IN, KEY> keyselector, final VulcanoTopologyBuilder builder, final Node node,
       final WindowAssigner<? extends Window> windowAssigner) {
     super(builder, node);
     this.windowAssigner = windowAssigner;

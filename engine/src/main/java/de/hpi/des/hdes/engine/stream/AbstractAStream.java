@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.engine.stream;
 
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 
 /**
  * Base class for all AStream types.
@@ -12,15 +12,15 @@ import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
  */
 public abstract class AbstractAStream<In> {
 
-  protected TopologyBuilder builder;
+  protected VulcanoTopologyBuilder builder;
   protected Node node;
 
-  protected AbstractAStream(final TopologyBuilder builder, final Node node) {
+  protected AbstractAStream(final VulcanoTopologyBuilder builder, final Node node) {
     this.builder = builder;
     this.node = node;
   }
 
-  public TopologyBuilder getBuilder() {
+  public VulcanoTopologyBuilder getBuilder() {
     return this.builder;
   }
 

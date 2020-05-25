@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.window.assigner;
 
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.aggregators.SumAggregator;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.stream.AStream;
@@ -41,7 +41,7 @@ public class Example {
     ListSource<Purchase> purchaseSource = new ListSource<>(List.of(new Purchase()));
     ListSink<Integer> listSink = new ListSink<>(new ArrayList<>());
 
-    TopologyBuilder builder = TopologyBuilder.newQuery();
+    VulcanoTopologyBuilder builder = VulcanoTopologyBuilder.newQuery();
     AStream<Purchase> purchaseStream = builder.streamOf(purchaseSource);
     builder.streamOf(sessionSource).filter(session -> session.getDuration() > MIN_DURATION)
         .window(TumblingWindow.ofEventTime(Time.seconds(20)))

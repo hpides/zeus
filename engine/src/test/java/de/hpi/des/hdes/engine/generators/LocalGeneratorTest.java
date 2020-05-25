@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 import de.hpi.des.hdes.engine.stream.AStream;

@@ -3,6 +3,7 @@ package de.hpi.des.hdes.engine.graph.pipeline;
 import java.util.List;
 
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.Buffer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +15,7 @@ public class SourcePipeline extends Pipeline implements RunnablePipeline {
     private Runnable pipelineObject;
 
     public SourcePipeline(List<Node> nodes, Buffer buffer) {
-        super(nodes);
+        // super(nodes);
         this.buffer = buffer;
     }
 
@@ -44,5 +45,11 @@ public class SourcePipeline extends Pipeline implements RunnablePipeline {
             log.error("Slot had an exception: ", e);
             throw e;
         }
+    }
+
+    @Override
+    public void accept(PipelineVisitor visitor) {
+        // TODO Auto-generated method stub
+
     }
 }

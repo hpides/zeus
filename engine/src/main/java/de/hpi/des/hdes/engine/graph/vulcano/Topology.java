@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Stores the logical plan.
+ * q Stores the logical plan.
  */
 @Slf4j
 @Getter

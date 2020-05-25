@@ -2,6 +2,9 @@ package de.hpi.des.hdes.engine.graph;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
+import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import lombok.Getter;
 
 @Getter
@@ -14,6 +17,11 @@ public class BinaryPipeline extends Pipeline {
         super();
         this.leftNodes = leftNodes;
         this.rightNodes = rightNodes;
+    }
+
+    public BinaryPipeline() {
+        this.leftNodes = Lists.newArrayList();
+        this.rightNodes = Lists.newArrayList();
     }
 
     public static BinaryPipeline of(final List<Node> leftNodes, List<Node> rightNodes) {

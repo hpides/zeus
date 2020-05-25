@@ -6,7 +6,7 @@ import org.jooq.lambda.tuple.Tuple3;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.Sink;
 import de.hpi.des.hdes.engine.operation.StreamFilter;
@@ -26,7 +26,7 @@ import de.hpi.des.hdes.engine.window.assigner.WindowAssigner;
  */
 public class AStream<In> extends AbstractAStream<In> {
 
-  public AStream(final TopologyBuilder builder, final Node node) {
+  public AStream(final VulcanoTopologyBuilder builder, final Node node) {
     super(builder, node);
   }
 
@@ -93,7 +93,7 @@ public class AStream<In> extends AbstractAStream<In> {
    * @param sink the sink to write elements to
    * @return the final builder
    */
-  public TopologyBuilder to(final Sink<? super In> sink) {
+  public VulcanoTopologyBuilder to(final Sink<? super In> sink) {
     final SinkNode<? super In> sinkNode = new SinkNode<>(sink);
     this.builder.addGraphNode(this.node, sinkNode);
     return this.builder;

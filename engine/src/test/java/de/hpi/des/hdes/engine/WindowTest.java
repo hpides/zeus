@@ -6,7 +6,7 @@ import de.hpi.des.hdes.engine.aggregators.SumAggregator;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.execution.plan.VulcanoExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.operation.Sink;
@@ -42,7 +42,7 @@ class WindowTest extends ShortTimoutSetup {
         final List<String> result = new LinkedList<>();
         final Sink<String> sink = new ListSink<>(result);
 
-        final TopologyBuilder builder = new TopologyBuilder();
+        final VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
         final AStream<String> stringString = builder.streamOf(stringSource);
 
@@ -73,7 +73,7 @@ class WindowTest extends ShortTimoutSetup {
         final List<String> result = new LinkedList<>();
         final Sink<String> sink = new ListSink<>(result);
 
-        final TopologyBuilder builder = new TopologyBuilder();
+        final VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
         final AStream<String> stringString = builder.streamOf(stringSource);
 
@@ -111,7 +111,7 @@ class WindowTest extends ShortTimoutSetup {
         final List<Integer> result = new LinkedList<>();
         final Sink<Integer> sink = new ListSink<>(result);
 
-        final TopologyBuilder builder = new TopologyBuilder();
+        final VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         builder.streamOf(source).window(new TumblingEventTimeWindow(Time.of(200).getNanos())).groupBy(t -> t.v1)
                 .aggregate(new Aggregator<Tuple2<Integer, Integer>, Integer, Integer>() {
                     @Override
@@ -165,7 +165,7 @@ class WindowTest extends ShortTimoutSetup {
         final List<Integer> result = new LinkedList<>();
         final Sink<Integer> sink = new ListSink<>(result);
 
-        final TopologyBuilder builder = new TopologyBuilder();
+        final VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         final AStream<Integer> stream = builder.streamOf(source).map(i -> i + 1);
 
         stream.window(new TumblingEventTimeWindow(Time.of(200).getNanos()))

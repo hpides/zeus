@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import de.hpi.des.hdes.engine.execution.ExecutionConfig;
 import de.hpi.des.hdes.engine.execution.slot.VulcanoRunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.ListSink;
 import de.hpi.des.hdes.engine.io.ListSource;
 import de.hpi.des.hdes.engine.stream.AStream;
@@ -55,7 +55,7 @@ class EngineTest {
 
     final List<Integer> results = new LinkedList<>();
     final var sink = new ListSink<>(results);
-    final var builder = new TopologyBuilder();
+    final var builder = new VulcanoTopologyBuilder();
 
     final AStream<Integer> stream1 = builder.streamOf(sourceS1).map(i -> i + 1).map(i -> i - 1);
     final AStream<Integer> stream2 = builder.streamOf(sourceS2).map(i -> i + 1).map(i -> i - 1);
@@ -104,7 +104,7 @@ class EngineTest {
     final ListSource<Integer> sourceIntQ1 = new ListSource(List.copyOf(sourceList));
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
-    final var builderQ1 = new TopologyBuilder();
+    final var builderQ1 = new VulcanoTopologyBuilder();
 
     builderQ1.streamOf(sourceIntQ1).map(i -> i + 1).to(sinkQ1);
     final Query Q1 = new Query(builderQ1.build());
@@ -119,7 +119,7 @@ class EngineTest {
     final ListSource<Integer> sourceIntQ2 = new ListSource<>(List.copyOf(sourceList));
     final LinkedList<Integer> resultsQ2 = new LinkedList<>();
     final var sinkQ2 = new ListSink<>(resultsQ2);
-    final var builderQ2 = new TopologyBuilder();
+    final var builderQ2 = new VulcanoTopologyBuilder();
     builderQ2.streamOf(sourceIntQ2).map(i -> i + 1).to(sinkQ2);
     final Query Q2 = new Query(builderQ2.build());
     engine.addQuery(Q2);
@@ -141,7 +141,7 @@ class EngineTest {
     final var sourceQ1 = new ListSource<>(list);
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
-    final var builderQ1 = new TopologyBuilder();
+    final var builderQ1 = new VulcanoTopologyBuilder();
 
     builderQ1.streamOf(sourceQ1).map(i -> i + 1).filter(i -> i > 0).to(sinkQ1);
     final Query Q1 = new Query(builderQ1.build());
@@ -155,7 +155,7 @@ class EngineTest {
 
     final LinkedList<Integer> resultsQ2 = new LinkedList<>();
     final var sinkQ2 = new ListSink<>(resultsQ2);
-    final var builderQ2 = new TopologyBuilder();
+    final var builderQ2 = new VulcanoTopologyBuilder();
     builderQ2.streamOf(sourceQ1).map(i -> i + 1).map(i -> i * 2).to(sinkQ2);
     final Query Q2 = new Query(builderQ2.build());
 
@@ -177,7 +177,7 @@ class EngineTest {
     final var sourceQ1 = new ListSource<>(list);
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
-    final var builderQ1 = new TopologyBuilder();
+    final var builderQ1 = new VulcanoTopologyBuilder();
     builderQ1.streamOf(sourceQ1).map(i -> i + 1).to(sinkQ1);
     final Query Q1 = new Query(builderQ1.build());
     final var engine = new VulcanoEngine();
@@ -200,7 +200,7 @@ class EngineTest {
     final var sourceQ1 = new ListSource<>(list);
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
-    final var builderQ1 = new TopologyBuilder();
+    final var builderQ1 = new VulcanoTopologyBuilder();
     builderQ1.streamOf(sourceQ1).map(i -> i + 1).to(sinkQ1);
     final Query Q1 = new Query(builderQ1.build());
     final var engine = new VulcanoEngine();
@@ -221,7 +221,7 @@ class EngineTest {
     final List<Integer> list = IntStream.range(0, sourceSize).boxed().collect(Collectors.toList());
 
     // Query 1
-    final var builderQ1 = TopologyBuilder.newQuery();
+    final var builderQ1 = VulcanoTopologyBuilder.newQuery();
     final var sourceQ1 = new ListSource<>(list);
 
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
@@ -232,7 +232,7 @@ class EngineTest {
 
     // Query 2
     final LinkedList<Integer> resultsQ2 = new LinkedList<>();
-    final var builderQ2 = TopologyBuilder.newQuery();
+    final var builderQ2 = VulcanoTopologyBuilder.newQuery();
     final var sourceQ2 = new ListSource<>(List.copyOf(list));
 
     final var sinkQ2 = new ListSink<>(resultsQ2);
@@ -265,7 +265,7 @@ class EngineTest {
     final List<Integer> list = IntStream.range(0, sourceSize).boxed().collect(Collectors.toList());
 
     // Query 1
-    final var builderQ1 = new TopologyBuilder();
+    final var builderQ1 = new VulcanoTopologyBuilder();
     final var sourceQ1 = new ListSource<>(list);
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
@@ -275,7 +275,7 @@ class EngineTest {
     // Query 2
     final LinkedList<Integer> resultsQ2 = new LinkedList<>();
     final var sinkQ2 = new ListSink<>(resultsQ2);
-    final var builderQ2 = new TopologyBuilder();
+    final var builderQ2 = new VulcanoTopologyBuilder();
     builderQ2.streamOf(sourceQ1).map(i -> i + 3).to(sinkQ2);
     final Query Q2 = new Query(builderQ2.build());
 
@@ -306,7 +306,7 @@ class EngineTest {
     final var sourceQ1 = new ListSource<>(list);
     final LinkedList<Integer> resultsQ1 = new LinkedList<>();
     final var sinkQ1 = new ListSink<>(resultsQ1);
-    final var builderQ1 = new TopologyBuilder();
+    final var builderQ1 = new VulcanoTopologyBuilder();
     builderQ1.streamOf(sourceQ1).map(i -> i + 1).to(sinkQ1);
     final Query Q1 = new Query(builderQ1.build());
 

@@ -2,7 +2,7 @@ package de.hpi.des.hdes.engine.stream;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
-import de.hpi.des.hdes.engine.graph.vulcano.TopologyBuilder;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.graph.vulcano.UnaryOperationNode;
 import de.hpi.des.hdes.engine.operation.StreamAggregation;
 import de.hpi.des.hdes.engine.operation.StreamJoin;
@@ -36,7 +36,7 @@ public class WindowedAStream<In> extends AbstractAStream<In> {
 
   private final WindowAssigner<? extends Window> windowAssigner;
 
-  public WindowedAStream(final TopologyBuilder builder, final Node node,
+  public WindowedAStream(final VulcanoTopologyBuilder builder, final Node node,
       final WindowAssigner<? extends Window> windowAssigner) {
     super(builder, node);
     this.windowAssigner = windowAssigner;
