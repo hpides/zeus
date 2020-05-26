@@ -1,0 +1,42 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug (Launch) - Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-MainMicroBenchmarkRunner<benchmark>",
+            "request": "launch",
+            "mainClass": "de.hpi.des.hdes.benchmark.MainMicroBenchmarkRunner",
+            "projectName": "benchmark"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-MainNetworkDataGenerator<benchmark>",
+            "request": "launch",
+            "mainClass": "de.hpi.des.hdes.benchmark.MainNetworkDataGenerator",
+            "projectName": "benchmark"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-MainNetworkEngine<benchmark>",
+            "request": "launch",
+            "mainClass": "de.hpi.des.hdes.benchmark.MainNetworkEngine",
+            "projectName": "benchmark"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-BenchmarkJob<flink-benchmark>",
+            "request": "launch",
+            "mainClass": "BenchmarkJob",
+            "projectName": "flink-benchmark"
+        }
+    ]
+}

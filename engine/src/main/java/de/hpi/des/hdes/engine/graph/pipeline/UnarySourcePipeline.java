@@ -8,30 +8,30 @@ import de.hpi.des.hdes.engine.io.Buffer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SourcePipeline extends Pipeline implements RunnablePipeline {
+public class UnarySourcePipeline extends UnaryPipeline implements RunnablePipeline {
 
-    private final Buffer buffer;
     private boolean shutdownFlag;
     private Runnable pipelineObject;
 
-    public SourcePipeline(List<Node> nodes, Buffer buffer) {
-        // super(nodes);
-        this.buffer = buffer;
+    public static UnarySourcePipeline of(UnaryPipeline pipeline) {
+        return null;
+
     }
 
+    @Override
     public void shutdown() {
-
+        // TODO
     }
 
     @Override
     public void loadPipeline() {
         super.loadPipeline();
-        try {
-            pipelineObject = (Runnable) this.getPipelineKlass().getDeclaredConstructor(Buffer.class)
-                    .newInstance(this.buffer);
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            log.error("Slot had an exception during class load: ", e);
-        }
+//        try {
+//            pipelineObject = (Runnable) this.getPipelineKlass().getDeclaredConstructor(Buffer.class)
+//                    .newInstance(this.buffer);
+//        } catch (ReflectiveOperationException | RuntimeException e) {
+//            log.error("Slot had an exception during class load: ", e);
+//        }
     }
 
     @Override
@@ -45,11 +45,5 @@ public class SourcePipeline extends Pipeline implements RunnablePipeline {
             log.error("Slot had an exception: ", e);
             throw e;
         }
-    }
-
-    @Override
-    public void accept(PipelineVisitor visitor) {
-        // TODO Auto-generated method stub
-
     }
 }

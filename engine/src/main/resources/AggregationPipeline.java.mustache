@@ -12,8 +12,7 @@ public class {{{className}}} {
     }
 
     @Override
-    public void process(final AData element) {
-        final long timestamp, final int value
+    public void process(final AData event) {
         long windowStart = event.getEventTime() - (event.getEventTime() % length);
         if (earliestOpenWindow > windowStart) {
             earliestOpenWindow = windowStart;

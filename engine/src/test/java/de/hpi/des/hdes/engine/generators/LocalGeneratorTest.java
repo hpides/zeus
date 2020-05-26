@@ -1,10 +1,14 @@
 package de.hpi.des.hdes.engine.generators;
 
+import de.hpi.des.hdes.engine.cstream.CStream;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import java.util.Stack;
+
+import com.google.common.eventbus.AllowConcurrentEvents;
+
 import java.util.ArrayList;
 
 import java.io.IOException;
@@ -30,7 +34,7 @@ public class LocalGeneratorTest {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         final List<Integer> listS1 = new ArrayList<>();
         final ListSource<Integer> source = new ListSource<>(listS1, new WatermarkGenerator<>(-1, -1), e -> e);
-        AStream<Integer> aStream = builder.streamOf(source);
+        builder.streamOf(source);
         FilterGenerator filter = new FilterGenerator("element % 4 == 0");
         UnaryGenerationNode node = new UnaryGenerationNode(filter);
         builder.addGraphNode(builder.getNodes().get(0), node);
@@ -51,25 +55,95 @@ public class LocalGeneratorTest {
     @Test
     public void testCStream() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(new BufferedSource(){
-        
+        CStream stream2 = builder.streamOfC(new BufferedSource() {
+
             @Override
             public void run() {
                 // TODO Auto-generated method stub
-                
+
             }
-        
+
             @Override
             public void shutdown() {
                 // TODO Auto-generated method stub
-                
+
             }
-        
+
             @Override
             public Buffer getInputBuffer() {
                 // TODO Auto-generated method stub
                 return null;
             }
-        })
+        }).map("").map("").map("").map("").map("").map("");
+        VulcanoTopologyBuilder builded = builder.streamOfC(new BufferedSource() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void shutdown() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Buffer getInputBuffer() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        }).filter("").join(stream2).aggregate().to();
+        PipelineTopology tmep = PipelineTopologyBuilder.pipelineTopologyOf(builded.build());
+        System.out.println("Done");
+
+    }
+
+    @Test
+    public void sourceJoinStreamTest() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        CStream stream2 = builder.streamOfC(new BufferedSource() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void shutdown() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Buffer getInputBuffer() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        }).filter("element % 2 == 0");
+        builder.streamOfC(new BufferedSource() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void shutdown() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Buffer getInputBuffer() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        }).filter("element < 100").join(stream2);
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology(new ArrayList<Pipeline>()));
+        generator.extend(PipelineTopologyBuilder.pipelineTopologyOf(builder.build()));
     }
 }

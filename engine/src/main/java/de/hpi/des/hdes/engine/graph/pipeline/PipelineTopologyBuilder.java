@@ -10,12 +10,15 @@ import java.util.Stack;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import de.hpi.des.hdes.engine.generators.AggregateGenerator;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.vulcano.SourceNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.udf.Aggregator;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PipelineTopologyBuilder {
     @Getter
     private final List<Node> nodes = new LinkedList<>();
@@ -27,43 +30,46 @@ public class PipelineTopologyBuilder {
         List<Node> pipelineNodes;
 
         Map<Node, Pipeline> nodeToPipeline = new HashMap<Node, Pipeline>();
-        Map<Node, Stack<List<Node>>> nodeToOperatorList = new HashMap<Node, Stack<List<Node>>>();
+        Map<Node, Stack<List<Node>>> nodeToInternalPipelineList = new HashMap<Node, Stack<List<Node>>>();
 
         for (Node node : Lists.reverse(nodes)) {
             // TODO: Add isPipelinebreaker to interfaces
             if (node instanceof UnaryGenerationNode) {
+                log.info("Unary: {}", node.getClass());
                 Pipeline currentPipeline;
-                List<Node> operatorList;
-                // TODO replace with compiled aggragator
-                if (((UnaryGenerationNode) node).getOperator() instanceof Aggregator) {
-                    // AggregationU
+                List<Node> internalOperatorList;
+                // TODO replace with compiled aggregator
+                if (((UnaryGenerationNode) node).getOperator() instanceof AggregateGenerator) {
+                    // Aggregation
                     currentPipeline = new UnaryPipeline();
                     pipelines.add(currentPipeline);
                     if (!node.getChildren().isEmpty()) {
                         Pipeline childPipeline = nodeToPipeline.get(node.getChildren().toArray()[0]);
-                        childPipeline.getParents().add(currentPipeline);
+                        childPipeline.addParent(currentPipeline);
                     }
-                    operatorList = ((UnaryPipeline) currentPipeline).getNodes();
+                    internalOperatorList = ((UnaryPipeline) currentPipeline).getNodes();
                 } else if (!node.getChildren().isEmpty()) {
                     Node childNode = (Node) node.getChildren().toArray()[0];
-                    operatorList = nodeToOperatorList.get(childNode).pop();
+                    internalOperatorList = nodeToInternalPipelineList.get(childNode).pop();
                     currentPipeline = nodeToPipeline.get(node.getChildren().toArray()[0]);
                 } else {
                     currentPipeline = new UnaryPipeline();
-                    operatorList = ((UnaryPipeline) currentPipeline).getNodes();
+                    pipelines.add(currentPipeline);
+                    internalOperatorList = ((UnaryPipeline) currentPipeline).getNodes();
                 }
-                operatorList.add(node);
+                internalOperatorList.add(node);
                 nodeToPipeline.put(node, currentPipeline);
                 Stack<List<Node>> listStack = new Stack<List<Node>>();
-                listStack.add(operatorList);
-                nodeToOperatorList.put(node, listStack);
+                listStack.add(internalOperatorList);
+                nodeToInternalPipelineList.put(node, listStack);
             } else if (node instanceof BinaryGenerationNode) {
+                log.info("Binary {}", node.getClass());
                 // Binary Operator
                 Pipeline currentPipeline = new BinaryPipeline((BinaryGenerationNode) node);
                 pipelines.add(currentPipeline);
                 if (!node.getChildren().isEmpty()) {
                     Pipeline childPipeline = nodeToPipeline.get(node.getChildren().toArray()[0]);
-                    childPipeline.getParents().add(currentPipeline);
+                    childPipeline.addParent(currentPipeline);
                 }
                 List<Node> operatorListLeft = ((BinaryPipeline) currentPipeline).getLeftNodes();
                 List<Node> operatorListRight = ((BinaryPipeline) currentPipeline).getRightNodes();
@@ -72,10 +78,31 @@ public class PipelineTopologyBuilder {
                 Stack<List<Node>> listStack = new Stack<List<Node>>();
                 listStack.add(operatorListLeft);
                 listStack.add(operatorListRight);
-                nodeToOperatorList.put(node, listStack);
+                nodeToInternalPipelineList.put(node, listStack);
                 nodeToPipeline.put(node, currentPipeline);
+            } else if (node instanceof BufferedSourceNode) {
+                log.info("Source {}", node.getClass());
+                Object childNode = node.getChildren().toArray()[0];
+                Pipeline oldPipeline = nodeToPipeline.get(childNode);
+                List<Node> internalOperatorList = nodeToInternalPipelineList.get(childNode).pop();
+                internalOperatorList.add(node);
+                if (pipelines.contains(oldPipeline)) {
+                    Pipeline newPipeline = null;
+                    if (oldPipeline instanceof UnaryPipeline) {
+                        newPipeline = UnarySourcePipeline.of((UnaryPipeline) oldPipeline);
+                    } else if (oldPipeline instanceof BinaryPipeline) {
+                        newPipeline = BinarySourcePipeline.of((BinaryPipeline) oldPipeline);
+                    } else {
+                    } // Only source
+                    if (oldPipeline.getChild() != null) {
+                        oldPipeline.getChild().addParent(newPipeline);
+                        oldPipeline.getChild().getParents().remove(oldPipeline);
+                    }
+                    pipelines.remove(oldPipeline);
+                    pipelines.add(newPipeline);
+                }
             } else {
-                // throw new Exception("Unsupported Node type");
+                log.info("Unknown {}", node.getClass());
             }
 
         }

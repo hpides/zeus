@@ -83,6 +83,7 @@ public class LocalGenerator implements PipelineVisitor {
     public void visit(UnaryPipeline unaryPipeline) {
         String execution = unaryPipeline.getChild().getPipelineId() + ".process(element);";
         String implementation = "";
+
         for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 implementation = ((UnaryGenerationNode) node).getOperator().generate(implementation);
