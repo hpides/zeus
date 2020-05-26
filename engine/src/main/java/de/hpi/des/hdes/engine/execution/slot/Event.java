@@ -4,10 +4,12 @@ import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple3;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
+@Getter
 public class Event {
-    private Tuple data;
+    private Object data;
     private boolean isWatermark;
     private long timestamp;
 }

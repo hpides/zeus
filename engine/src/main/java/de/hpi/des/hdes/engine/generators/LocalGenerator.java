@@ -118,8 +118,9 @@ public class LocalGenerator implements PipelineVisitor {
             }
         }
 
-        String rightImplementation = binaryPipeline.getChild().getPipelineId() + ".process(element);";
+        String rightImplementation = "";
         rightImplementation = binaryPipeline.getBinaryNode().getOperator().generate(rightImplementation, false);
+
         for (Node node : Lists.reverse(binaryPipeline.getRightNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 rightImplementation = ((UnaryGenerationNode) node).getOperator().generate(rightImplementation);
@@ -129,7 +130,7 @@ public class LocalGenerator implements PipelineVisitor {
         }
 
         try {
-            Mustache template = MustacheFactorySingleton.getInstance().compile("JoinPipeline.java.mustache");
+            Mustache template = MustacheFactorySingleton.getInstance().compile("JoinSourcePipeline.java.mustache");
             template.execute(writer,
                     new JoinData(binaryPipeline.getPipelineId(), 1000, 1000, leftImplementation, rightImplementation))
                     // TODO: Set length and slide

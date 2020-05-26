@@ -77,8 +77,10 @@ public class CStream extends AbstractCStream {
      * @param stream2 second cstream
      * @return joined cstream
      */
-    public CStream join(final CStream stream2) {
-        final BinaryGenerationNode child = new BinaryGenerationNode(new JoinGenerator());
+    public CStream join(final CStream stream2, final String keyExtractorLeft, final String keyExtractorRight,
+            final String joinMapper) {
+        final BinaryGenerationNode child = new BinaryGenerationNode(
+                new JoinGenerator(keyExtractorLeft, keyExtractorRight, joinMapper));
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(stream2.getNode(), child);
         return new CStream(this.builder, child);

@@ -1,0 +1,84 @@
+import java.util.HashMap;
+
+import de.hpi.des.hdes.engine.io.Buffer;
+
+import org.jooq.lambda.tuple.*;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
+public class {{{className}}} implements Runnable {
+
+    private final {{{nextClassName}}} nextPipeline;
+    private final Buffer bufferLeft; 
+    private final Buffer bufferRight;
+    private final HashMap<Long, Multimap<Object, Object>> stateLeft;
+    private final HashMap<Long, Multimap<Object, Object>> stateRight;
+    private final long length = {{{length}}};
+    private final long slide = {{{slide}}};
+
+    private long earliestOpenWindowJoin = Long.MAX_VALUE;
+    private long latestTimestampLeft;
+    private long latestTimestampRight;
+
+    public {{{className}}}(final {{{nextClassName}}} nextPipeline, final Buffer bufferLeft, final Buffer bufferRight) {
+        this.nextPipeline = nextPipeline;
+        this.bufferLeft = bufferLeft;
+        this.bufferRight = bufferRight;
+        this.stateLeft = new HashMap<>();
+        this.stateRight = new HashMap<>();
+        this.latestTimestampLeft = 0;
+        this.latestTimestampRight = 0;
+    }
+
+    @Override
+    public void run() {
+        for(Event elem : bufferLeft.poll()) {
+            this.joinLeftPipeline(elem);
+        }
+        for(Event elem : bufferRight.poll()) {
+            this.joinRightPipeline(elem);
+        }
+    }
+
+    public void joinLeftPipeline(final Event event) {
+        final long eventTimestamp = event.getEventTime();
+        latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
+        long windowStart = eventTimestamp - (eventTimestamp % length);
+        if (earliestOpenWindowJoin > windowStart) {
+            earliestOpenWindowJoin = windowStart;
+        }
+
+        {{{leftImplementation}}}
+
+        for (; earliestOpenWindowJoin + length <= latestTimestampLeft
+                && earliestOpenWindowJoin + length <= latestTimestampRight; earliestOpenWindowJoin += slide) {
+            if (stateLeft.containsKey(earliestOpenWindowJoin)) {
+                stateLeft.remove(earliestOpenWindowJoin);
+            }
+            if (stateRight.containsKey(earliestOpenWindowJoin)) {
+                stateRight.remove(earliestOpenWindowJoin);
+            }
+        }
+    }
+
+    public void joinRightPipeline(final Event event) {
+        latestTimestampRight = event.getEventTime();
+        long windowStart = event.getEventTime() - (event.getEventTime() % length);
+        if (earliestOpenWindowJoin > windowStart) {
+            earliestOpenWindowJoin = windowStart;
+        }
+
+        {{{rightImplementation}}}
+
+        for (; earliestOpenWindowJoin + length <= latestTimestampLeft
+                && earliestOpenWindowJoin + length <= latestTimestampRight; earliestOpenWindowJoin += slide) {
+            if (stateLeft.containsKey(earliestOpenWindowJoin)) {
+                stateLeft.remove(earliestOpenWindowJoin);
+            }
+            if (stateRight.containsKey(earliestOpenWindowJoin)) {
+                stateRight.remove(earliestOpenWindowJoin);
+            }
+        }
+    }
+}

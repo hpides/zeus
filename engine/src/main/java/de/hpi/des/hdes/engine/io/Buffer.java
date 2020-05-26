@@ -1,7 +1,9 @@
 package de.hpi.des.hdes.engine.io;
 
+import java.util.List;
+
 import de.hpi.des.hdes.engine.execution.slot.Event;
 
 public interface Buffer {
-    public Event poll();
+    public List<Event> poll();
 }
