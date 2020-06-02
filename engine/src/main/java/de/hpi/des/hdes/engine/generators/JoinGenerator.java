@@ -19,11 +19,14 @@ public class JoinGenerator implements BinaryGeneratable {
         private final String execution;
         private final String joinKeyExtractor;
         private final String joinMapper;
+        private final String nextPipelineFunction;
 
-        public JoinData(String execution, final String joinKeyExtractor, final String joinMapper) {
+        public JoinData(String execution, final String joinKeyExtractor, final String joinMapper,
+                final String nextPipelineFunction) {
             this.execution = execution;
             this.joinKeyExtractor = joinKeyExtractor;
             this.joinMapper = joinMapper;
+            this.nextPipelineFunction = nextPipelineFunction;
         }
     }
 
@@ -35,9 +38,9 @@ public class JoinGenerator implements BinaryGeneratable {
     }
 
     @Override
-    public String generate(String execution, boolean isLeft) {
+    public String generate(final String execution, final String nextPipelineFunction, final boolean isLeft) {
         try {
-            writer.flush();
+            writer.getBuffer().setLength(0);
             String file = "JoinRight.java.mustache";
             String joinKeyExtractor = this.keyExtractorRight;
             if (isLeft) {
@@ -45,7 +48,8 @@ public class JoinGenerator implements BinaryGeneratable {
                 joinKeyExtractor = this.keyExtractorLeft;
             }
             Mustache template = MustacheFactorySingleton.getInstance().compile(file);
-            template.execute(writer, new JoinData(execution, joinKeyExtractor, joinMapper)).flush();
+            template.execute(writer, new JoinData(execution, joinKeyExtractor, joinMapper, nextPipelineFunction))
+                    .flush();
             return writer.toString();
         } catch (IOException e) {
             System.out.println(e);

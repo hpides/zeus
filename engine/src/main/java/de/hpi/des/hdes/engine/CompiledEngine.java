@@ -20,7 +20,7 @@ public class CompiledEngine implements Engine {
     @Getter
     private boolean isRunning;
 
-    CompiledEngine() {
+    public CompiledEngine() {
         this.executor = Executors.newCachedThreadPool();
         this.plan = CompiledExecutionPlan.emptyExecutionPlan();
         this.isRunning = false;

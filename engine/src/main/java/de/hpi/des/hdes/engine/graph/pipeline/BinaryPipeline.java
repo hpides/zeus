@@ -15,6 +15,8 @@ public class BinaryPipeline extends Pipeline {
     private final List<Node> leftNodes;
     private final List<Node> rightNodes;
     private final BinaryGenerationNode binaryNode;
+    private Pipeline leftParent;
+    private Pipeline rightParent;
 
     protected BinaryPipeline(List<Node> leftNodes, List<Node> rightNodes, BinaryGenerationNode binaryNode) {
         super();
@@ -33,6 +35,18 @@ public class BinaryPipeline extends Pipeline {
     public static BinaryPipeline of(final List<Node> leftNodes, List<Node> rightNodes,
             BinaryGenerationNode binaryNode) {
         return new BinaryPipeline(leftNodes, rightNodes, binaryNode);
+    }
+
+    @Override
+    public void addLeftParent(Pipeline leftPipeline) {
+        super.addLeftParent(leftPipeline);
+        this.leftParent = leftPipeline;
+    }
+
+    @Override
+    public void addRightParent(Pipeline rightPipeline) {
+        super.addRightParent(rightPipeline);
+        this.rightParent = rightPipeline;
     }
 
     @Override

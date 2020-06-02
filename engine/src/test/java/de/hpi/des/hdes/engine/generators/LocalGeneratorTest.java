@@ -1,20 +1,26 @@
 package de.hpi.des.hdes.engine.generators;
 
 import de.hpi.des.hdes.engine.cstream.CStream;
+import de.hpi.des.hdes.engine.execution.slot.Event;
+
+import org.jooq.lambda.tuple.Tuple2;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import java.util.Stack;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.AllowConcurrentEvents;
 
 import java.util.ArrayList;
-
+import java.util.Arrays;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import de.hpi.des.hdes.engine.CompiledEngine;
+import de.hpi.des.hdes.engine.Engine;
 import de.hpi.des.hdes.engine.astream.AStream;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
@@ -120,8 +126,16 @@ public class LocalGeneratorTest {
 
             @Override
             public Buffer getInputBuffer() {
-                // TODO Auto-generated method stub
-                return null;
+                return new Buffer() {
+
+                    int counter = 0;
+
+                    @Override
+                    public List<Event> poll() {
+                        return Arrays
+                                .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
+                    }
+                };
             }
         }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 % 2 == 0");
         builder.streamOfC(new BufferedSource() {
@@ -140,13 +154,32 @@ public class LocalGeneratorTest {
 
             @Override
             public Buffer getInputBuffer() {
-                // TODO Auto-generated method stub
-                return null;
+                return new Buffer() {
+
+                    int counter = 0;
+
+                    @Override
+                    public List<Event> poll() {
+                        return Arrays
+                                .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
+                    }
+                };
             }
         }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 < 100").join(stream2,
-                "e1 -> ((Tuple2<Integer,Integer>)e1.getData()).v1", "e2 -> ((Tuple2<Integer,Integer>)e2.getData()).v1",
-                "(left, right) -> new Tuple4<Integer,Integer,Integer,Integer>(left.v1,left.v2,right.v1,right.v2)");
-        LocalGenerator generator = new LocalGenerator(new PipelineTopology(new ArrayList<Pipeline>()));
-        generator.extend(PipelineTopologyBuilder.pipelineTopologyOf(builder.build()));
+                "e1 -> ((Tuple2<Integer,Integer>)e1).v1", "e2 -> ((Tuple2<Integer,Integer>)e2).v1",
+                "(left, right) -> new Tuple4<Integer, Integer, Integer, Integer>(((Tuple2<Integer, Integer>)left).v1, ((Tuple2<Integer, Integer>)left).v2, ((Tuple2<Integer, Integer>)right).v1, ((Tuple2<Integer, Integer>)right).v2)");
+        // LocalGenerator generator = new LocalGenerator(new PipelineTopology(new
+        // ArrayList<Pipeline>()));
+        // generator.extend(
+        // // PipelineTopology temp =
+        // PipelineTopologyBuilder.pipelineTopologyOf(builder.build())
+        // ;
+        // );
+        Engine engine = new CompiledEngine();
+        engine.addQuery(builder.buildAsQuery());
+        engine.run();
+        while (true) {
+        }
+        // System.out.println("Done");
     }
 }

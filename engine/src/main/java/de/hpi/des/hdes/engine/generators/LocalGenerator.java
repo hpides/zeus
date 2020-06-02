@@ -21,26 +21,29 @@ import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
+import de.hpi.des.hdes.engine.graph.pipeline.SourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
+
+// TODO If there is a BinaryPipeline (No source), set at generation time for the preceding pipelines if they are left or right
 
 public class LocalGenerator implements PipelineVisitor {
 
     private final PipelineTopology pipelineTopology;
-    String implementation = "";
-
     private final StringWriter writer = new StringWriter();
 
     @Getter
     private class JoinData {
         private String className;
+        private String nextClassName;
         private long slide;
         private long length;
         private String leftImplementation;
         private String rightImplementation;
 
-        public JoinData(String className, long slide, long length, String leftImplementation,
-                String rightImplementation) {
+        public JoinData(final String className, final String nextClassName, final long slide, final long length,
+                final String leftImplementation, final String rightImplementation) {
             this.className = className;
+            this.nextClassName = nextClassName;
             this.slide = slide;
             this.length = length;
             this.leftImplementation = leftImplementation;
@@ -62,6 +65,19 @@ public class LocalGenerator implements PipelineVisitor {
             this.length = length;
             this.implementation = implementation;
             this.execution = execution;
+        }
+    }
+
+    @Getter
+    private class SourceData {
+        private String className;
+        private String nextPipelineClass;
+        private String nextPipelineFunction;
+
+        public SourceData(String className, String nextPipelineClass, String nextPipelineFunction) {
+            this.className = className;
+            this.nextPipelineClass = nextPipelineClass;
+            this.nextPipelineFunction = nextPipelineFunction;
         }
     }
 
@@ -107,36 +123,70 @@ public class LocalGenerator implements PipelineVisitor {
 
     @Override
     public void visit(BinaryPipeline binaryPipeline) {
+        String nextPipelineFunction = this.pipelineTopology.getChildProcessMethod(binaryPipeline,
+                binaryPipeline.getChild());
         String leftImplementation = "";
-        leftImplementation = binaryPipeline.getBinaryNode().getOperator().generate(leftImplementation, true);
+        leftImplementation = binaryPipeline.getBinaryNode().getOperator().generate(leftImplementation,
+                nextPipelineFunction, true);
 
         for (Node node : Lists.reverse(binaryPipeline.getLeftNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 leftImplementation = ((UnaryGenerationNode) node).getOperator().generate(leftImplementation);
             } else {
-                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+                System.err.println(String.format("Node %s not implemented for code generation.", node.getClass()));
             }
         }
 
         String rightImplementation = "";
-        rightImplementation = binaryPipeline.getBinaryNode().getOperator().generate(rightImplementation, false);
+        rightImplementation = binaryPipeline.getBinaryNode().getOperator().generate(rightImplementation,
+                nextPipelineFunction, false);
 
         for (Node node : Lists.reverse(binaryPipeline.getRightNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 rightImplementation = ((UnaryGenerationNode) node).getOperator().generate(rightImplementation);
             } else {
-                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+                System.err.println(String.format("Node %s not implemented for code generation.", node.getClass()));
             }
         }
 
         try {
-            Mustache template = MustacheFactorySingleton.getInstance().compile("JoinSourcePipeline.java.mustache");
+            Mustache template = MustacheFactorySingleton.getInstance().compile("JoinPipeline.java.mustache");
+            String nextClassName = "";
+            if (binaryPipeline.getChild() == null) {
+                nextClassName = "TempSink";
+            } else {
+                nextClassName = binaryPipeline.getChild().getPipelineId();
+            }
             template.execute(writer,
-                    new JoinData(binaryPipeline.getPipelineId(), 1000, 1000, leftImplementation, rightImplementation))
+                    new JoinData(binaryPipeline.getPipelineId(), nextClassName, 1000, 1000, leftImplementation,
+                            rightImplementation))
                     // TODO: Set length and slide
                     .flush();
-            implementation = writer.toString();
-            Files.writeString(Paths.get(binaryPipeline.getPipelineId() + ".java"), implementation);
+            String implementation = writer.toString();
+            Files.writeString(
+                    Paths.get(
+                            "./src/main/java/de/hpi/des/hdes/engine/temp/" + binaryPipeline.getPipelineId() + ".java"),
+                    implementation);
+            writer.getBuffer().setLength(0);
+        } catch (IOException e) {
+            System.exit(1);
+        }
+    }
+
+    @Override
+    public void visit(SourcePipeline sourcePipeline) {
+        String nextPipelineFunction = this.pipelineTopology.getChildProcessMethod(sourcePipeline,
+                sourcePipeline.getChild());
+        try {
+            Mustache template = MustacheFactorySingleton.getInstance().compile("Source.java.mustache");
+            template.execute(writer, new SourceData(sourcePipeline.getPipelineId(),
+                    sourcePipeline.getChild().getPipelineId(), nextPipelineFunction)).flush();
+            String implementation = writer.toString();
+            Files.writeString(
+                    Paths.get(
+                            "./src/main/java/de/hpi/des/hdes/engine/temp/" + sourcePipeline.getPipelineId() + ".java"),
+                    implementation);
+            writer.getBuffer().setLength(0);
         } catch (IOException e) {
             System.exit(1);
         }

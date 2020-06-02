@@ -1,5 +1,21 @@
-class {{{className}}} {    
-    void pipeline(AData<> element) {
-        {{{implementation}}}
+package de.hpi.des.hdes.engine.temp;
+
+import de.hpi.des.hdes.engine.execution.slot.Event;
+import de.hpi.des.hdes.engine.io.Buffer;
+
+public class {{{className}}} implements Runnable {
+    private final Buffer buffer;
+    private final {{{nextPipelineClass}}} nextPipeline;
+
+    public {{{className}}} (final Buffer buffer, final {{{nextPipelineClass}}} nextPipeline) {
+        this.buffer = buffer;
+        this.nextPipeline = nextPipeline;
+    }
+
+    @Override
+    public void run() {
+        for (Event elem : buffer.poll()) {
+            this.nextPipeline.{{{nextPipelineFunction}}}(elem);
+        }
     }
 }

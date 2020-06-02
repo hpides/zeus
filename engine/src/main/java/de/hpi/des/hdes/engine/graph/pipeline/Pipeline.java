@@ -25,9 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class Pipeline {
 
-    private Class pipelineKlass;
+    protected Class pipelineKlass;
     private final String pipelineId;
+    private Object pipelineObject;
     private final List<Pipeline> parents = new ArrayList<>();
+
     @Setter
     private Pipeline child;
 
@@ -42,24 +44,36 @@ public abstract class Pipeline {
 
     public abstract void accept(PipelineVisitor visitor);
 
-    private String getFilePath() {
-        // TODO code-generation: Define path to files in a central place
-        return "";
+    protected String getFilePath() {
+        return "/Users/nils/Documents/MP/HDES/engine/src/main/java/de/hpi/des/hdes/engine/temp/" + getPipelineId()
+                + ".java";
     }
 
     // TODO code-generation: call after file was generated
-    void loadPipeline() {
+    void loadPipeline(Object child, Class childKlass) {
         Path javaFile = Paths.get(this.getFilePath());
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         compiler.run(null, null, null, javaFile.toFile().getAbsolutePath());
-        Path javaClass = javaFile.getParent().resolve(this.pipelineId);
+        Path javaClass = javaFile.getParent().resolve(this.pipelineId+".class");
+        // Path javaClass = javaFile.getParent().resolve("HardCodedAggregation.class");
         URL classUrl;
         try {
             classUrl = javaClass.getParent().toFile().toURI().toURL();
             URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { classUrl });
-            pipelineKlass = Class.forName(this.pipelineId, true, classLoader);
+            pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp."+this.pipelineId, true, classLoader);
+            pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass).newInstance(child);
         } catch (MalformedURLException | ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }
+    }
+
+    public void addLeftParent(Pipeline leftPipeline) {
+        this.parents.add(leftPipeline);
+        leftPipeline.setChild(this);
+    }
+
+    public void addRightParent(Pipeline rightPipeline) {
+        this.parents.add(rightPipeline);
+        rightPipeline.setChild(this);
     }
 }

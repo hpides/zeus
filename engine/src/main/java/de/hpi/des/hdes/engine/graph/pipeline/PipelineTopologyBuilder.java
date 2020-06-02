@@ -45,7 +45,8 @@ public class PipelineTopologyBuilder {
                     pipelines.add(currentPipeline);
                     if (!node.getChildren().isEmpty()) {
                         Pipeline childPipeline = nodeToPipeline.get(node.getChildren().toArray()[0]);
-                        childPipeline.addParent(currentPipeline);
+                        Node childNode = (Node) node.getChildren().toArray()[0];
+                        addParent(node, childPipeline, currentPipeline, childNode);
                     }
                     internalOperatorList = ((UnaryPipeline) currentPipeline).getNodes();
                 } else if (!node.getChildren().isEmpty()) {
@@ -69,38 +70,22 @@ public class PipelineTopologyBuilder {
                 pipelines.add(currentPipeline);
                 if (!node.getChildren().isEmpty()) {
                     Pipeline childPipeline = nodeToPipeline.get(node.getChildren().toArray()[0]);
-                    childPipeline.addParent(currentPipeline);
+                    Node childNode = (Node) node.getChildren().toArray()[0];
+                    addParent(node, childPipeline, currentPipeline, childNode);
                 }
                 List<Node> operatorListLeft = ((BinaryPipeline) currentPipeline).getLeftNodes();
                 List<Node> operatorListRight = ((BinaryPipeline) currentPipeline).getRightNodes();
-                operatorListLeft.add(node);
-                operatorListRight.add(node);
                 Stack<List<Node>> listStack = new Stack<List<Node>>();
                 listStack.add(operatorListLeft);
                 listStack.add(operatorListRight);
                 nodeToInternalPipelineList.put(node, listStack);
                 nodeToPipeline.put(node, currentPipeline);
             } else if (node instanceof BufferedSourceNode) {
-                log.info("Source {}", node.getClass());
                 Object childNode = node.getChildren().toArray()[0];
-                Pipeline oldPipeline = nodeToPipeline.get(childNode);
-                List<Node> internalOperatorList = nodeToInternalPipelineList.get(childNode).pop();
-                internalOperatorList.add(node);
-                if (pipelines.contains(oldPipeline)) {
-                    Pipeline newPipeline = null;
-                    if (oldPipeline instanceof UnaryPipeline) {
-                        newPipeline = UnarySourcePipeline.of((UnaryPipeline) oldPipeline);
-                    } else if (oldPipeline instanceof BinaryPipeline) {
-                        newPipeline = BinarySourcePipeline.of((BinaryPipeline) oldPipeline);
-                    } else {
-                    } // Only source
-                    if (oldPipeline.getChild() != null) {
-                        oldPipeline.getChild().addParent(newPipeline);
-                        oldPipeline.getChild().getParents().remove(oldPipeline);
-                    }
-                    pipelines.remove(oldPipeline);
-                    pipelines.add(newPipeline);
-                }
+                Pipeline childPipeline = nodeToPipeline.get(childNode);
+                SourcePipeline sourcePipeline = new SourcePipeline((BufferedSourceNode) node);
+                addParent(node, childPipeline, sourcePipeline, (Node) childNode);
+                pipelines.add(sourcePipeline);
             } else {
                 log.info("Unknown {}", node.getClass());
             }
@@ -108,6 +93,24 @@ public class PipelineTopologyBuilder {
         }
 
         return new PipelineTopology(pipelines);
+    }
+
+    private static void addParent(Node node, Pipeline childPipeline, Pipeline sourcePipeline, Node childNode) {
+        if (childPipeline instanceof BinaryPipeline) {
+            // TODO make it more efficient
+            // TODO if an aggregation comes before a join, the nodes are empty
+            if (((BinaryPipeline) childPipeline).getLeftNodes().contains(childNode)) {
+                childPipeline.addLeftParent(sourcePipeline);
+            } else if (((BinaryPipeline) childPipeline).getRightNodes().contains(childNode)) {
+                childPipeline.addRightParent(sourcePipeline);
+            } else {
+                log.error("Something unpredictable in a class you do not want to touch happened (RUN!!!): {}",
+                        node.getClass());
+            }
+
+        } else if (childPipeline instanceof UnaryPipeline) {
+            childPipeline.addParent(sourcePipeline);
+        }
     }
 
     public static PipelineTopologyBuilder newQuery() {

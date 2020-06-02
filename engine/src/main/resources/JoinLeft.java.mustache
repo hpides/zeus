@@ -1,7 +1,7 @@
 final Function joinKeyExtractor = {{{joinKeyExtractor}}};
-final Object key = joinKeyExtractor.apply(element.getData());
-final Object value = element.getData();
-for (; windowStart <= timestamp; windowStart += slide) {
+final Object key = joinKeyExtractor.apply(event.getData());
+final Object value = event.getData();
+for (; windowStart <= eventTimestamp; windowStart += slide) {
     final Multimap<Object, Object> state = this.stateLeft.computeIfAbsent(windowStart,
             w -> ArrayListMultimap.create());
     state.put(key, value);
@@ -9,8 +9,8 @@ for (; windowStart <= timestamp; windowStart += slide) {
     Multimap<Object, Object> rightState = stateRight.get(windowStart);
     if (rightState != null && rightState.containsKey(key)) {
         for (Object rightValue : rightState.get(key)) {
-            final Function joinMapper = {{{joinMapper}}};
-            this.nextPipeline.process(Event(windowStart, joinMapper.apply(value, rightValue)));
+            final BiFunction joinMapper = {{{joinMapper}}};
+            this.nextPipeline.{{{nextPipelineFunction}}}(new Event(joinMapper.apply(value, rightValue), false, eventTimestamp));
         }
     }
 }
