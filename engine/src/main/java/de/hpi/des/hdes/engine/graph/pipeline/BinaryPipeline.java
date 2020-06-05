@@ -38,19 +38,31 @@ public class BinaryPipeline extends Pipeline {
     }
 
     @Override
-    public void addLeftParent(Pipeline leftPipeline) {
-        super.addLeftParent(leftPipeline);
-        this.leftParent = leftPipeline;
-    }
-
-    @Override
-    public void addRightParent(Pipeline rightPipeline) {
-        super.addRightParent(rightPipeline);
-        this.rightParent = rightPipeline;
-    }
-
-    @Override
     public void accept(PipelineVisitor visitor) {
         visitor.visit(this);
+    }
+
+    private boolean isLeft(Node operatorNode) {
+        // TODO evaluate if a list search or hash map makes more sense
+        return leftNodes.contains(operatorNode);
+    }
+
+    @Override
+    public void addParent(Pipeline pipeline, Node childNode) {
+        if (this.isLeft(childNode)) {
+            this.leftParent = pipeline;
+        } else {
+            this.rightParent = pipeline;
+        }
+        pipeline.setChild(this);
+    }
+
+    @Override
+    public void addOperator(Node operator, Node childNode) {
+        if ((this.isLeft(childNode) && !childNode.equals(binaryNode)) || leftNodes.size() == 1) {
+            this.leftNodes.add(operator);
+        } else {
+            this.rightNodes.add(operator);
+        }
     }
 }

@@ -74,4 +74,10 @@ public abstract class Node {
   public List<Query> getAssociatedQueries() {
     return this.associatedQueries;
   }
+
+  // TODO: This must be somehow dependent on a queryID -> unsure for now: how are
+  // Pipelines connected to a query?
+  public Node getChild() {
+    return (Node) this.getChildren().toArray()[0];
+  }
 }

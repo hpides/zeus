@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -12,9 +13,10 @@ public class UnaryPipeline extends Pipeline {
 
     @Getter
     private final List<Node> nodes;
+    private Pipeline parent;
 
-    public UnaryPipeline() {
-        this.nodes = Lists.newArrayList();
+    public UnaryPipeline(Node node) {
+        this.nodes = Arrays.asList(node);
     }
 
     protected UnaryPipeline(List<Node> nodes) {
@@ -29,5 +31,16 @@ public class UnaryPipeline extends Pipeline {
     @Override
     public void accept(PipelineVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void addParent(Pipeline pipeline, Node childNode) {
+        this.parent = pipeline;
+        pipeline.setChild(this);
+    }
+
+    @Override
+    public void addOperator(Node operator, Node childNode) {
+        this.nodes.add(operator);
     }
 }

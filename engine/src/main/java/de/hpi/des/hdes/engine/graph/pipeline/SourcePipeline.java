@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
+
+import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.Buffer;
 import lombok.extern.slf4j.Slf4j;
@@ -33,12 +35,12 @@ public class SourcePipeline extends Pipeline implements RunnablePipeline {
         Path javaFile = Paths.get(this.getFilePath());
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         compiler.run(null, null, null, javaFile.toFile().getAbsolutePath());
-        Path javaClass = javaFile.getParent().resolve(this.getPipelineId()+".class");
+        Path javaClass = javaFile.getParent().resolve(this.getPipelineId() + ".class");
         URL classUrl;
         try {
             classUrl = javaClass.getParent().toFile().toURI().toURL();
             URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { classUrl });
-            pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp."+this.getPipelineId(), true, classLoader);
+            pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp." + this.getPipelineId(), true, classLoader);
             Object temp = pipelineKlass.getDeclaredConstructor(Buffer.class, childKlass)
                     .newInstance(sourceNode.getSource().getInputBuffer(), child);
             pipelineObject = (Runnable) temp;
@@ -62,6 +64,18 @@ public class SourcePipeline extends Pipeline implements RunnablePipeline {
 
     @Override
     public void shutdown() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void addParent(Pipeline pipeline, Node childNode) {
+        this.setChild(pipeline);
+
+    }
+
+    @Override
+    public void addOperator(Node operator, Node childNode) {
         // TODO Auto-generated method stub
 
     }

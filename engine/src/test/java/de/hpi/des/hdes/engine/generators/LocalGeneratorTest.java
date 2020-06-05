@@ -25,7 +25,6 @@ import de.hpi.des.hdes.engine.astream.AStream;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
-import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopologyBuilder;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
@@ -44,8 +43,8 @@ public class LocalGeneratorTest {
         FilterGenerator filter = new FilterGenerator("element % 4 == 0");
         UnaryGenerationNode node = new UnaryGenerationNode(filter);
         builder.addGraphNode(builder.getNodes().get(0), node);
-        LocalGenerator generator = new LocalGenerator(new PipelineTopology(new ArrayList<Pipeline>()));
-        generator.extend(PipelineTopologyBuilder.pipelineTopologyOf(builder.build()));
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+        generator.extend(PipelineTopology.pipelineTopologyOf(builder.build()));
         // try {
         // String result = Files.readString(Paths.get(uuid + ".java"));
         // assertEquals(
@@ -137,7 +136,8 @@ public class LocalGeneratorTest {
                     }
                 };
             }
-        }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 % 2 == 0");
+        }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 % 2 == 0")
+                .filter("((Tuple2<Integer,Integer>)event.getData()).v2 % 2 == 0");
         builder.streamOfC(new BufferedSource() {
 
             @Override
@@ -165,15 +165,14 @@ public class LocalGeneratorTest {
                     }
                 };
             }
-        }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 < 100").join(stream2,
-                "e1 -> ((Tuple2<Integer,Integer>)e1).v1", "e2 -> ((Tuple2<Integer,Integer>)e2).v1",
-                "(left, right) -> new Tuple4<Integer, Integer, Integer, Integer>(((Tuple2<Integer, Integer>)left).v1, ((Tuple2<Integer, Integer>)left).v2, ((Tuple2<Integer, Integer>)right).v1, ((Tuple2<Integer, Integer>)right).v2)");
+        }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 < 100")
+                .filter("((Tuple2<Integer,Integer>)event.getData()).v2 < 100").join(stream2,
+                        "e1 -> ((Tuple2<Integer,Integer>)e1).v1", "e2 -> ((Tuple2<Integer,Integer>)e2).v1",
+                        "(left, right) -> new Tuple4<Integer, Integer, Integer, Integer>(((Tuple2<Integer, Integer>)left).v1, ((Tuple2<Integer, Integer>)left).v2, ((Tuple2<Integer, Integer>)right).v1, ((Tuple2<Integer, Integer>)right).v2)");
         // LocalGenerator generator = new LocalGenerator(new PipelineTopology(new
         // ArrayList<Pipeline>()));
         // generator.extend(
-        // // PipelineTopology temp =
-        // PipelineTopologyBuilder.pipelineTopologyOf(builder.build())
-        // ;
+        PipelineTopology temp = PipelineTopology.pipelineTopologyOf(builder.build());
         // );
         Engine engine = new CompiledEngine();
         engine.addQuery(builder.buildAsQuery());

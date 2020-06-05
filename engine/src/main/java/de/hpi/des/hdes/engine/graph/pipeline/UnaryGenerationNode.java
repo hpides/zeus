@@ -1,7 +1,7 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
+import de.hpi.des.hdes.engine.generators.AggregateGenerator;
 import de.hpi.des.hdes.engine.generators.Generatable;
 
 /**
@@ -10,7 +10,7 @@ import de.hpi.des.hdes.engine.generators.Generatable;
  * @param <IN>  type of incoming elements
  * @param <OUT> type of outgoing elements
  */
-public class UnaryGenerationNode extends Node {
+public class UnaryGenerationNode extends GenerationNode {
 
     private final Generatable operator;
 
@@ -32,5 +32,18 @@ public class UnaryGenerationNode extends Node {
     public void accept(NodeVisitor visitor) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void accept(PipelineTopology pipelineTopology) {
+        if (this.getChildren().isEmpty()) {
+            UnaryPipeline pipeline = new UnaryPipeline(this);
+            pipelineTopology.addPipelineAsLeaf(pipeline, this);
+        } else if (this.getOperator() instanceof AggregateGenerator) {
+            UnaryPipeline pipeline = new UnaryPipeline(this);
+            pipelineTopology.addPipelineAsParent(pipeline, this);
+        } else {
+            pipelineTopology.addNodeToPipeline(this);
+        }
     }
 }

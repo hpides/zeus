@@ -9,7 +9,6 @@ import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.generators.LocalGenerator;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
-import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopologyBuilder;
 import de.hpi.des.hdes.engine.graph.pipeline.RunnablePipeline;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 
@@ -44,7 +43,7 @@ public class CompiledExecutionPlan {
     }
 
     private CompiledExecutionPlan() {
-        this(Topology.emptyTopology(), new PipelineTopology(Lists.newArrayList()));
+        this(Topology.emptyTopology(), new PipelineTopology());
     }
 
     /**
@@ -72,9 +71,9 @@ public class CompiledExecutionPlan {
     public static CompiledExecutionPlan extend(final CompiledExecutionPlan executionPlan,
             final Topology queryTopology) {
         if (executionPlan.isEmpty()) {
-            PipelineTopology newPipelineTopology = PipelineTopologyBuilder.pipelineTopologyOf(queryTopology);
+            PipelineTopology newPipelineTopology = PipelineTopology.pipelineTopologyOf(queryTopology);
 
-            LocalGenerator generator = new LocalGenerator(new PipelineTopology(new ArrayList<Pipeline>()));
+            LocalGenerator generator = new LocalGenerator(new PipelineTopology());
             generator.extend(newPipelineTopology);
             newPipelineTopology.loadPipelines();
 
