@@ -21,6 +21,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
+import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.SourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 
@@ -57,20 +58,31 @@ public class LocalGenerator implements PipelineVisitor {
     @Getter
     private class AggregationData {
         private String className;
+        private String nextClassName;
         private long slide;
         private long length;
         private String implementation;
-        private String execution;
 
-        public AggregationData(String className, long slide, long length, String implementation, String execution) {
+        public AggregationData(String className, String nextClassname, long slide, long length, String implementation) {
             this.className = className;
             this.slide = slide;
             this.length = length;
             this.implementation = implementation;
-            this.execution = execution;
+            this.nextClassName = nextClassname;
         }
     }
 
+    @Getter
+    private class EmptyPipelineData {
+        private String className;
+        private String implementation;
+
+        public EmptyPipelineData(String className, String implementation){
+            this.className = className;
+            this.implementation = implementation;
+        }
+    }
+    
     @Getter
     private class SourceData {
         private String className;
@@ -81,6 +93,15 @@ public class LocalGenerator implements PipelineVisitor {
             this.className = className;
             this.nextPipelineClass = nextPipelineClass;
             this.nextPipelineFunction = nextPipelineFunction;
+        }
+    }
+
+    @Getter
+    private class SinkData {
+        private String className;
+
+        public SinkData(String className){
+            this.className = className;
         }
     }
 
@@ -100,8 +121,7 @@ public class LocalGenerator implements PipelineVisitor {
 
     @Override
     public void visit(UnaryPipeline unaryPipeline) {
-        String execution = unaryPipeline.getChild().getPipelineId() + ".process(element);";
-        String implementation = "";
+        String implementation = unaryPipeline.hasChild() ? unaryPipeline.getChild().getPipelineId() + ".process(event);" : "";
 
         for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
@@ -112,11 +132,18 @@ public class LocalGenerator implements PipelineVisitor {
         }
 
         try {
-            Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
-            template.execute(writer,
-                    new AggregationData(unaryPipeline.getPipelineId(), 1000, 1000, implementation, execution))
-                    // TODO: Set length and slide
-                    .flush();
+            if(unaryPipeline.hasChild() && !(unaryPipeline.getChild() instanceof SinkPipeline)){
+                Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
+                template.execute(writer,
+                        new AggregationData(unaryPipeline.getPipelineId(), unaryPipeline.getChild().getPipelineId(), 1000, 1000, implementation))
+                        // TODO: Set length and slide
+                        .flush();
+            } else {
+                Mustache template = MustacheFactorySingleton.getInstance().compile("EmptyPipeline.java.mustache");
+                template.execute(writer,
+                        new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation))
+                        .flush();
+            }
             implementation = writer.toString();
             Files.writeString(Paths.get(tempDirectory + unaryPipeline.getPipelineId() + ".java"), implementation);
         } catch (IOException e) {
@@ -186,6 +213,22 @@ public class LocalGenerator implements PipelineVisitor {
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
             log.error("Compile Error: {}", e);
+        }
+    }
+
+    @Override
+    public void visit(SinkPipeline sinkPipeline) {
+        try {
+            Mustache template = MustacheFactorySingleton.getInstance().compile("Sink.java.mustache");
+            template.execute(writer, new SinkData(sinkPipeline.getPipelineId())).flush();
+            String implementation = writer.toString();
+            Files.writeString(
+                    Paths.get(
+                            "./src/main/java/de/hpi/des/hdes/engine/temp/" + sinkPipeline.getPipelineId() + ".java"),
+                    implementation);
+            writer.getBuffer().setLength(0);
+        } catch (IOException e) {
+            System.exit(1);
         }
     }
 }

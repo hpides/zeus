@@ -6,6 +6,7 @@ import de.hpi.des.hdes.engine.execution.slot.Event;
 import org.jooq.lambda.tuple.Tuple2;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Stack;
@@ -19,9 +20,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import de.hpi.des.hdes.engine.TestUtil;
 import de.hpi.des.hdes.engine.CompiledEngine;
 import de.hpi.des.hdes.engine.Engine;
 import de.hpi.des.hdes.engine.astream.AStream;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSink;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
@@ -134,6 +137,11 @@ public class LocalGeneratorTest {
                         return Arrays
                                 .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
                     }
+
+                    @Override
+                    public void write(Event event) {
+
+                    }
                 };
             }
         }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 % 2 == 0")
@@ -163,6 +171,11 @@ public class LocalGeneratorTest {
                         return Arrays
                                 .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
                     }
+
+                    @Override
+                    public void write(Event event) {
+
+                    }
                 };
             }
         }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 < 100")
@@ -180,5 +193,92 @@ public class LocalGeneratorTest {
         while (true) {
         }
         // System.out.println("Done");
+    }
+
+    @Test
+    public void withoutPipelineBreakerTest() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        builder.streamOfC(new BufferedSource() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void shutdown() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Buffer getInputBuffer() {
+                return new Buffer() {
+
+                    int counter = 0;
+
+                    @Override
+                    public List<Event> poll() {
+                        return Arrays
+                                .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
+                    }
+
+                    @Override
+                    public void write(Event event) {
+
+                    }
+                };
+            }
+        }).filter("event.getData() > 2");
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        generator.extend(pt);
+        // assertTrue(TestUtil.contains(pt, "if(x > 2){}"));
+    }
+
+    @Test
+    public void withSinkTest() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        builder.streamOfC(new BufferedSource() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void shutdown() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Buffer getInputBuffer() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        }).filter("event.getData() > 2").to(new BufferedSink(){
+
+			@Override
+			public void shutdown() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public Buffer getOutputBuffer() {
+				// TODO Auto-generated method stub
+				return null;
+			}});
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        generator.extend(pt);
+        // assertTrue(TestUtil.contains(pt, ".process(event)"));
     }
 }

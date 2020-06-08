@@ -3,6 +3,7 @@ package de.hpi.des.hdes.engine.generators;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 
 import org.jooq.lambda.tuple.Tuple4;
 
@@ -16,6 +17,10 @@ public class TempSink {
 
     public TempSink(FileWriter fw) {
         this.bw = new BufferedWriter(fw);
+    }
+
+    public TempSink() {
+        this.bw = new BufferedWriter(new StringWriter());
     }
 
     public void process(Event e) {

@@ -1,3 +1,9 @@
+package de.hpi.des.hdes.engine.temp;
+
+import java.util.HashMap;
+
+import de.hpi.des.hdes.engine.execution.slot.Event;
+
 public class {{{className}}} {
 
     private final {{{nextClassName}}} nextPipeline;
@@ -11,8 +17,7 @@ public class {{{className}}} {
         this.windowToState = new HashMap<>();
     }
 
-    @Override
-    public void process(final AData event) {
+    public void process(final Event event) {
         long windowStart = event.getEventTime() - (event.getEventTime() % length);
         if (earliestOpenWindow > windowStart) {
             earliestOpenWindow = windowStart;

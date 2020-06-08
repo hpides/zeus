@@ -56,7 +56,6 @@ public class PipelineTopology {
                 return "";
             }
         } else {
-            // log.error("Unknown Pipeline type: {}", child.getClass());
             return "process";
         }
     }

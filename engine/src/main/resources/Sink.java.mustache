@@ -1,0 +1,16 @@
+package de.hpi.des.hdes.engine.temp;
+
+import de.hpi.des.hdes.engine.execution.slot.Event;
+import de.hpi.des.hdes.engine.io.Buffer;
+
+public class {{{className}}} {
+    private final Buffer buffer;
+
+    public {{{className}}} (final Buffer buffer) {
+        this.buffer = buffer;
+    }
+
+    public void process(final Event event) {
+      this.buffer.write(event);
+    }
+}
