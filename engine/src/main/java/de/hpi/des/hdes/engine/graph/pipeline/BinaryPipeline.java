@@ -49,7 +49,7 @@ public class BinaryPipeline extends Pipeline {
 
     @Override
     public void addParent(Pipeline pipeline, Node childNode) {
-        if (this.isLeft(childNode)) {
+        if (this.isLeft(childNode) || (childNode.equals(binaryNode) && rightParent != null)) {
             this.leftParent = pipeline;
         } else {
             this.rightParent = pipeline;
@@ -59,7 +59,7 @@ public class BinaryPipeline extends Pipeline {
 
     @Override
     public void addOperator(Node operator, Node childNode) {
-        if ((this.isLeft(childNode) && !childNode.equals(binaryNode)) || leftNodes.size() == 1) {
+        if ((this.isLeft(childNode) && !childNode.equals(binaryNode)) || leftNodes.size() == 0) {
             this.leftNodes.add(operator);
         } else {
             this.rightNodes.add(operator);

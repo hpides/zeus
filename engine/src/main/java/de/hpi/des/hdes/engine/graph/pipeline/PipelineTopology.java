@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
-import de.hpi.des.hdes.engine.TempSink;
+import de.hpi.des.hdes.engine.generators.TempSink;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import lombok.Getter;

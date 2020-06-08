@@ -106,7 +106,7 @@ public class LocalGeneratorTest {
 
     // }
 
-    @Test
+    // @Test
     public void sourceJoinStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         CStream stream2 = builder.streamOfC(new BufferedSource() {

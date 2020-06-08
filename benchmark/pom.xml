@@ -83,7 +83,7 @@
             <configuration>
               <archive>
                 <manifest>
-                  <mainClass>de.hpi.des.hdes.benchmark.MainNetworkRunner</mainClass>
+                  <mainClass>de.hpi.des.hdes.benchmark.MainNetworkEngine</mainClass>
                 </manifest>
                 <manifestEntries>
                   <Multi-Release>true</Multi-Release> <!-- to fix WARNING: sun.reflect.Reflection

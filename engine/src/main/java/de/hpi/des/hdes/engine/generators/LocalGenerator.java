@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.StringWriter;
 import lombok.Getter;
-
+import lombok.extern.slf4j.Slf4j;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
@@ -26,10 +26,13 @@ import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 
 // TODO If there is a BinaryPipeline (No source), set at generation time for the preceding pipelines if they are left or right
 
+@Slf4j
 public class LocalGenerator implements PipelineVisitor {
 
     private final PipelineTopology pipelineTopology;
     private final StringWriter writer = new StringWriter();
+
+    private String tempDirectory = "./engine/src/main/java/de/hpi/des/hdes/engine/temp/";
 
     @Getter
     private class JoinData {
@@ -115,9 +118,9 @@ public class LocalGenerator implements PipelineVisitor {
                     // TODO: Set length and slide
                     .flush();
             implementation = writer.toString();
-            Files.writeString(Paths.get(unaryPipeline.getPipelineId() + ".java"), implementation);
+            Files.writeString(Paths.get(tempDirectory + unaryPipeline.getPipelineId() + ".java"), implementation);
         } catch (IOException e) {
-            System.exit(1);
+            log.error("Compile Error: {}", e);
         }
     }
 
@@ -163,13 +166,10 @@ public class LocalGenerator implements PipelineVisitor {
                     // TODO: Set length and slide
                     .flush();
             String implementation = writer.toString();
-            Files.writeString(
-                    Paths.get(
-                            "./src/main/java/de/hpi/des/hdes/engine/temp/" + binaryPipeline.getPipelineId() + ".java"),
-                    implementation);
+            Files.writeString(Paths.get(tempDirectory + binaryPipeline.getPipelineId() + ".java"), implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
-            System.exit(1);
+            log.error("Compile Error: {}", e);
         }
     }
 
@@ -182,13 +182,10 @@ public class LocalGenerator implements PipelineVisitor {
             template.execute(writer, new SourceData(sourcePipeline.getPipelineId(),
                     sourcePipeline.getChild().getPipelineId(), nextPipelineFunction)).flush();
             String implementation = writer.toString();
-            Files.writeString(
-                    Paths.get(
-                            "./src/main/java/de/hpi/des/hdes/engine/temp/" + sourcePipeline.getPipelineId() + ".java"),
-                    implementation);
+            Files.writeString(Paths.get(tempDirectory + sourcePipeline.getPipelineId() + ".java"), implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
-            System.exit(1);
+            log.error("Compile Error: {}", e);
         }
     }
 }
