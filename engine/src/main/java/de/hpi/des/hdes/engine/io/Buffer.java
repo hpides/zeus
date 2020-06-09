@@ -6,4 +6,6 @@ import de.hpi.des.hdes.engine.execution.slot.Event;
 
 public interface Buffer {
     public List<Event> poll();
+
+    public void write(Event event);
 }

@@ -33,6 +33,10 @@ public class UnaryPipeline extends Pipeline {
         visitor.visit(this);
     }
 
+    public boolean hasChild() {
+        return this.getChild() != null;
+    }
+
     @Override
     public void addParent(Pipeline pipeline, Node childNode) {
         this.parent = pipeline;

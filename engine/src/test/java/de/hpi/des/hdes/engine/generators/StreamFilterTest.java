@@ -11,6 +11,6 @@ public class StreamFilterTest {
     void generateModuloFilter() {
         FilterGenerator generator = new FilterGenerator("element % 4 == 0");
         String out = generator.generate("implementation");
-        assertEquals("if ( element % 4 == 0 ) { implementation}", out.replaceAll("( ){2,}|\n|\r", ""));
+        assertEquals("if(element % 4 == 0){ implementation}", out.replaceAll("( ){2,}|\n|\r", ""));
     }
 }

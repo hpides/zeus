@@ -7,10 +7,11 @@ import de.hpi.des.hdes.engine.generators.JoinGenerator;
 import de.hpi.des.hdes.engine.generators.MapGenerator;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.BinaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSink;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSinkNode;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
-import de.hpi.des.hdes.engine.operation.Sink;
 
 public class CStream extends AbstractCStream {
 
@@ -88,10 +89,9 @@ public class CStream extends AbstractCStream {
 
     /**
      * Writes the elements of this stream into a sink.
-     *
-     * @return the final builder
      */
-    public VulcanoTopologyBuilder to() {
-        return this.builder;
+    public void to(BufferedSink sink) {
+        final BufferedSinkNode child = new BufferedSinkNode(sink);
+        this.builder.addGraphNode(this.node, child);
     }
 }

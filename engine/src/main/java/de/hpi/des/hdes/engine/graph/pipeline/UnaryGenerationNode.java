@@ -37,11 +37,9 @@ public class UnaryGenerationNode extends GenerationNode {
     @Override
     public void accept(PipelineTopology pipelineTopology) {
         if (this.getChildren().isEmpty()) {
-            UnaryPipeline pipeline = new UnaryPipeline(this);
-            pipelineTopology.addPipelineAsLeaf(pipeline, this);
-        } else if (this.getOperator() instanceof AggregateGenerator) {
-            UnaryPipeline pipeline = new UnaryPipeline(this);
-            pipelineTopology.addPipelineAsParent(pipeline, this);
+            pipelineTopology.addPipelineAsLeaf(new UnaryPipeline(this), this);
+        } else if (this.getOperator() instanceof AggregateGenerator || this.getChild() instanceof BufferedSinkNode) {
+            pipelineTopology.addPipelineAsParent(new UnaryPipeline(this), this);
         } else {
             pipelineTopology.addNodeToPipeline(this);
         }
