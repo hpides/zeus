@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,9 +10,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
-import de.hpi.des.hdes.engine.generators.TempSink;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
+import de.hpi.des.hdes.engine.generators.TempSink;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +22,7 @@ public class PipelineTopology {
 
     private final List<Pipeline> pipelines = new ArrayList<>();
     private final Map<Node, Pipeline> nodeToPipeline = new HashMap<Node, Pipeline>();
+    private TempSink sink;
 
     public static PipelineTopology pipelineTopologyOf(Topology queryTopology) {
         PipelineTopology pipelineTopology = new PipelineTopology();
@@ -32,7 +35,13 @@ public class PipelineTopology {
     }
 
     public void loadPipelines() {
-        pipelines.get(0).loadPipeline(new TempSink(), TempSink.class);
+        try {
+            this.sink = new TempSink(new FileWriter("output/compiled_out.csv"));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        pipelines.get(0).loadPipeline(this.sink, TempSink.class);
         for (Pipeline pipeline : pipelines.subList(1, pipelines.size())) {
             pipeline.loadPipeline(pipeline.getChild().getPipelineObject(), pipeline.getChild().getPipelineKlass());
         }

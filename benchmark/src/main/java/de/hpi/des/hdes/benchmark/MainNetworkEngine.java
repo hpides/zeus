@@ -50,6 +50,8 @@ public class MainNetworkEngine implements Runnable {
   private String benchmarkType;
   @Option(names = { "--networkBufferSize", "-nbs" }, defaultValue = "10")
   private int bufferinK;
+  @Option(names = { "--packageRoot" }, defaultValue = "")
+  private String packageRoot;
 
   // Calculated values
   private int waitSecondsBetweenBatches = 0;
@@ -89,6 +91,9 @@ public class MainNetworkEngine implements Runnable {
             "Please do not remove any of the fixed queries. Choose at least the same amount of newQueries ofr deletedQueries");
         System.exit(1);
       }
+    }
+    if (!packageRoot.equals("")) {
+      DirectoryHelper.setPackageRoot(packageRoot);
     }
     switch (benchmarkType) {
       case "bmap": {

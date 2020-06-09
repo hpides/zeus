@@ -18,6 +18,7 @@ import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
+import de.hpi.des.hdes.engine.io.DirectoryHelper;
 import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
@@ -31,8 +32,6 @@ public class LocalGenerator implements PipelineVisitor {
 
     private final PipelineTopology pipelineTopology;
     private final StringWriter writer = new StringWriter();
-
-    private String tempDirectory = "./engine/src/main/java/de/hpi/des/hdes/engine/temp/";
 
     @Getter
     private class JoinData {
@@ -118,7 +117,9 @@ public class LocalGenerator implements PipelineVisitor {
                     // TODO: Set length and slide
                     .flush();
             implementation = writer.toString();
-            Files.writeString(Paths.get(tempDirectory + unaryPipeline.getPipelineId() + ".java"), implementation);
+            Files.writeString(
+                    Paths.get(DirectoryHelper.getTempDirectoryPath() + unaryPipeline.getPipelineId() + ".java"),
+                    implementation);
         } catch (IOException e) {
             log.error("Compile Error: {}", e);
         }
@@ -166,7 +167,9 @@ public class LocalGenerator implements PipelineVisitor {
                     // TODO: Set length and slide
                     .flush();
             String implementation = writer.toString();
-            Files.writeString(Paths.get(tempDirectory + binaryPipeline.getPipelineId() + ".java"), implementation);
+            Files.writeString(
+                    Paths.get(DirectoryHelper.getTempDirectoryPath() + binaryPipeline.getPipelineId() + ".java"),
+                    implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
             log.error("Compile Error: {}", e);
@@ -182,7 +185,9 @@ public class LocalGenerator implements PipelineVisitor {
             template.execute(writer, new SourceData(sourcePipeline.getPipelineId(),
                     sourcePipeline.getChild().getPipelineId(), nextPipelineFunction)).flush();
             String implementation = writer.toString();
-            Files.writeString(Paths.get(tempDirectory + sourcePipeline.getPipelineId() + ".java"), implementation);
+            Files.writeString(
+                    Paths.get(DirectoryHelper.getTempDirectoryPath() + sourcePipeline.getPipelineId() + ".java"),
+                    implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
             log.error("Compile Error: {}", e);

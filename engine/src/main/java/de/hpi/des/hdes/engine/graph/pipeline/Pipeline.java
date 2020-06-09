@@ -1,6 +1,6 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -12,8 +12,10 @@ import javax.tools.ToolProvider;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
+import de.hpi.des.hdes.engine.io.DirectoryHelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +29,22 @@ public abstract class Pipeline {
 
     protected Class pipelineKlass;
     private final String pipelineId;
+    @Setter
     private Object pipelineObject;
+    private static URLClassLoader tempClassLoader;
+
+    public static URLClassLoader getClassLoader() {
+        if (tempClassLoader == null) {
+            try {
+                tempClassLoader = URLClassLoader
+                        .newInstance(new URL[] { new File("engine/src/main/java/").toURI().toURL() });
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return tempClassLoader;
+    }
 
     @Setter
     private Pipeline child;
@@ -43,24 +60,33 @@ public abstract class Pipeline {
     public abstract void addOperator(Node operator, Node childNode);
 
     protected String getFilePath() {
-        return "/Users/nils/Documents/MP/HDES/engine/src/main/java/de/hpi/des/hdes/engine/temp/" + getPipelineId()
-                + ".java";
+        return DirectoryHelper.getTempDirectoryPath() + getPipelineId() + ".java";
     }
 
-    // TODO code-generation: call after file was generated
-    void loadPipeline(Object child, Class childKlass) {
+    protected void compileClass() {
         Path javaFile = Paths.get(this.getFilePath());
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        compiler.run(null, null, null, javaFile.toFile().getAbsolutePath());
-        Path javaClass = javaFile.getParent().resolve(this.pipelineId + ".class");
-        // Path javaClass = javaFile.getParent().resolve("HardCodedAggregation.class");
-        URL classUrl;
+
+        List<String> optionList = new ArrayList<String>();
+        if (this.getChild() != null) {
+            optionList.addAll(Arrays.asList("-classpath", DirectoryHelper.getClassPathWithTempPackage()));
+        }
+
+        compiler.getTask(null, null, null, optionList, null, compiler.getStandardFileManager(null, null, null)
+                .getJavaFileObjects(javaFile.toFile().getAbsolutePath())).call();
         try {
-            classUrl = javaClass.getParent().toFile().toURI().toURL();
-            URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { classUrl });
-            pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp." + this.pipelineId, true, classLoader);
+            pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp." + this.getPipelineId(), true,
+                    Pipeline.getClassLoader());
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            log.error("Slot had an exception during class load: ", e);
+        }
+    }
+
+    public void loadPipeline(Object child, Class childKlass) {
+        this.compileClass();
+        try {
             pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass).newInstance(child);
-        } catch (MalformedURLException | ReflectiveOperationException | RuntimeException e) {
+        } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }
     }
