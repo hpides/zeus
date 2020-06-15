@@ -132,6 +132,12 @@ public class BufferedNetworkSource<T> implements BufferedSource {
                 }
                 return result;
             }
+
+            @Override
+            public void write(Event event) {
+                // TODO Auto-generated method stub
+
+            }
         };
     }
 }

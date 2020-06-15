@@ -3,6 +3,7 @@ package de.hpi.des.hdes.benchmark;
 import de.hpi.des.hdes.engine.JobManager;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.VulcanoEngine;
+import de.hpi.des.hdes.engine.io.DirectoryHelper;
 import de.hpi.des.hdes.engine.operation.Sink;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.lambda.tuple.Tuple;

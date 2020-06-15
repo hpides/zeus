@@ -26,4 +26,10 @@ public class NetworkBuffer implements Buffer {
         return result;
     }
 
+    @Override
+    public void write(Event event) {
+        // TODO Auto-generated method stub
+
+    }
+
 }
