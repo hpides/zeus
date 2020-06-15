@@ -1,284 +1,136 @@
 package de.hpi.des.hdes.engine.generators;
 
-import de.hpi.des.hdes.engine.cstream.CStream;
-import de.hpi.des.hdes.engine.execution.slot.Event;
-
-import org.jooq.lambda.tuple.Tuple2;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
-import java.util.Stack;
-
-import com.google.common.collect.Lists;
-import com.google.common.eventbus.AllowConcurrentEvents;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import de.hpi.des.hdes.engine.TestUtil;
-import de.hpi.des.hdes.engine.CompiledEngine;
-import de.hpi.des.hdes.engine.Engine;
-import de.hpi.des.hdes.engine.astream.AStream;
+import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSink;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
-import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
-import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.Buffer;
-import de.hpi.des.hdes.engine.io.ListSource;
-import de.hpi.des.hdes.engine.window.WatermarkGenerator;
 
 public class LocalGeneratorTest {
 
-    // @Test
-    public void generateForModuloFilter() {
+    private BufferedSource source = new BufferedSource(){
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+        }
+        @Override
+        public void shutdown() {
+            // TODO Auto-generated method stub   
+        }
+        @Override
+        public Buffer getInputBuffer() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    };
+
+    private BufferedSink sink = new BufferedSink(){
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+        }
+        @Override
+        public void shutdown() {
+            // TODO Auto-generated method stub   
+        }
+        @Override
+        public Buffer getOutputBuffer() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    };
+    
+    @Test
+    public void sourceSinkStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        final List<Integer> listS1 = new ArrayList<>();
-        final ListSource<Integer> source = new ListSource<>(listS1, new WatermarkGenerator<>(-1, -1), e -> e);
-        builder.streamOf(source);
-        FilterGenerator filter = new FilterGenerator("element % 4 == 0");
-        UnaryGenerationNode node = new UnaryGenerationNode(filter);
-        builder.addGraphNode(builder.getNodes().get(0), node);
+        builder.streamOfC(source).to(sink);
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
-        generator.extend(PipelineTopology.pipelineTopologyOf(builder.build()));
-        // try {
-        // String result = Files.readString(Paths.get(uuid + ".java"));
-        // assertEquals(
-        // String.format("class %s {void pipeline(AData<> element) {if ( element %% 4 ==
-        // 0 ) { }}}", uuid, ""),
-        // result.replaceAll("( ){2,}|\n|\r", ""));
-        // } catch (IOException e) {
-        // System.out.println(e.getMessage());
-        // System.exit(1);
-        // }
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        generator.extend(pt);
+        CodeAssert.assertThat(pt, builder)
+            .hasSinkNodes(1)
+            .hasSourceNodes(1)
+            .hasUnaryNodes(0)
+            .hasBinaryNodes(0)
+            .hasSourcePipelines(1)
+            .hasSinkPipelines(1)
+            .hasUnaryPipelines(0)
+            .hasBinaryPipelines(0)
+            .gotGenerated()
+            .isConnected();
     }
 
-    // @Test
-    // public void testCStream() {
-    // VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-    // CStream stream2 = builder.streamOfC(new BufferedSource() {
+    @Test
+    public void sourceFilterStreamTest() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        builder.streamOfC(source).filter("event.getData() > 2");
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        generator.extend(pt);
+        CodeAssert.assertThat(pt, builder)
+            .hasSinkNodes(0)
+            .hasSourceNodes(1)
+            .hasUnaryNodes(1)
+            .hasBinaryNodes(0)
+            .hasSourcePipelines(1)
+            .hasSinkPipelines(0)
+            .hasUnaryPipelines(1)
+            .hasBinaryPipelines(0)
+            .gotGenerated()
+            .isConnected()
+            .traverseAST("event.getData() > 2");
+    }
 
-    // @Override
-    // public void run() {
-    // // TODO Auto-generated method stub
+    @Test
+    public void sourceFilterSinkStreamTest() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        builder.streamOfC(source).filter("event.getData() > 2").to(sink);
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        generator.extend(pt);
+        // Validates at topolgy of nodes
+        CodeAssert.assertThat(pt, builder)
+            .hasSinkNodes(1)
+            .hasSourceNodes(1)
+            .hasUnaryNodes(1)
+            .hasBinaryNodes(0)
+            .hasSourcePipelines(1)
+            .hasSinkPipelines(1)
+            .hasUnaryPipelines(1)
+            .hasBinaryPipelines(0)
+            .gotGenerated()
+            .isConnected()
+            .traverseAST("event.getData() > 2")
+            .endsPipeline();
+    }
 
-    // }
-
-    // @Override
-    // public void shutdown() {
-    // // TODO Auto-generated method stub
-
-    // }
-
-    // @Override
-    // public Buffer getInputBuffer() {
-    // // TODO Auto-generated method stub
-    // return null;
-    // }
-    // }).map("").map("").map("").map("").map("").map("");
-    // VulcanoTopologyBuilder builded = builder.streamOfC(new BufferedSource() {
-
-    // @Override
-    // public void run() {
-    // // TODO Auto-generated method stub
-
-    // }
-
-    // @Override
-    // public void shutdown() {
-    // // TODO Auto-generated method stub
-
-    // }
-
-    // @Override
-    // public Buffer getInputBuffer() {
-    // // TODO Auto-generated method stub
-    // return null;
-    // }
-    // }).filter("").join(stream2).aggregate().to();
-    // PipelineTopology tmep =
-    // PipelineTopologyBuilder.pipelineTopologyOf(builded.build());
-    // System.out.println("Done");
-
-    // }
-
-    // @Test
+    @Test
     public void sourceJoinStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        CStream stream2 = builder.streamOfC(new BufferedSource() {
-
-            @Override
-            public void run() {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void shutdown() {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public Buffer getInputBuffer() {
-                return new Buffer() {
-
-                    int counter = 0;
-
-                    @Override
-                    public List<Event> poll() {
-                        return Arrays
-                                .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
-                    }
-
-                    @Override
-                    public void write(Event event) {
-
-                    }
-                };
-            }
-        }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 % 2 == 0")
-                .filter("((Tuple2<Integer,Integer>)event.getData()).v2 % 2 == 0");
-        builder.streamOfC(new BufferedSource() {
-
-            @Override
-            public void run() {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void shutdown() {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public Buffer getInputBuffer() {
-                return new Buffer() {
-
-                    int counter = 0;
-
-                    @Override
-                    public List<Event> poll() {
-                        return Arrays
-                                .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
-                    }
-
-                    @Override
-                    public void write(Event event) {
-
-                    }
-                };
-            }
-        }).filter("((Tuple2<Integer,Integer>)event.getData()).v2 < 100")
-                .filter("((Tuple2<Integer,Integer>)event.getData()).v2 < 100").join(stream2,
-                        "e1 -> ((Tuple2<Integer,Integer>)e1).v1", "e2 -> ((Tuple2<Integer,Integer>)e2).v1",
-                        "(left, right) -> new Tuple4<Integer, Integer, Integer, Integer>(((Tuple2<Integer, Integer>)left).v1, ((Tuple2<Integer, Integer>)left).v2, ((Tuple2<Integer, Integer>)right).v1, ((Tuple2<Integer, Integer>)right).v2)");
-        // LocalGenerator generator = new LocalGenerator(new PipelineTopology(new
-        // ArrayList<Pipeline>()));
-        // generator.extend(
-        PipelineTopology temp = PipelineTopology.pipelineTopologyOf(builder.build());
-        // );
-        Engine engine = new CompiledEngine();
-        engine.addQuery(builder.buildAsQuery());
-        engine.run();
-        while (true) {
-        }
-        // System.out.println("Done");
-    }
-
-    @Test
-    public void withoutPipelineBreakerTest() {
-        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(new BufferedSource() {
-
-            @Override
-            public void run() {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void shutdown() {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public Buffer getInputBuffer() {
-                return new Buffer() {
-
-                    int counter = 0;
-
-                    @Override
-                    public List<Event> poll() {
-                        return Arrays
-                                .asList(new Event(new Tuple2<Integer, Integer>(counter, counter), false, counter++));
-                    }
-
-                    @Override
-                    public void write(Event event) {
-
-                    }
-                };
-            }
-        }).filter("event.getData() > 2");
+        var stream = builder.streamOfC(source);
+        builder.streamOfC(source).join(stream, "e1 -> e1", "e2 -> e2", "(l,r) -> l+r");
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);
-        // assertTrue(TestUtil.contains(pt, "if(x > 2){}"));
-    }
-
-    @Test
-    public void withSinkTest() {
-        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(new BufferedSource() {
-
-            @Override
-            public void run() {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void shutdown() {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public Buffer getInputBuffer() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-        }).filter("event.getData() > 2").to(new BufferedSink(){
-
-			@Override
-			public void shutdown() {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public Buffer getOutputBuffer() {
-				// TODO Auto-generated method stub
-				return null;
-			}});
-        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
-        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
-        generator.extend(pt);
-        // assertTrue(TestUtil.contains(pt, ".process(event)"));
+        String id = pt.getPipelines().stream().filter(p -> p instanceof BinaryPipeline).findFirst().get().getPipelineId();
+        CodeAssert.assertThat(pt, builder)
+            .hasSinkNodes(0)
+            .hasSourceNodes(2)
+            .hasUnaryNodes(0)
+            .hasBinaryNodes(2)
+            .hasSourcePipelines(2)
+            .hasSinkPipelines(0)
+            .hasUnaryPipelines(0)
+            .hasBinaryPipelines(1)
+            .gotGenerated()
+            .isConnected()
+            .traverseAST(id)
+            .hasVariable("joinKeyExtractor", "e1 -> e1")
+            .hasVariable("joinKeyExtractor", "e2 -> e2")
+            .hasVariable("joinMapper", "(l,r) -> l+r");
     }
 }

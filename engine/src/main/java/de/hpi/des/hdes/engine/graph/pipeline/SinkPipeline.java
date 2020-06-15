@@ -8,6 +8,7 @@ import javax.tools.JavaCompiler;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
@@ -19,6 +20,7 @@ public class SinkPipeline extends Pipeline implements RunnablePipeline {
   private final BufferedSinkNode sinkNode;
   private Runnable pipelineObject;
   private boolean shutdownFlag;
+  @Getter
   private Pipeline parent;
 
   public SinkPipeline(BufferedSinkNode sinkNode) {

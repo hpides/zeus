@@ -3,7 +3,15 @@ package de.hpi.des.hdes.engine.temp;
 import de.hpi.des.hdes.engine.execution.slot.Event;
 
 public class {{{className}}} {
-  public {{{className}}}() { }
+  {{#hasChild}}
+  private final {{{nextPipeline}}} nextPipeline;
+  {{/hasChild}}
+  
+  public {{{className}}}({{#hasChild}}final {{{nextPipeline}}} nextPipeline{{/hasChild}}) {
+    {{#hasChild}}
+    this.nextPipeline = nextPipeline;
+    {{/hasChild}}
+  }
 
   public void process(final Event event){
     {{{implementation}}}

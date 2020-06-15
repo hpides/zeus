@@ -75,10 +75,14 @@ public class LocalGenerator implements PipelineVisitor {
     private class EmptyPipelineData {
         private String className;
         private String implementation;
+        private boolean hasChild;
+        private String nextPipeline;
 
-        public EmptyPipelineData(String className, String implementation){
+        public EmptyPipelineData(String className, String implementation, boolean hasChild, Pipeline nextPipeline){
             this.className = className;
             this.implementation = implementation;
+            this.hasChild = hasChild;
+            if(nextPipeline != null) this.nextPipeline = nextPipeline.getPipelineId();
         }
     }
     
@@ -120,7 +124,7 @@ public class LocalGenerator implements PipelineVisitor {
 
     @Override
     public void visit(UnaryPipeline unaryPipeline) {
-        String implementation = unaryPipeline.hasChild() ? unaryPipeline.getChild().getPipelineId() + ".process(event);" : "";
+        String implementation = unaryPipeline.hasChild() ?  "nextPipeline.process(event);" : "";
 
         for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
@@ -140,13 +144,14 @@ public class LocalGenerator implements PipelineVisitor {
             } else {
                 Mustache template = MustacheFactorySingleton.getInstance().compile("EmptyPipeline.java.mustache");
                 template.execute(writer,
-                        new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation))
+                        new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation, unaryPipeline.hasChild(), unaryPipeline.getChild()))
                         .flush();
             }
             implementation = writer.toString();
             Files.writeString(
                     Paths.get(DirectoryHelper.getTempDirectoryPath() + unaryPipeline.getPipelineId() + ".java"),
                     implementation);
+          writer.getBuffer().setLength(0);
         } catch (IOException e) {
             log.error("Compile Error: {}", e);
         }
@@ -228,8 +233,7 @@ public class LocalGenerator implements PipelineVisitor {
             template.execute(writer, new SinkData(sinkPipeline.getPipelineId())).flush();
             String implementation = writer.toString();
             Files.writeString(
-                    Paths.get(
-                            "./src/main/java/de/hpi/des/hdes/engine/temp/" + sinkPipeline.getPipelineId() + ".java"),
+                    Paths.get(DirectoryHelper.getTempDirectoryPath() + sinkPipeline.getPipelineId() + ".java"),
                     implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
