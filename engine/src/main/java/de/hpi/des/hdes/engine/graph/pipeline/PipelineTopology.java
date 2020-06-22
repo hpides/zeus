@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.TempSink;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,22 +35,21 @@ public class PipelineTopology {
         return pipelineTopology;
     }
 
-    public void loadPipelines() {
+    public void loadPipelines(Dispatcher dispatcher) {
         try {
             this.sink = new TempSink(new FileWriter("output/compiled_out.csv"));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        pipelines.get(0).loadPipeline(this.sink, TempSink.class);
+        pipelines.get(0).loadPipeline(dispatcher, TempSink.class);
         for (Pipeline pipeline : pipelines.subList(1, pipelines.size())) {
-            pipeline.loadPipeline(pipeline.getChild().getPipelineObject(), pipeline.getChild().getPipelineKlass());
+            pipeline.loadPipeline(dispatcher, pipeline.getChild().getPipelineKlass());
         }
     }
 
-    public List<RunnablePipeline> getRunnablePiplines() {
-        return this.pipelines.stream().filter(pipeline -> pipeline instanceof RunnablePipeline)
-                .map(pipeline -> (RunnablePipeline) pipeline).collect(Collectors.toList());
+    public List<Pipeline> getRunnablePiplines() {
+        return this.pipelines.stream().filter(pipeline -> pipeline instanceof Runnable).collect(Collectors.toList());
     }
 
     public static String getChildProcessMethod(Pipeline parent, Pipeline child) {

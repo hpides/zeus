@@ -4,12 +4,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import de.hpi.des.hdes.engine.Query;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.slot.CompiledRunnableSlot;
 import de.hpi.des.hdes.engine.execution.slot.Slot;
 import de.hpi.des.hdes.engine.generators.LocalGenerator;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
-import de.hpi.des.hdes.engine.graph.pipeline.RunnablePipeline;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class CompiledExecutionPlan {
     /**
      * @return a list of runnable slots
      */
-    public List<RunnablePipeline> getRunnablePiplines() {
+    public List<Pipeline> getRunnablePiplines() {
         return pipelineTopology.getRunnablePiplines();
     }
 
@@ -75,7 +75,9 @@ public class CompiledExecutionPlan {
 
             LocalGenerator generator = new LocalGenerator(new PipelineTopology());
             generator.extend(newPipelineTopology);
-            newPipelineTopology.loadPipelines();
+            Dispatcher dispatcher = new Dispatcher(newPipelineTopology);
+
+            newPipelineTopology.loadPipelines(dispatcher);
 
             return new CompiledExecutionPlan(queryTopology, newPipelineTopology);
         } else {
@@ -107,7 +109,7 @@ public class CompiledExecutionPlan {
         return null;
     }
 
-    public List<RunnablePipeline> getRunnablePiplinesFor(Query query) {
+    public List<Pipeline> getRunnablePiplinesFor(Query query) {
         // TODO engine
         return null;
     }

@@ -7,6 +7,7 @@ import de.hpi.des.hdes.engine.cstream.CStream;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourceNode;
+import de.hpi.des.hdes.engine.graph.pipeline.NetworkSourceNode;
 import de.hpi.des.hdes.engine.operation.Source;
 import lombok.Getter;
 
@@ -62,6 +63,18 @@ public class VulcanoTopologyBuilder {
    */
   public CStream streamOfC(BufferedSource source) {
     final BufferedSourceNode sourceNode = new BufferedSourceNode(source);
+    this.nodes.add(sourceNode);
+    return new CStream(this, sourceNode);
+  }
+
+  /**
+   * The entry point for the definition of queries in HDES.
+   *
+   * @param source a source to read data from
+   * @return a new a stream
+   */
+  public CStream streamOfC(String host, int port) {
+    final NetworkSourceNode sourceNode = new NetworkSourceNode(host, port);
     this.nodes.add(sourceNode);
     return new CStream(this, sourceNode);
   }

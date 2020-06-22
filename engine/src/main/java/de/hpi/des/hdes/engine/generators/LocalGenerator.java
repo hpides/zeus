@@ -23,7 +23,8 @@ import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.SourcePipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.NetworkSourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 
 // TODO If there is a BinaryPipeline (No source), set at generation time for the preceding pipelines if they are left or right
@@ -96,6 +97,17 @@ public class LocalGenerator implements PipelineVisitor {
             this.className = className;
             this.nextPipelineClass = nextPipelineClass;
             this.nextPipelineFunction = nextPipelineFunction;
+        }
+    }
+
+    @Getter
+    private class NetworkSourceData {
+        private String className;
+        private String numberBytes;
+
+        public NetworkSourceData(String className, String numberBytes) {
+            this.className = className;
+            this.numberBytes = numberBytes;
         }
     }
 
@@ -209,7 +221,7 @@ public class LocalGenerator implements PipelineVisitor {
     }
 
     @Override
-    public void visit(SourcePipeline sourcePipeline) {
+    public void visit(BufferedSourcePipeline sourcePipeline) {
         String nextPipelineFunction = this.pipelineTopology.getChildProcessMethod(sourcePipeline,
                 sourcePipeline.getChild());
         try {
@@ -240,4 +252,19 @@ public class LocalGenerator implements PipelineVisitor {
             System.exit(1);
         }
     }
+
+	@Override
+	public void visit(NetworkSourcePipeline sourcePipeline) {
+        try {
+            Mustache template = MustacheFactorySingleton.getInstance().compile("NetworkSource.java.mustache");
+            template.execute(writer, new NetworkSourceData(sourcePipeline.getPipelineId(), "1024")).flush();
+            String implementation = writer.toString();
+            Files.writeString(
+                    Paths.get(DirectoryHelper.getTempDirectoryPath() + sourcePipeline.getPipelineId() + ".java"),
+                    implementation);
+            writer.getBuffer().setLength(0);
+        } catch (IOException e) {
+            log.error("Compile Error: {}", e);
+        }
+	}
 }

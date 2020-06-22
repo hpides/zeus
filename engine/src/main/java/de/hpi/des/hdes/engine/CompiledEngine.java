@@ -1,12 +1,13 @@
 package de.hpi.des.hdes.engine;
 
+import java.nio.channels.Pipe;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import de.hpi.des.hdes.engine.execution.plan.CompiledExecutionPlan;
 import de.hpi.des.hdes.engine.execution.slot.CompiledRunnableSlot;
-import de.hpi.des.hdes.engine.graph.pipeline.RunnablePipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,15 +59,11 @@ public class CompiledEngine implements Engine {
     @Override
     public void deleteQuery(Query query) {
         // TODO engine: what about Pipelines with shared operators?
-        List<RunnablePipeline> pipelinesToShutdown = this.plan.getRunnablePiplinesFor(query);
         this.plan = CompiledExecutionPlan.delete(this.plan, query);
-        pipelinesToShutdown.forEach(RunnablePipeline::shutdown);
     }
 
     @Override
     public void shutdown() {
-        this.plan.getRunnablePiplines().forEach(RunnablePipeline::shutdown);
-
         this.executor.shutdownNow();
     }
 

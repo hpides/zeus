@@ -19,7 +19,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourceNode;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.SourcePipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
@@ -68,7 +68,7 @@ public class CodeAssert extends StringAssert {
     // Maybe extract into private method
     int actual = 0;
     for(Pipeline p: pipelineTopology.getPipelines()) {
-      if(p instanceof SourcePipeline) {
+      if(p instanceof BufferedSourcePipeline) {
         actual++;
       }
     }

@@ -13,14 +13,7 @@ import de.hpi.des.hdes.engine.io.Buffer;
 public class LocalGeneratorTest {
 
     private BufferedSource source = new BufferedSource(){
-        @Override
-        public void run() {
-            // TODO Auto-generated method stub
-        }
-        @Override
-        public void shutdown() {
-            // TODO Auto-generated method stub   
-        }
+    
         @Override
         public Buffer getInputBuffer() {
             // TODO Auto-generated method stub
@@ -29,14 +22,7 @@ public class LocalGeneratorTest {
     };
 
     private BufferedSink sink = new BufferedSink(){
-        @Override
-        public void run() {
-            // TODO Auto-generated method stub
-        }
-        @Override
-        public void shutdown() {
-            // TODO Auto-generated method stub   
-        }
+       
         @Override
         public Buffer getOutputBuffer() {
             // TODO Auto-generated method stub

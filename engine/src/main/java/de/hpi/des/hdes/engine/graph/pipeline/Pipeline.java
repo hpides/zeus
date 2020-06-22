@@ -4,12 +4,14 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.DirectoryHelper;
@@ -25,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Slf4j
-public abstract class Pipeline {
+public abstract class Pipeline implements Runnable {
 
     protected Class pipelineKlass;
     private final String pipelineId;
@@ -82,10 +84,10 @@ public abstract class Pipeline {
         }
     }
 
-    public void loadPipeline(Object child, Class childKlass) {
+    public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
         try {
-            pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass).newInstance(child);
+            pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass).newInstance(dispatcher.getReadByteBufferForPipeline(this), dispatcher);
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }

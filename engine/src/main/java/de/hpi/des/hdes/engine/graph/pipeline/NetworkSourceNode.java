@@ -3,13 +3,16 @@ package de.hpi.des.hdes.engine.graph.pipeline;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import lombok.Getter;
 
-public class BufferedSourceNode extends GenerationNode {
+@Getter
+public class NetworkSourceNode extends GenerationNode {
 
-    @Getter
-    private final BufferedSource source;
+    private final String host;
+    private final int port;
+    
 
-    public BufferedSourceNode(BufferedSource source) {
-        this.source = source;
+    public NetworkSourceNode(String host, int port) {
+        this.host = host;
+        this.port = port;
     }
 
     @Override
@@ -20,7 +23,7 @@ public class BufferedSourceNode extends GenerationNode {
 
     @Override
     public void accept(PipelineTopology pipelineTopology) {
-        BufferedSourcePipeline sourcePipeline = new BufferedSourcePipeline(this);
+        NetworkSourcePipeline sourcePipeline = new NetworkSourcePipeline(this);
         pipelineTopology.addPipelineAsParent(sourcePipeline, this);
     }
 

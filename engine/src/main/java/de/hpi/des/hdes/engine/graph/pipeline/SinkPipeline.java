@@ -15,7 +15,7 @@ import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.Buffer;
 
 @Slf4j
-public class SinkPipeline extends Pipeline implements RunnablePipeline {
+public class SinkPipeline extends Pipeline {
 
   private final BufferedSinkNode sinkNode;
   private Runnable pipelineObject;
@@ -59,11 +59,6 @@ public class SinkPipeline extends Pipeline implements RunnablePipeline {
       log.error("Source had an execption: ", e);
       throw e;
     }
-  }
-  
-  @Override
-  public void shutdown() {
-    //TODO AUto-generated method stub
   }
 
   @Override

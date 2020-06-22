@@ -47,4 +47,10 @@ public class UnaryPipeline extends Pipeline {
     public void addOperator(Node operator, Node childNode) {
         this.nodes.add(operator);
     }
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		
+	}
 }
