@@ -6,7 +6,9 @@
     keyType: string, // How do we support multiple keys? Object could do the trick with a custom key exctractor
     nativeKeyType: string, same as keyType except lowercased, except for Object2Object
     leftKeyOffset: int
-    rightKeyOffset: int
+    rightKeyOffset: int,
+    leftImplementation: String,
+    rightImplementation: String,
   }
 }}
 package de.hpi.des.hdes.engine.temp;
@@ -40,7 +42,7 @@ public class {{{pipelineId}}} {
         this.windowSlide = windowSlide;
     }
 
-    public void readEventLeft(int offset) {
+    public void readEventLeft() {
         leftInput.position(offset);
         final long eventTimestamp = leftInput.getLong();
         leftInput.mark();
@@ -54,8 +56,8 @@ public class {{{pipelineId}}} {
 
         {{keyType}}2ObjectOpenHashMap<IntSet> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
-        leftInput.position(leftInput)
-        IntSet set = bucket.computeIfAbsent(leftInput.get{{keyType}}(), w -> new IntArraySet());
+        leftInput.position(leftInput.position()+leftKeyOffset);
+        IntSet set = bucket.computeIfAbsent(leftInput.get{{keyType}}(), w -> new {{keyType}}ArraySet());
         leftInput.reset();
         set.add(leftInput.position());
         leftInput.position(leftInput.position() + leftTupleLength);
@@ -67,10 +69,9 @@ public class {{{pipelineId}}} {
                 trigger(earliestOpenWindowJoin);
             }
         }
-        leftInput.rewind();
     }
 
-    public void readEventRight(int offset) {
+    public void readEventRight() {
         rightInput.position(offset);
         final long eventTimestamp = rightInput.getLong();
         rightInput.mark();
@@ -84,16 +85,68 @@ public class {{{pipelineId}}} {
 
         {{keyType}}2ObjectOpenHashMap<IntSet> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
-        IntSet set = bucket.computeIfAbsent(rightInput.get{{keyType}}(), w -> new IntArraySet());
+        rightInput.position(rightInput.position() + rightKeyOffset);
+        IntSet set = bucket.computeIfAbsent(rightInput.get{{keyType}}(), w -> new {{keyType}}ArraySet());
         rightInput.reset();
-        // Custom offset needed for key?s
-        rightInput.rewind();
+        set.add(rightInput.position());
+        rightInput.position(rightInput.position() + rightTupleLength);
+
+        if (rightInput.getChar() == (char) 1) {
+            latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
+            for (; earliestOpenWindowJoin + windowLength <= latestTimestampLeft && earliestOpenWindowJoin
+                    + windowLength <= latestTimestampRight; earliestOpenWindowJoin += windowSlide) {
+                trigger(earliestOpenWindowJoin);
+            }
+        }
     }
 
     private void trigger(final long timeStamp) {
         {{keyType}}2ObjectOpenHashMap<IntSet> leftBucket = leftWindowsToBuckets.get(timeStamp);
         {{keyType}}2ObjectOpenHashMap<IntSet> rightBucket = rightWindowsToBuckets.get(timeStamp);
+        int maxLeftOffset = 0;
+        int maxRightOffset = 0;
         for ({{nativeKeyType}} key : leftBucket.keySet()) {
             if (rightBucket.containsKey(key)) {
                 for (int leftOffset : leftBucket.get(key)) {
                     for (int rightOffset : rightBucket.get(key)) {
+                        this.writeOutput(leftOffset, rightOffset);
+                        maxLeftOffset = Math.max(leftOffset, maxLeftOffset);
+                        maxRightOffset = Math.max(rightOffset, maxRightOffset);
+                    }
+                }
+                ;
+            }
+        }
+        dispatcher.free(leftInput, maxLeftOffset);
+        dispatcher.free(rightInput, maxRightOffset);
+    }
+
+    public void writeOutput(int leftOffset, int rightOffset) {
+        leftInput.position(leftOffset);
+        rightInput.position(rightOffset);
+        byte[] out = new byte[8 + 2 + leftTupleLength + rightTupleLength];
+        ByteBuffer b = ByteBuffer.wrap(out).putLong(count++);
+        leftInput.get(out, 8, leftTupleLength);
+        rightInput.get(out, 8 + leftTupleLength, rightTupleLength);
+        b.putChar(8 + leftTupleLength + rightTupleLength, (char) 0);
+        while (!dispatcher.write(this, out));
+        leftInput.clear();
+        rightInput.clear();
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            if (leftInput.hasRemaining())
+                readEventLeft();
+            if (rightInput.hasRemaining())
+                readEventRight();
+            if (leftInput.position() == leftInput.capacity()) {
+                dispatcher.resetLimit(leftInput);
+            }
+            if (rightInput.position() == rightInput.capacity()) {
+                dispatcher.resetLimit(rightInput);
+            }
+        }
+    }
+}

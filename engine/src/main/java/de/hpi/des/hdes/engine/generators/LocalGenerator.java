@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.github.mustachejava.Mustache;
 import com.google.common.collect.Lists;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -243,6 +244,7 @@ public class LocalGenerator implements PipelineVisitor {
         }
 
         try {
+            // TODO setup other operations before
             Mustache template = MustacheFactorySingleton.getInstance().compile("JoinPipeline.java.mustache");
             String nextClassName = "";
             if (binaryPipeline.getChild() == null) {
@@ -269,9 +271,17 @@ public class LocalGenerator implements PipelineVisitor {
     public void visit(AJoinPipeline aJoinPipeline) {
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("AJoinPipeline.java.mustache");
-            template.execute(writer, new AJoinData(aJoinPipeline.getPipelineId(), aJoinPipeline.getBinaryNode().getOperator().getLeftTypes(), aJoinPipeline.getBinaryNode().getOperator().getLeftTypes(), aJoinPipeline.getBinaryNode().getOperator().getKeyPositionLeft(), aJoinPipeline.getBinaryNode().getOperator().getKeyPositionRight());
-        } catch (Exception e) {
-
+            FileWriter out = new FileWriter(Paths
+                    .get(DirectoryHelper.getTempDirectoryPath() + aJoinPipeline.getPipelineId() + ".java").toFile());
+            template.execute(out,
+                    new AJoinData(aJoinPipeline.getPipelineId(),
+                            aJoinPipeline.getBinaryNode().getOperator().getLeftTypes(),
+                            aJoinPipeline.getBinaryNode().getOperator().getLeftTypes(),
+                            aJoinPipeline.getBinaryNode().getOperator().getKeyPositionLeft(),
+                            aJoinPipeline.getBinaryNode().getOperator().getKeyPositionRight()))
+                    .flush();
+        } catch (IOException e) {
+            log.error("Write out error: {}", e);
         }
     }
 
