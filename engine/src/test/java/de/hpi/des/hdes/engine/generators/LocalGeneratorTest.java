@@ -81,4 +81,16 @@ public class LocalGeneratorTest {
                 .isConnected().traverseAST(id).hasVariable("joinKeyExtractor", "e1 -> e1")
                 .hasVariable("joinKeyExtractor", "e2 -> e2").hasVariable("joinMapper", "(l,r) -> l+r");
     }
+
+    @Test
+    public void sourceAJoinStreamTest() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        var stream = builder.streamOfC(source);
+        builder.streamOfC(source).ajoin(stream, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0);
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        // Fails in lieu of wrong filepath to write
+        generator.extend(pt);
+    }
 }
