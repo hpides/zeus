@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
+import de.hpi.des.hdes.engine.generators.BinaryGeneratable;
 import de.hpi.des.hdes.engine.generators.JoinGenerator;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import lombok.Getter;
@@ -11,8 +12,8 @@ public class BinaryGenerationNode extends GenerationNode {
     @Getter
     private final JoinGenerator operator;
 
-    public BinaryGenerationNode(final JoinGenerator operator) {
-        this.operator = operator;
+    public BinaryGenerationNode(final BinaryGeneratable operator) {
+        this.operator = (JoinGenerator) operator;
     }
 
     @Override

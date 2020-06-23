@@ -79,4 +79,4 @@ hdes-data/
 # Local History for Visual Studio Code
 .history/
 
-temp/
+temp/*.java

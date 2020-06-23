@@ -1,0 +1,116 @@
+{{! 
+  hash used: {
+    pipelineId: string,
+    leftTupleLength: int,
+    rightTupleLength: int,
+    keyType: string, // How do we support multiple keys? Object could do the trick with a custom key exctractor
+    nativeKeyType: string, same as keyType except lowercased, except for Object2Object
+  }
+}}
+package de.hpi.des.hdes.engine.temp;
+
+import java.nio.ByteBuffer;
+
+import it.unimi.dsi.fastutil.*;
+
+public class {{{pipelineId}}} {
+    final private long windowSlide;
+    final private long windowLength;
+    private long earliestOpenWindowJoin = Long.MAX_VALUE;
+    private long latestTimestampLeft;
+    private long latestTimestampRight;
+    final private int leftTupleLength = {{leftTupleLength}};
+    final private int rightTupleLength = {{rightTuplLength}};
+    private ByteBuffer leftInput;
+    private ByteBuffer rightInput;
+    private ByteBuffer output;
+    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntSet>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntSet>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
+
+
+    public void readEventLeft(int offset) {
+        leftInput.position(offset);
+        long eventTimestamp = leftInput.getLong();
+        leftInput.mark();
+        if (eventTimestamp < latestTimestampLeft) {
+            return;
+        }
+        long windowStart = eventTimestamp - (eventTimestamp % windowLength);
+        if (earliestOpenWindowJoin > windowStart) {
+            earliestOpenWindowJoin = windowStart;
+        }
+
+        {{keyType}}2ObjectOpenHashMap<IntSet> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
+                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
+        IntSet set = bucket.computeIfAbsent(leftInput.get{{keyType}}(), w -> new IntArraySet());
+        leftInput.reset();
+        // Custom offset needed for key?s
+        set.add(leftInput.position());
+        leftInput.position(leftInput.position() + leftTupleLength);
+
+        if (leftInput.getChar() == (char) 1) {
+            latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
+            for (; earliestOpenWindowJoin + windowLength <= latestTimestampLeft && earliestOpenWindowJoin
+                    + windowLength <= latestTimestampRight; earliestOpenWindowJoin += windowSlide) {
+                trigger(earliestOpenWindowJoin);
+            }
+        }
+        leftInput.rewind();
+    }
+
+    public void readEventRight(int offset) {
+        rightInput.position(offset);
+        long eventTimestamp = rightInput.getLong();
+        rightInput.mark();
+        if (eventTimestamp < latestTimestampRight) {
+            return;
+        }
+        long windowStart = eventTimestamp - (eventTimestamp % windowLength);
+        if (earliestOpenWindowJoin > windowStart) {
+            earliestOpenWindowJoin = windowStart;
+        }
+
+        {{keyType}}2ObjectOpenHashMap<IntSet> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
+                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
+        IntSet set = bucket.computeIfAbsent(rightInput.get{{keyType}}(), w -> new IntArraySet());
+        rightInput.reset();
+        // Custom offset needed for key?s
+        set.add(rightInput.position());
+        rightInput.position(rightInput.position() + rightTupleLength);
+
+        if (rightInput.getChar() == (char) 1) {
+            latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
+            for (; earliestOpenWindowJoin + windowLength <= latestTimestampLeft && earliestOpenWindowJoin
+                    + windowLength <= latestTimestampRight; earliestOpenWindowJoin += windowSlide) {
+                trigger(earliestOpenWindowJoin);
+            }
+        }
+        rightInput.rewind();
+    }
+
+    private void trigger(final long timeStamp) {
+        {{keyType}}2ObjectOpenHashMap<IntSet> leftBucket = leftWindowsToBuckets.get(timeStamp);
+        {{keyType}}2ObjectOpenHashMap<IntSet> rightBucket = rightWindowsToBuckets.get(timeStamp);
+        for ({{nativeKeyType}} key : leftBucket.keySet()) {
+            if (rightBucket.containsKey(key)) {
+                for (int leftOffset : leftBucket.get(key)) {
+                    for (int rightOffset : rightBucket.get(key)) {
+                        this.writeOutput(leftOffset, rightOffset);
+                    }
+                }
+            }
+        }
+    }
+
+    public void writeOutput(int leftOffset, int rightOffset) {
+        leftInput.position(leftOffset);
+        leftInput.limit(leftOffset + leftTupleLength);
+        rightInput.position(rightOffset);
+        rightInput.limit(rightOffset + rightTupleLength);
+        {{! count is the value for the thimestamp }}
+        output.putLong(count++).put(leftInput).put(rightInput);
+        // This does not erase the data, but set position = 0, limit = capacity and discards mark.
+        leftInput.clear();
+        rightInput.clear();
+    }
+}

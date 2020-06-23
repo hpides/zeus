@@ -3,17 +3,21 @@ package de.hpi.des.hdes.engine.temp;
 import de.hpi.des.hdes.engine.execution.slot.Event;
 
 public class {{{className}}} {
+  private final ByteBuffer input;
   {{#hasChild}}
-  private final {{{nextPipeline}}} nextPipeline;
+  private final ByteBuffer output;
   {{/hasChild}}
   
-  public {{{className}}}({{#hasChild}}final {{{nextPipeline}}} nextPipeline{{/hasChild}}) {
+  public {{{className}}}(final ByteBuffer input{{#hasChild}}, final ByteBuffer output{{/hasChild}}) {
+    this.input = input;
     {{#hasChild}}
-    this.nextPipeline = nextPipeline;
+    this.output = output;
     {{/hasChild}}
   }
 
-  public void process(final Event event){
+  public void processEvent(int offset){
+    input.position(offset);
+    input.mark(offset);
     {{{implementation}}}
   }  
 }
