@@ -16,16 +16,17 @@ public class AJoin implements Runnable {
     private long latestTimestampRight;
     final private int leftTupleLength = 8;
     final private int rightTupleLength = 8;
-    private ByteBuffer leftInput;
-    private ByteBuffer rightInput;
-    private Dispatcher dispatcher;
+    final private ByteBuffer leftInput;
+    final private ByteBuffer rightInput;
+    final private Dispatcher dispatcher;
 
     final private Long2ObjectMap<Int2ObjectOpenHashMap<IntSet>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
     final private Long2ObjectMap<Int2ObjectOpenHashMap<IntSet>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
     // TEMP
     private long count = 1;
 
-    public AJoin(ByteBuffer left, ByteBuffer right, Dispatcher dispatcher, long windowLength, long windowSlide) {
+    public AJoin(final ByteBuffer left, final ByteBuffer right, final Dispatcher dispatcher, final long windowLength,
+            final long windowSlide) {
         leftInput = left;
         rightInput = right;
         this.dispatcher = dispatcher;
@@ -34,13 +35,13 @@ public class AJoin implements Runnable {
     }
 
     public void readEventLeft() {
-        long eventTimestamp = leftInput.getLong();
+        final long eventTimestamp = leftInput.getLong();
         // Marks begining of values
         leftInput.mark();
         if (eventTimestamp < latestTimestampLeft) {
             return;
         }
-        long windowStart = eventTimestamp - (eventTimestamp % windowLength);
+        final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
         if (earliestOpenWindowJoin > windowStart) {
             earliestOpenWindowJoin = windowStart;
         }
@@ -63,13 +64,13 @@ public class AJoin implements Runnable {
     }
 
     public void readEventRight() {
-        long eventTimestamp = rightInput.getLong();
+        final long eventTimestamp = rightInput.getLong();
         // Marks beginning of values
         rightInput.mark();
         if (eventTimestamp < latestTimestampRight) {
             return;
         }
-        long windowStart = eventTimestamp - (eventTimestamp % windowLength);
+        final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
         if (earliestOpenWindowJoin > windowStart) {
             earliestOpenWindowJoin = windowStart;
         }

@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.JoinPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
@@ -22,7 +22,7 @@ public class Dispatcher {
     private final Map<ByteBuffer, BufferWrapper> readBufferToBufferWrapper = new HashMap<>();
 
     private class BufferWrapper {
-        
+
         @Getter
         private final ByteBuffer writeBuffer;
         @Getter
@@ -50,7 +50,7 @@ public class Dispatcher {
             }
             this.limit = offset;
         }
-    
+
         public void resetLimit() {
             writeBuffer.limit(this.limit);
         }
@@ -75,14 +75,14 @@ public class Dispatcher {
         return writeBuffers.get(pipeline.getParent()).getReadBuffer();
     }
 
-    public ByteBuffer getLeftByteBufferForPipeline(final BinaryPipeline pipeline) {
+    public ByteBuffer getLeftByteBufferForPipeline(final JoinPipeline pipeline) {
         return writeBuffers.get(pipeline.getLeftParent()).getReadBuffer();
     }
 
-     public ByteBuffer getRightByteBufferForPipeline(final BinaryPipeline pipeline) {
-         return writeBuffers.get(pipeline.getRightParent()).getReadBuffer();
+    public ByteBuffer getRightByteBufferForPipeline(final JoinPipeline pipeline) {
+        return writeBuffers.get(pipeline.getRightParent()).getReadBuffer();
     }
-    
+
     public boolean write(final Pipeline pipeline, final byte[] bytes) {
         final BufferWrapper bufferWrapper = writeBuffers.get(pipeline);
         if (bufferWrapper.hasRemaining(bytes.length)) {
@@ -98,6 +98,6 @@ public class Dispatcher {
     }
 
     public void resetLimit(final ByteBuffer readBuffer) {
-        readBufferToBufferWrapper.get(readBuffer).resetLimit();        
+        readBufferToBufferWrapper.get(readBuffer).resetLimit();
     }
 }

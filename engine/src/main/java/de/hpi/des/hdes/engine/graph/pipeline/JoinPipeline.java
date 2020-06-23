@@ -10,31 +10,31 @@ import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import lombok.Getter;
 
 @Getter
-public class BinaryPipeline extends Pipeline {
+public class JoinPipeline extends Pipeline {
 
     private final List<Node> leftNodes;
     private final List<Node> rightNodes;
-    private final BinaryGenerationNode binaryNode;
+    private final JoinGenerationNode binaryNode;
     private Pipeline leftParent;
     private Pipeline rightParent;
 
-    protected BinaryPipeline(List<Node> leftNodes, List<Node> rightNodes, BinaryGenerationNode binaryNode) {
+    protected JoinPipeline(List<Node> leftNodes, List<Node> rightNodes, JoinGenerationNode binaryNode) {
         super();
         this.leftNodes = leftNodes;
         this.rightNodes = rightNodes;
         this.binaryNode = binaryNode;
     }
 
-    protected BinaryPipeline(BinaryGenerationNode binaryNode) {
+    protected JoinPipeline(JoinGenerationNode binaryNode) {
         super();
         this.binaryNode = binaryNode;
         this.leftNodes = new ArrayList<>();
         this.rightNodes = new ArrayList<>();
     }
 
-    public static BinaryPipeline of(final List<Node> leftNodes, List<Node> rightNodes,
-            BinaryGenerationNode binaryNode) {
-        return new BinaryPipeline(leftNodes, rightNodes, binaryNode);
+    public static JoinPipeline of(final List<Node> leftNodes, List<Node> rightNodes,
+            JoinGenerationNode binaryNode) {
+        return new JoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 
     @Override
@@ -66,9 +66,9 @@ public class BinaryPipeline extends Pipeline {
         }
     }
 
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void run() {
+        // TODO Auto-generated method stub
+
+    }
 }

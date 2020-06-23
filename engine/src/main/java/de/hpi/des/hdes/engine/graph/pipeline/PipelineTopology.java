@@ -55,10 +55,10 @@ public class PipelineTopology {
     public static String getChildProcessMethod(Pipeline parent, Pipeline child) {
         if (child instanceof UnaryPipeline) {
             return "process";
-        } else if (child instanceof BinaryPipeline) {
-            if (((BinaryPipeline) child).getLeftParent().equals(parent)) {
+        } else if (child instanceof JoinPipeline) {
+            if (((JoinPipeline) child).getLeftParent().equals(parent)) {
                 return "joinLeftPipeline";
-            } else if (((BinaryPipeline) child).getRightParent().equals(parent)) {
+            } else if (((JoinPipeline) child).getRightParent().equals(parent)) {
                 return "joinRightPipeline";
             } else {
                 log.error("Unkown parent pipeline in binary pipeline with id: {}", parent.getPipelineId());

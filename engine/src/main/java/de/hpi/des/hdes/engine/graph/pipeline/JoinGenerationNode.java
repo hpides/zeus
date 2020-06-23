@@ -7,12 +7,12 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BinaryGenerationNode extends GenerationNode {
+public class JoinGenerationNode extends GenerationNode {
 
     @Getter
     private final JoinGenerator operator;
 
-    public BinaryGenerationNode(final BinaryGeneratable operator) {
+    public JoinGenerationNode(final BinaryGeneratable operator) {
         this.operator = (JoinGenerator) operator;
     }
 
@@ -25,7 +25,7 @@ public class BinaryGenerationNode extends GenerationNode {
     @Override
     public void accept(PipelineTopology pipelineTopology) {
         if (this.getChildren().isEmpty()) {
-            BinaryPipeline currentPipeline = new BinaryPipeline(this);
+            JoinPipeline currentPipeline = new JoinPipeline(this);
             pipelineTopology.addPipelineAsLeaf(currentPipeline, this);
         } else {
             // TODO create new pipeline
