@@ -43,6 +43,8 @@ public class {{{pipelineId}}} {
     }
 
     public void readEventLeft() {
+
+        {{{operatorImplementation}}}
         leftInput.position(offset);
         final long eventTimestamp = leftInput.getLong();
         leftInput.mark();

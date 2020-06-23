@@ -71,8 +71,8 @@ public class LocalGenerator implements PipelineVisitor {
         public AJoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
                 final int leftKeyIndex, final int rightKeyIndex) {
             this.pipelineId = pipelineId;
-            this.keyType = keyType.getUppercaseName();
-            this.nativeKeyType = keyType.getLowercaseName();
+            this.keyType = rightTypes[rightKeyIndex].getUppercaseName();
+            this.nativeKeyType = rightTypes[rightKeyIndex].getLowercaseName();
             int leftOffset = 0;
             int leftSize = 0;
             for (int i = 0; i < leftTypes.length; i++) {
@@ -80,10 +80,6 @@ public class LocalGenerator implements PipelineVisitor {
                 leftSize += length;
                 if (i < leftKeyIndex)
                     leftOffset += length;
-                if (i == leftKeyIndex) {
-                    keyType = leftTypes[i].getUppercaseName();
-                    nativeKeyType = leftTypes[i].getLowercaseName();
-                }
             }
             this.leftKeyOffset = leftOffset;
             this.leftTupleLength = leftSize;

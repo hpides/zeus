@@ -8,32 +8,18 @@ import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import lombok.Getter;
 
 @Getter
-public class AJoinPipeline extends Pipeline {
+public class AJoinPipeline extends BinaryPipeline {
 
-    private final List<Node> leftNodes;
-    private final List<Node> rightNodes;
-    private final AJoinGenerationNode binaryNode;
-    private Pipeline leftParent;
-    private Pipeline rightParent;
-
-    protected AJoinPipeline(List<Node> leftNodes, List<Node> rightNodes, AJoinGenerationNode binaryNode) {
-        super();
-        this.leftNodes = leftNodes;
-        this.rightNodes = rightNodes;
-        this.binaryNode = binaryNode;
+    protected AJoinPipeline(List<Node> leftNodes, List<Node> rightNodes, Node binaryNode) {
+        super(leftNodes, rightNodes, binaryNode);
     }
 
-    protected AJoinPipeline(AJoinGenerationNode binaryNode) {
-        super();
-        this.binaryNode = binaryNode;
-        this.leftNodes = new ArrayList<>();
-        this.rightNodes = new ArrayList<>();
+    protected AJoinPipeline(Node binaryNode) {
+        super(binaryNode);
     }
 
-    @Override
-    public void run() {
-        // TODO Auto-generated method stub
-
+    public static AJoinPipeline of(List<Node> leftNodes, List<Node> rightNodes, Node binaryNode) {
+        return new AJoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 
     @Override
@@ -42,15 +28,8 @@ public class AJoinPipeline extends Pipeline {
     }
 
     @Override
-    public void addParent(Pipeline pipeline, Node childNode) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addOperator(Node operator, Node childNode) {
-        // TODO Auto-generated method stub
-
+    public AJoinGenerationNode getBinaryNode() {
+        return (AJoinGenerationNode) this.binaryNode;
     }
 
 }
