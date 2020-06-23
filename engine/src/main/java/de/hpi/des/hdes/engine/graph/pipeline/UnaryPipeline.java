@@ -13,6 +13,7 @@ public class UnaryPipeline extends Pipeline {
 
     @Getter
     private final List<Node> nodes;
+    @Getter
     private Pipeline parent;
 
     public UnaryPipeline(Node node) {

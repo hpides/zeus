@@ -47,7 +47,7 @@ public class NetworkSourcePipeline extends Pipeline {
         this.compileClass();
         try {
             pipelineObject = (Runnable) pipelineKlass.getDeclaredConstructor(Buffer.class, childKlass)
-                    .newInstance(dispatcher.getReadByteBufferForPipeline(this), dispatcher, sourceNode.getHost(), sourceNode.getPort());
+                    .newInstance();//dispatcher.getReadByteBufferForPipeline(this), dispatcher, sourceNode.getHost(), sourceNode.getPort());
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }

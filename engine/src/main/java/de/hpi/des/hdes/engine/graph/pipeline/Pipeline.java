@@ -87,7 +87,7 @@ public abstract class Pipeline implements Runnable {
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
         try {
-            pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass).newInstance(dispatcher.getReadByteBufferForPipeline(this), dispatcher);
+            pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass).newInstance(dispatcher.getReadByteBufferForPipeline((UnaryPipeline) this), dispatcher);
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }
