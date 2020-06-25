@@ -90,7 +90,6 @@ public class LocalGeneratorTest {
                 new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0);
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
-        // Fails in lieu of wrong filepath to write
         generator.extend(pt);
     }
 }

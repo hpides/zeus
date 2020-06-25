@@ -51,7 +51,6 @@ public class BufferedNetworkSource<T> implements BufferedSource {
 
     }
 
-    @Override
     public void run() {
         log.info("Client server on {}", port);
         var isConnected = false;
@@ -113,7 +112,6 @@ public class BufferedNetworkSource<T> implements BufferedSource {
         Thread.currentThread().interrupt();
     }
 
-    @Override
     public void shutdown() {
         // TODO Auto-generated method stub
 
