@@ -2,10 +2,17 @@ package de.hpi.des.hdes.engine.generators;
 
 import java.nio.ByteBuffer;
 
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import org.junit.jupiter.api.Test;
 
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSink;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
+import de.hpi.des.hdes.engine.io.Buffer;
 import de.hpi.des.hdes.engine.temp.ajoin.AJoin;
-import de.hpi.des.hdes.engine.temp.ajoin.Dispatcher;
 
 public class AJoinTest {
     // @Test
@@ -23,38 +30,48 @@ public class AJoinTest {
 
     @Test
     public void testAJoinWindowing() {
-        ByteBuffer leftInput = ByteBuffer.allocate(1400);
-        ByteBuffer rightInput = leftInput.duplicate();
-        ByteBuffer output = ByteBuffer.allocate(2500);
+        BufferedSource source = new BufferedSource() {
+
+            @Override
+            public Buffer getInputBuffer() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        };
+
+        BufferedSink sink = new BufferedSink() {
+
+            @Override
+            public Buffer getOutputBuffer() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        };
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        var stream = builder.streamOfC(source);
+        builder.streamOfC(source).ajoin(stream, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0);
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        Dispatcher dispatcher = new Dispatcher(pt);
+
+        ReadBuffer leftInput = dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) pt.getPipelines().get(0));
+        ReadBuffer rightInput = dispatcher.getRightByteBufferForPipeline((BinaryPipeline) pt.getPipelines().get(0));
+
         for (int i = 1; i < 8; i++) {
-            leftInput.putLong((long) i).putInt(i * 10).putInt(i * 10 + 1).putChar((char) 256);
+            ByteBuffer input = ByteBuffer.allocate(17);
+            input.putLong((long) i).putInt(i * 10).putInt(i * 10 + 1).put((byte)9);
+            dispatcher.write(pt.getPipelines().get(1).getPipelineId(), input.array());
+            dispatcher.write(pt.getPipelines().get(2).getPipelineId(), input.array());
         }
-        leftInput.putLong((long) 8).putInt(8 * 10).putInt(8 * 10 + 1).putChar((char) 1);
-        AJoin aJoin = new AJoin(leftInput, rightInput, new Dispatcher() {
-
-            @Override
-            public boolean write(Runnable p, byte[] out) {
-                output.put(out);
-                return true;
-            }
-
-            @Override
-            public void resetLimit(ByteBuffer leftInput) {
-                System.out.println("Reset limit");
-            }
-
-            @Override
-            public void free(ByteBuffer buffer, int offset) {
-                System.out.println("Freed " + offset);
-            }
-        }, 5, 5);
-        leftInput.position(0);
-        rightInput.position(0);
+        ByteBuffer input = ByteBuffer.allocate(17);
+        input.putLong((long) 8).putInt(8 * 10).putInt(8 * 10 + 1).put((byte)1);
+        dispatcher.write(pt.getPipelines().get(1).getPipelineId(), input.array());
+        dispatcher.write(pt.getPipelines().get(2).getPipelineId(), input.array());
+        AJoin aJoin = new AJoin(leftInput, rightInput, dispatcher, 5, 5, pt.getPipelines().get(0).getPipelineId());
         for (int i = 0; i < 8; i++) {
             aJoin.readEventLeft();
             aJoin.readEventRight();
         }
-        output.position(0);
         System.out.println("Done");
     }
 }

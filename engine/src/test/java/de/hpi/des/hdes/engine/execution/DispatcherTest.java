@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
@@ -38,12 +39,12 @@ public class DispatcherTest {
 
         byte[] bytes = {10, 11, 12};
         BufferedSourcePipeline pipeline = (BufferedSourcePipeline) topology.getPipelines().get(1);
-        dispatcher.write(pipeline, bytes);
+        dispatcher.write(pipeline.getPipelineId(), bytes);
         
         UnaryPipeline unaryPipeline = (UnaryPipeline) topology.getPipelines().get(0);
-        ByteBuffer readBuffer = dispatcher.getReadByteBufferForPipeline(unaryPipeline);
+        ReadBuffer readBuffer = dispatcher.getReadByteBufferForPipeline(unaryPipeline);
         byte[] result = new byte[3];
-        readBuffer.get(result);
+        readBuffer.getBuffer().get(result);
         assertArrayEquals(result, bytes);
     }
 }

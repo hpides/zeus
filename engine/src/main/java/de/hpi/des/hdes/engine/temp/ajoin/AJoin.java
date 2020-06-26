@@ -2,6 +2,8 @@ package de.hpi.des.hdes.engine.temp.ajoin;
 
 import java.nio.ByteBuffer;
 
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -12,33 +14,42 @@ public class AJoin implements Runnable {
     final private long windowSlide;
     final private long windowLength;
     private long earliestOpenWindowJoin = Long.MAX_VALUE;
-    private long latestTimestampLeft;
-    private long latestTimestampRight;
+    private long latestWatermarkLeft;
+    private long latestWatermarkRight;
     final private int leftTupleLength = 8;
     final private int rightTupleLength = 8;
-    final private ByteBuffer leftInput;
-    final private ByteBuffer rightInput;
+    final private int leftKeyOffset = 0;
+    final private int rightKeyOffset = 0;
+    final private ReadBuffer leftInput;
+    final private ReadBuffer rightInput;
+    final private ByteBuffer leftByteBuffer;
+    final private ByteBuffer rightByteBuffer;
     final private Dispatcher dispatcher;
+    final String pipelineID;
 
     final private Long2ObjectMap<Int2ObjectOpenHashMap<IntSet>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
     final private Long2ObjectMap<Int2ObjectOpenHashMap<IntSet>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
     // TEMP
     private long count = 1;
 
-    public AJoin(final ByteBuffer left, final ByteBuffer right, final Dispatcher dispatcher, final long windowLength,
-            final long windowSlide) {
+    public AJoin(final ReadBuffer left, final ReadBuffer right, final Dispatcher dispatcher, final long windowLength,
+            final long windowSlide, final String pipelineID) {
         leftInput = left;
         rightInput = right;
+        leftByteBuffer = left.getBuffer();
+        rightByteBuffer = right.getBuffer();
         this.dispatcher = dispatcher;
         this.windowLength = windowLength;
         this.windowSlide = windowSlide;
+        this.pipelineID = pipelineID;
     }
 
     public void readEventLeft() {
-        final long eventTimestamp = leftInput.getLong();
+        final long eventTimestamp = leftByteBuffer.getLong();
         // Marks begining of values
-        leftInput.mark();
-        if (eventTimestamp < latestTimestampLeft) {
+        leftByteBuffer.mark();
+        if (eventTimestamp < latestWatermarkLeft) {
+            leftByteBuffer.position(leftByteBuffer.position() + leftTupleLength + 1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
@@ -46,46 +57,51 @@ public class AJoin implements Runnable {
             earliestOpenWindowJoin = windowStart;
         }
 
+        // {{{operatorImplementation}}}
         Int2ObjectOpenHashMap<IntSet> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new Int2ObjectOpenHashMap<IntSet>());
-        IntSet set = bucket.computeIfAbsent(leftInput.getInt(), w -> new IntArraySet());
-        leftInput.reset();
+        leftByteBuffer.position(leftByteBuffer.position() + leftKeyOffset);
+        IntSet set = bucket.computeIfAbsent(leftByteBuffer.getInt(), w -> new IntArraySet());
+        leftByteBuffer.reset();
         // Custom offset needed for key?s
-        set.add(leftInput.position());
-        leftInput.position(leftInput.position() + leftTupleLength);
+        set.add(leftByteBuffer.position());
+        leftByteBuffer.position(leftByteBuffer.position() + leftTupleLength);
 
-        if (leftInput.getChar() == (char) 1) {
-            latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
-            for (; earliestOpenWindowJoin + windowLength <= latestTimestampLeft && earliestOpenWindowJoin
-                    + windowLength <= latestTimestampRight; earliestOpenWindowJoin += windowSlide) {
+        if (leftByteBuffer.get() == (byte) 1) {
+            latestWatermarkLeft = Math.max(latestWatermarkLeft, eventTimestamp);
+            for (; earliestOpenWindowJoin + windowLength <= latestWatermarkLeft && earliestOpenWindowJoin
+                    + windowLength <= latestWatermarkRight; earliestOpenWindowJoin += windowSlide) {
                 trigger(earliestOpenWindowJoin);
             }
         }
     }
 
     public void readEventRight() {
-        final long eventTimestamp = rightInput.getLong();
+        final long eventTimestamp = rightByteBuffer.getLong();
         // Marks beginning of values
-        rightInput.mark();
-        if (eventTimestamp < latestTimestampRight) {
+        rightByteBuffer.mark();
+        if (eventTimestamp < latestWatermarkRight) {
+            rightByteBuffer.position(rightByteBuffer.position() + rightTupleLength + 1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
         if (earliestOpenWindowJoin > windowStart) {
             earliestOpenWindowJoin = windowStart;
         }
+        // {{{operatorImplementation}}}
         Int2ObjectOpenHashMap<IntSet> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new Int2ObjectOpenHashMap<IntSet>());
-        IntSet set = bucket.computeIfAbsent(rightInput.getInt(), w -> new IntArraySet());
-        rightInput.reset();
+        rightByteBuffer.position(rightByteBuffer.position() + rightKeyOffset);
+        IntSet set = bucket.computeIfAbsent(rightByteBuffer.getInt(), w -> new IntArraySet());
+        rightByteBuffer.reset();
         // Custom offset needed for key?s
-        set.add(rightInput.position());
-        rightInput.position(rightInput.position() + rightTupleLength);
+        set.add(rightByteBuffer.position());
+        rightByteBuffer.position(rightByteBuffer.position() + rightTupleLength);
 
-        if (rightInput.getChar() == (char) 1) {
-            latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
-            for (; earliestOpenWindowJoin + windowLength <= latestTimestampLeft && earliestOpenWindowJoin
-                    + windowLength <= latestTimestampRight; earliestOpenWindowJoin += windowSlide) {
+        if (rightByteBuffer.get() == (byte) 1) {
+            latestWatermarkRight = Math.max(latestWatermarkRight, eventTimestamp);
+            for (; earliestOpenWindowJoin + windowLength <= latestWatermarkLeft && earliestOpenWindowJoin
+                    + windowLength <= latestWatermarkRight; earliestOpenWindowJoin += windowSlide) {
                 trigger(earliestOpenWindowJoin);
             }
         }
@@ -108,38 +124,38 @@ public class AJoin implements Runnable {
                 ;
             }
         }
-        dispatcher.free(leftInput, maxLeftOffset);
-        dispatcher.free(rightInput, maxRightOffset);
     }
 
     public void writeOutput(int leftOffset, int rightOffset) {
-        leftInput.position(leftOffset);
-        rightInput.position(rightOffset);
-        byte[] out = new byte[8 + 2 + leftTupleLength + rightTupleLength];
+        leftByteBuffer.position(leftOffset);
+        rightByteBuffer.position(rightOffset);
+        byte[] out = new byte[8 + 1 + leftTupleLength + rightTupleLength];
         ByteBuffer b = ByteBuffer.wrap(out).putLong(count++);
-        leftInput.get(out, 8, leftTupleLength);
-        rightInput.get(out, 8 + leftTupleLength, rightTupleLength);
-        b.putChar(8 + leftTupleLength + rightTupleLength, (char) 0);
-        while (!dispatcher.write(this, out))
+        leftByteBuffer.get(out, 8, leftTupleLength);
+        rightByteBuffer.get(out, 8 + leftTupleLength, rightTupleLength);
+        b.put(8 + leftTupleLength + rightTupleLength, (byte) 0);
+        while (!dispatcher.write(pipelineID, out))
             ;
+        dispatcher.free(leftInput, leftOffset - 8);
+        dispatcher.free(rightInput, rightOffset - 8);
         // This does not erase the data, but set position = 0, limit = capacity and
         // discards mark.
-        leftInput.clear();
-        rightInput.clear();
+        leftByteBuffer.clear();
+        rightByteBuffer.clear();
         return;
     }
 
     @Override
     public void run() {
         while (true) {
-            if (leftInput.hasRemaining())
+            if (leftByteBuffer.hasRemaining())
                 readEventLeft();
-            if (rightInput.hasRemaining())
+            if (rightByteBuffer.hasRemaining())
                 readEventRight();
-            if (leftInput.position() == leftInput.capacity()) {
+            if (leftByteBuffer.position() == leftByteBuffer.capacity()) {
                 dispatcher.resetLimit(leftInput);
             }
-            if (rightInput.position() == rightInput.capacity()) {
+            if (rightByteBuffer.position() == rightByteBuffer.capacity()) {
                 dispatcher.resetLimit(rightInput);
             }
         }
