@@ -42,7 +42,7 @@ public class LocalGeneratorTest {
                 .isConnected();
     }
 
-    @Test
+    // @Test
     public void sourceFilterStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         builder.streamOfC(source).filter("event.getData() > 2");
@@ -54,7 +54,7 @@ public class LocalGeneratorTest {
                 .isConnected().traverseAST("event.getData() > 2");
     }
 
-    @Test
+    // @Test
     public void sourceFilterSinkStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         builder.streamOfC(source).filter("event.getData() > 2").to(sink);
@@ -67,7 +67,7 @@ public class LocalGeneratorTest {
                 .isConnected().traverseAST("event.getData() > 2").endsPipeline();
     }
 
-    @Test
+    // @Test
     public void sourceJoinStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         var stream = builder.streamOfC(source);

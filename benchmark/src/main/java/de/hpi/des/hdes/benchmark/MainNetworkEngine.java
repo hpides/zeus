@@ -21,8 +21,8 @@ import java.util.function.Function;
 @Slf4j
 public class MainNetworkEngine implements Runnable {
 
-  private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin",
-      "najoin_aggregated", "hotcat", "maxpric", "filter", "ifilter", "gfilter");
+  private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin", "hotcat",
+      "maxpric");
 
   // CLI Options
   @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "120")
@@ -121,9 +121,6 @@ public class MainNetworkEngine implements Runnable {
       case "maxpric": {
         nexmarkLightHighestPricePerAuction();
       }
-      case "filter": {
-        filter();
-      }
       default:
         log.warn("There was an error with benchmark {}", benchmarkType);
     }
@@ -191,15 +188,6 @@ public class MainNetworkEngine implements Runnable {
     executeQuery((sink) -> Queries.makeNexmarkMaxiumPriceForAuction(s1, s2, sink),
         new FileSinkFactory("nexmark_maxpri", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
         List.of(s1, s2), 1);
-  }
-
-  // JNIO Microbenchmark
-  private void filter() {
-    var source = this.prepareIntSources(basicPort1);
-    source.setProfilingEvents(true);
-    executeQuery((sink) -> Queries.makeFilter0Measured(source, sink),
-        new FileSinkFactory("filter_jvm", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 100),
-        List.of(source));
   }
 
   private AbstractSerializer getSerializer(String dataType) {
