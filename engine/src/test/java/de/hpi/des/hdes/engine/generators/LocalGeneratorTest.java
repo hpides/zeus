@@ -45,26 +45,26 @@ public class LocalGeneratorTest {
     // @Test
     public void sourceFilterStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(source).filter("event.getData() > 2");
+        builder.streamOfC(source).filter(new PrimitiveType[]{PrimitiveType.LONG}, "v1 -> v1 > 1");
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);
         CodeAssert.assertThat(pt, builder).hasSinkNodes(0).hasSourceNodes(1).hasUnaryNodes(1).hasBinaryNodes(0)
                 .hasSourcePipelines(1).hasSinkPipelines(0).hasUnaryPipelines(1).hasBinaryPipelines(0).gotGenerated()
-                .isConnected().traverseAST("event.getData() > 2");
+                .isConnected().hasVariable("v1", "input.getLong()");
     }
 
     // @Test
     public void sourceFilterSinkStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(source).filter("event.getData() > 2").to(sink);
+        builder.streamOfC(source).filter(new PrimitiveType[]{PrimitiveType.LONG}, "v1 -> v1 > 1");
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);
         // Validates at topolgy of nodes
         CodeAssert.assertThat(pt, builder).hasSinkNodes(1).hasSourceNodes(1).hasUnaryNodes(1).hasBinaryNodes(0)
                 .hasSourcePipelines(1).hasSinkPipelines(1).hasUnaryPipelines(1).hasBinaryPipelines(0).gotGenerated()
-                .isConnected().traverseAST("event.getData() > 2").endsPipeline();
+                .isConnected().hasVariable("v1", "input.getLong()");
     }
 
     // @Test

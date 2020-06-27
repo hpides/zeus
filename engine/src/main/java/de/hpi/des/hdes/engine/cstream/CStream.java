@@ -54,8 +54,8 @@ public class CStream extends AbstractCStream {
      * @param filter the predicate
      * @return the filtered stream
      */
-    public CStream filter(final String filter) {
-        final UnaryGenerationNode child = new UnaryGenerationNode(new FilterGenerator(filter));
+    public CStream filter(final PrimitiveType[] types, final String filter) {
+        final UnaryGenerationNode child = new UnaryGenerationNode(new FilterGenerator(types, filter));
         this.builder.addGraphNode(this.node, child);
         return new CStream(this.builder, child);
     }
