@@ -1,16 +1,30 @@
 package de.hpi.des.hdes.engine.generators;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.*;
 
-import de.hpi.des.hdes.engine.generators.FilterGenerator;
+import java.util.regex.Pattern;
 
 public class StreamFilterTest {
 
     @Test
-    void generateModuloFilter() {
-        FilterGenerator generator = new FilterGenerator("element % 4 == 0");
+    void throwFunctionErrorFilter() {
+        FilterGenerator generator = new FilterGenerator(new PrimitiveType[0],"v1 > 1");
+        assertThatThrownBy(() -> generator.generate("implementation")).hasMessageContaining("Malformatted function");
+    }
+
+    @Test
+    void throwParameterErrorFilter() {
+        FilterGenerator generator = new FilterGenerator(new PrimitiveType[0],"(v1, v2, v3) -> v1 > 1");
+        assertThatThrownBy(() -> generator.generate("implementation")).hasMessageContaining("Malformatted parameters");
+    }
+
+    @Test
+    void generateFilter() {
+        FilterGenerator generator = new FilterGenerator(new PrimitiveType[]{PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT}, "(v1, v2, v3) -> v1 > 1");
         String out = generator.generate("implementation");
-        assertEquals("if(element % 4 == 0){ implementation}", out.replaceAll("( ){2,}|\n|\r", ""));
+        assertThat(out).containsPattern(Pattern.compile("long v1 = input.getLong()", Pattern.LITERAL));
+        assertThat(out).containsPattern(Pattern.compile("(long v1) -> v1>1", Pattern.LITERAL));
+        assertThat(out).containsPattern(Pattern.compile("if(filter.apply(v1))", Pattern.LITERAL));
     }
 }
