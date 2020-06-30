@@ -79,4 +79,4 @@ hdes-data/
 # Local History for Visual Studio Code
 .history/
 
-temp/*.java
+engine/src/main/java/de/hpi/des/hdes/engine/temp/*.java
