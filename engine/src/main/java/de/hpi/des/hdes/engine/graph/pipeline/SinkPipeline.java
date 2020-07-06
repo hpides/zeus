@@ -32,32 +32,20 @@ public class SinkPipeline extends Pipeline {
     visitor.visit(this);
   }
 
-  void loadPipeline(Object child){
+  void loadPipeline(Object child) {
     Path javaFile = Paths.get(this.getFilePath());
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     compiler.run(null, null, null, javaFile.toFile().getAbsolutePath());
-    Path javaClass = javaFile.getParent().resolve(this.getPipelineId()+ ".class");
+    Path javaClass = javaFile.getParent().resolve(this.getPipelineId() + ".class");
     try {
       URL classURl = javaClass.getParent().toFile().toURI().toURL();
-      URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{classURl});
-      pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp."+this.getPipelineId(), true,classLoader);
-      Object temp = pipelineKlass.getDeclaredConstructor(Buffer.class).newInstance(sinkNode.getSink().getOutputBuffer());
+      URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { classURl });
+      pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp." + this.getPipelineId(), true, classLoader);
+      Object temp = pipelineKlass.getDeclaredConstructor(Buffer.class)
+          .newInstance(sinkNode.getSink().getOutputBuffer());
       pipelineObject = (Runnable) temp;
-    } catch(MalformedURLException|ReflectiveOperationException|RuntimeException e) {
+    } catch (MalformedURLException | ReflectiveOperationException | RuntimeException e) {
       log.error("Slot had an exception during class load: ", e);
-    }
-  }
-
-  @Override
-  public void run() {
-    try {
-      while(!Thread.currentThread().isInterrupted() && this.shutdownFlag){
-        pipelineObject.run();
-      }
-      log.debug("Stopped running {}", this);
-    } catch(final RuntimeException e) {
-      log.error("Source had an execption: ", e);
-      throw e;
     }
   }
 
@@ -70,6 +58,6 @@ public class SinkPipeline extends Pipeline {
   @Override
   public void addOperator(Node operator, Node childNode) {
     // TODO Auto-generated method stub
-    
+
   }
 }

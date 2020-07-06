@@ -1,12 +1,12 @@
 package de.hpi.des.hdes.engine;
 
-import java.nio.channels.Pipe;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import de.hpi.des.hdes.engine.execution.Stoppable;
 import de.hpi.des.hdes.engine.execution.plan.CompiledExecutionPlan;
-import de.hpi.des.hdes.engine.execution.slot.CompiledRunnableSlot;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import lombok.Getter;
@@ -20,6 +20,7 @@ public class CompiledEngine implements Engine {
     private final ExecutorService executor;
     @Getter
     private boolean isRunning;
+    private final List<Stoppable> runningPiplines = new LinkedList<>();
 
     public CompiledEngine() {
         this.executor = Executors.newCachedThreadPool();
@@ -35,9 +36,12 @@ public class CompiledEngine implements Engine {
         }
 
         this.isRunning = true;
-        for (final Runnable pipeline : this.plan.getRunnablePiplines()) {
-            log.debug("Pipeline {} submitted", pipeline);
-            this.executor.submit(pipeline);
+        for (final Pipeline pipeline : this.plan.getRunnablePiplines()) {
+            log.info("Pipeline {} submitted", pipeline);
+            // this.executor.submit(pipeline);
+            Thread t = new Thread((Runnable) pipeline.getPipelineObject());
+            t.start();
+            runningPiplines.add((Stoppable) pipeline.getPipelineObject());
         }
 
     }
@@ -46,14 +50,6 @@ public class CompiledEngine implements Engine {
     public void addQuery(Query query) {
         Topology topology = query.getTopology();
         this.plan = CompiledExecutionPlan.extend(this.plan, topology);
-
-        for (final Runnable pipeline : this.plan.getRunnablePiplines()) {
-            log.debug("Pipeline {} submitted", pipeline);
-            this.executor.submit(pipeline);
-        }
-
-        // TODO keep track of running pipeline
-
     }
 
     @Override
@@ -65,6 +61,10 @@ public class CompiledEngine implements Engine {
     @Override
     public void shutdown() {
         this.executor.shutdownNow();
+        for (Stoppable t : runningPiplines) {
+            t.shutdown();
+        }
+        runningPiplines.clear();
     }
 
     @Override

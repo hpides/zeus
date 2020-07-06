@@ -54,19 +54,6 @@ public class BufferedSourcePipeline extends Pipeline {
     }
 
     @Override
-    public void run() {
-        try {
-            while (!Thread.currentThread().isInterrupted() && !this.shutdownFlag) {
-                pipelineObject.run();
-            }
-            log.debug("Stopped running {}", this);
-        } catch (final RuntimeException e) {
-            log.error("Source had an exception: ", e);
-            throw e;
-        }
-    }
-
-    @Override
     public void addParent(Pipeline pipeline, Node childNode) {
         this.setChild(pipeline);
     }

@@ -24,6 +24,7 @@ public class PipelineTopology {
     private final List<Pipeline> pipelines = new ArrayList<>();
     private final Map<Node, Pipeline> nodeToPipeline = new HashMap<Node, Pipeline>();
     private TempSink sink;
+    private Dispatcher dispatcher;
 
     public static PipelineTopology pipelineTopologyOf(Topology queryTopology) {
         PipelineTopology pipelineTopology = new PipelineTopology();
@@ -36,6 +37,7 @@ public class PipelineTopology {
     }
 
     public void loadPipelines(Dispatcher dispatcher) {
+        this.dispatcher = dispatcher;
         try {
             this.sink = new TempSink(new FileWriter("output/compiled_out.csv"));
         } catch (IOException e) {
@@ -49,7 +51,7 @@ public class PipelineTopology {
     }
 
     public List<Pipeline> getRunnablePiplines() {
-        return this.pipelines.stream().filter(pipeline -> pipeline instanceof Runnable).collect(Collectors.toList());
+        return this.pipelines;
     }
 
     public static String getChildProcessMethod(Pipeline parent, Pipeline child) {

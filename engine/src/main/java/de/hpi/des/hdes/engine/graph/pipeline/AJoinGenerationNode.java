@@ -3,9 +3,7 @@ package de.hpi.des.hdes.engine.graph.pipeline;
 import de.hpi.des.hdes.engine.generators.AJoinGenerator;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class AJoinGenerationNode extends GenerationNode {
 
     @Getter
@@ -23,6 +21,6 @@ public class AJoinGenerationNode extends GenerationNode {
     @Override
     public void accept(PipelineTopology pipelineTopology) {
         AJoinPipeline pipeline = new AJoinPipeline(this);
-        pipelineTopology.addPipelineAsLeaf(pipeline, this);
+        pipelineTopology.addPipelineAsParent(pipeline, this);
     }
 }

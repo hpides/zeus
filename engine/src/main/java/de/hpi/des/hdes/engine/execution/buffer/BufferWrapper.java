@@ -26,32 +26,57 @@ public class BufferWrapper {
     }
 
     public boolean hasRemaining(final int bytes) {
-        if (limit > writeBuffer.position()) {
+        if (getLimitInBytes() > writeBuffer.position()) {
             return writeBuffer.limit() - writeBuffer.position() > bytes;
         }
-        return writeBuffer.limit() - writeBuffer.position() + limit > bytes;
+        return writeBuffer.limit() - writeBuffer.position() + getLimitInBytes() > bytes;
     }
 
     public void free(final int offset) {
         int index = offset / tupleSize;
         bitmask[index] = false;
-        if (this.limit + 1 == index) {
-            while (!bitmask[index] && index != limit) {
+        int modLimit = limit % bitmask.length;
+        if (modLimit == index) {
+            boolean allFalse = false;
+            do {
                 index++;
-                if (index == writeBuffer.capacity()) {
+                if (index == bitmask.length) {
                     index = 0;
                 }
+                if (index == modLimit) {
+                    allFalse = true;
+                    break;
+                }
+            } while (!bitmask[index]);
+            if (allFalse) {
+                limit = bitmask.length;
+            } else {
+                limit = index;
             }
-            limit = index;
-            if (limit > writeBuffer.position()) {
-                writeBuffer.limit(limit);
-            } else if (limit < writeBuffer.position()) {
+            int writeLimit = getLimitInBytes();
+            if (writeLimit > writeBuffer.position()) {
+                writeBuffer.limit(writeLimit);
+            } else if (writeLimit < writeBuffer.position()) {
                 writeBuffer.limit(writeBuffer.capacity());
             }
         }
     }
 
-    public void resetLimit() {
-        writeBuffer.limit(this.limit);
+    public void resetReadLimit() {
+        readBuffer.getBuffer().position(0);
+        readBuffer.limit(writeBuffer.position());
+    }
+
+    public void resetWriteLimt() {
+        writeBuffer.position(0);
+        if (limit != bitmask.length) {
+            writeBuffer.limit(getLimitInBytes());
+        } else {
+            writeBuffer.limit(0);
+        }
+    }
+
+    private int getLimitInBytes() {
+        return limit * tupleSize;
     }
 }

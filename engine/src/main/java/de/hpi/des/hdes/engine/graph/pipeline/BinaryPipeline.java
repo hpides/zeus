@@ -53,10 +53,4 @@ public abstract class BinaryPipeline extends Pipeline {
             this.rightNodes.add(operator);
         }
     }
-
-    @Override
-    public void run() {
-        // TODO Auto-generated method stub
-
-    }
 }
