@@ -67,11 +67,12 @@ public class LocalGeneratorTest {
                 .isConnected().hasVariable("v1", "input.getLong()");
     }
 
-    // @Test
+    @Test
     public void sourceJoinStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         var stream = builder.streamOfC(source);
-        builder.streamOfC(source).join(stream, "e1 -> e1", "e2 -> e2", "(l,r) -> l+r");
+        builder.streamOfC(source).join(stream, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0);
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);

@@ -40,21 +40,41 @@ public class LocalGenerator implements PipelineVisitor {
 
     @Getter
     private class JoinData {
-        private String className;
-        private String nextClassName;
-        private long slide;
-        private long length;
-        private String leftImplementation;
-        private String rightImplementation;
+        private final String pipelineId;
+        private final int leftTupleLength;
+        private final int rightTupleLength;
+        private final String keyType;
+        private final String nativeKeyType;
+        private final int leftKeyOffset;
+        private final int rightKeyOffset;
 
-        public JoinData(final String className, final String nextClassName, final long slide, final long length,
-                final String leftImplementation, final String rightImplementation) {
-            this.className = className;
-            this.nextClassName = nextClassName;
-            this.slide = slide;
-            this.length = length;
-            this.leftImplementation = leftImplementation;
-            this.rightImplementation = rightImplementation;
+        public JoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
+                final int leftKeyIndex, final int rightKeyIndex) {
+            this.pipelineId = pipelineId;
+            this.keyType = rightTypes[rightKeyIndex].getUppercaseName();
+            this.nativeKeyType = rightTypes[rightKeyIndex].getLowercaseName();
+            int leftOffset = 0;
+            int leftSize = 0;
+            for (int i = 0; i < leftTypes.length; i++) {
+                int length = leftTypes[i].getLength();
+                leftSize += length;
+                if (i < leftKeyIndex) {
+                    leftOffset += length;
+                }
+            }
+            this.leftKeyOffset = leftOffset;
+            this.leftTupleLength = leftSize;
+            int rightOffset = 0;
+            int rightSize = 0;
+            for (int i = 0; i < rightTypes.length; i++) {
+                int length = rightTypes[i].getLength();
+                rightSize += length;
+                if (i < rightKeyIndex) {
+                    rightOffset += length;
+                }
+            }
+            this.rightKeyOffset = rightOffset;
+            this.rightTupleLength = rightSize;
         }
     }
 
@@ -78,8 +98,9 @@ public class LocalGenerator implements PipelineVisitor {
             for (int i = 0; i < leftTypes.length; i++) {
                 int length = leftTypes[i].getLength();
                 leftSize += length;
-                if (i < leftKeyIndex)
+                if (i < leftKeyIndex) {
                     leftOffset += length;
+                }
             }
             this.leftKeyOffset = leftOffset;
             this.leftTupleLength = leftSize;
@@ -88,8 +109,9 @@ public class LocalGenerator implements PipelineVisitor {
             for (int i = 0; i < rightTypes.length; i++) {
                 int length = rightTypes[i].getLength();
                 rightSize += length;
-                if (i < rightKeyIndex)
+                if (i < rightKeyIndex) {
                     rightOffset += length;
+                }
             }
             this.rightKeyOffset = rightOffset;
             this.rightTupleLength = rightSize;
@@ -212,54 +234,20 @@ public class LocalGenerator implements PipelineVisitor {
     }
 
     @Override
-    public void visit(JoinPipeline binaryPipeline) {
-        String nextPipelineFunction = this.pipelineTopology.getChildProcessMethod(binaryPipeline,
-                binaryPipeline.getChild());
-        String leftImplementation = "";
-        leftImplementation = binaryPipeline.getBinaryNode().getOperator().generate(leftImplementation,
-                nextPipelineFunction, true);
-
-        for (Node node : Lists.reverse(binaryPipeline.getLeftNodes())) {
-            if (node instanceof UnaryGenerationNode) {
-                leftImplementation = ((UnaryGenerationNode) node).getOperator().generate(leftImplementation);
-            } else {
-                System.err.println(String.format("Node %s not implemented for code generation.", node.getClass()));
-            }
-        }
-
-        String rightImplementation = "";
-        rightImplementation = binaryPipeline.getBinaryNode().getOperator().generate(rightImplementation,
-                nextPipelineFunction, false);
-
-        for (Node node : Lists.reverse(binaryPipeline.getRightNodes())) {
-            if (node instanceof UnaryGenerationNode) {
-                rightImplementation = ((UnaryGenerationNode) node).getOperator().generate(rightImplementation);
-            } else {
-                System.err.println(String.format("Node %s not implemented for code generation.", node.getClass()));
-            }
-        }
-
+    public void visit(JoinPipeline joinPipeline) {
         try {
-            // TODO setup other operations before
             Mustache template = MustacheFactorySingleton.getInstance().compile("JoinPipeline.java.mustache");
-            String nextClassName = "";
-            if (binaryPipeline.getChild() == null) {
-                nextClassName = "TempSink";
-            } else {
-                nextClassName = binaryPipeline.getChild().getPipelineId();
-            }
-            template.execute(writer,
-                    new JoinData(binaryPipeline.getPipelineId(), nextClassName, 1000, 1000, leftImplementation,
-                            rightImplementation))
-                    // TODO: Set length and slide
+            FileWriter out = new FileWriter(Paths
+                    .get(DirectoryHelper.getTempDirectoryPath() + joinPipeline.getPipelineId() + ".java").toFile());
+            template.execute(out,
+                    new JoinData(joinPipeline.getPipelineId(),
+                        joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
+                        joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
+                        joinPipeline.getBinaryNode().getOperator().getKeyPositionLeft(),
+                        joinPipeline.getBinaryNode().getOperator().getKeyPositionRight()))
                     .flush();
-            String implementation = writer.toString();
-            Files.writeString(
-                    Paths.get(DirectoryHelper.getTempDirectoryPath() + binaryPipeline.getPipelineId() + ".java"),
-                    implementation);
-            writer.getBuffer().setLength(0);
         } catch (IOException e) {
-            log.error("Compile Error: {}", e);
+            log.error("Write out error: {}", e);
         }
     }
 
