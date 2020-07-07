@@ -31,7 +31,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
-    byte[] out = new byte[8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1];
+    final byte[] out = new byte[8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1];
 
 
     final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntSet>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
@@ -175,7 +175,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         ByteBuffer b = ByteBuffer.wrap(out).putLong(0,((long)(leftInput.getBuffer().getLong(leftOffset)+rightInput.getBuffer().getLong(rightOffset))/2));
         leftInput.getBuffer().get(out, 8, {{leftTupleLength}});
         rightInput.getBuffer().get(out, 8 + {{leftTupleLength}}, {{rightTupleLength}});
-        b.putChar(8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
+        b.put(8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
         while (!dispatcher.write("{{pipelineId}}", out)) {
             if(shutdownFlag) {
                 System.out.println("Aborted writing to sink");
