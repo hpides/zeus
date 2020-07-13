@@ -31,6 +31,11 @@ public class UnaryPipeline extends Pipeline {
     }
 
     @Override
+    public int hashCode() {
+        return nodes.stream().mapToInt(t -> t.hashCode()).sum();
+    }
+
+    @Override
     public void accept(PipelineVisitor visitor) {
         visitor.visit(this);
     }

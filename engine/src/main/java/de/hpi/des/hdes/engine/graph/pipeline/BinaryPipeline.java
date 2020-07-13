@@ -19,8 +19,8 @@ public abstract class BinaryPipeline extends Pipeline {
     final protected PrimitiveType[] joinInputTypes;
 
     protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
-        super(leftNodes.get(leftNodes.size()-1).getInputTypes());
-        this.joinInputTypes = rightNodes.get(rightNodes.size()-1).getInputTypes();
+        super(leftNodes.get(leftNodes.size() - 1).getInputTypes());
+        this.joinInputTypes = rightNodes.get(rightNodes.size() - 1).getInputTypes();
         this.binaryNode = binaryNode;
         this.leftNodes = leftNodes;
         this.rightNodes = rightNodes;
@@ -37,6 +37,12 @@ public abstract class BinaryPipeline extends Pipeline {
     protected boolean isLeft(Node operatorNode) {
         // TODO evaluate if a list search or hash map makes more sense
         return leftNodes.contains(operatorNode);
+    }
+
+    @Override
+    public int hashCode() {
+        return leftNodes.stream().mapToInt(t -> t.hashCode()).sum()
+                + rightNodes.stream().mapToInt(t -> t.hashCode()).sum();
     }
 
     @Override

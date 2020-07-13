@@ -1,26 +1,10 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
-
 import de.hpi.des.hdes.engine.execution.Dispatcher;
-import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSourceNode;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.Buffer;
-import de.hpi.des.hdes.engine.io.DirectoryHelper;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import lombok.Getter;
 import lombok.Setter;

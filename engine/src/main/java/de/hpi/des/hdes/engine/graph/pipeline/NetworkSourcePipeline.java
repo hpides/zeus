@@ -26,6 +26,11 @@ public class NetworkSourcePipeline extends Pipeline {
     }
 
     @Override
+    public int hashCode() {
+        return sourceNode.getHost().concat(Integer.toString(sourceNode.getPort())).hashCode();
+    }
+
+    @Override
     public void accept(PipelineVisitor visitor) {
         visitor.visit(this);
     }

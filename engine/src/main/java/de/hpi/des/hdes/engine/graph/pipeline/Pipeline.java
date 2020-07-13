@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class Pipeline {
 
     protected Class pipelineKlass;
-    private final String pipelineId;
     @Setter
     protected Object pipelineObject;
     private static URLClassLoader tempClassLoader;
@@ -58,10 +57,21 @@ public abstract class Pipeline {
     }
 
     protected Pipeline(PrimitiveType[] types) {
-        this.pipelineId = "c".concat(UUID.randomUUID().toString().replaceAll("-", ""));
         this.inputTypes = types;
         for (int i = 0; i < inputTypes.length; i++)
             currentTypes.add(null);
+    }
+
+    public String getPipelineId() {
+        return "c".concat(Integer.toString(hashCode()));
+    }
+
+    @Override
+    public boolean equals(final Object p) {
+        if (p instanceof Pipeline) {
+            return ((Pipeline) p).getPipelineId().equals(getPipelineId());
+        }
+        return false;
     }
 
     public InterfaceData registerInterface(String returnType, PrimitiveType[] types) {

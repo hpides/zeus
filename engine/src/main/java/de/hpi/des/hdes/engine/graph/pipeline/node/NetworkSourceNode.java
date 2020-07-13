@@ -11,12 +11,16 @@ public class NetworkSourceNode extends GenerationNode {
 
     private final String host;
     private final int port;
-    
 
     public NetworkSourceNode(final PrimitiveType[] outputTypes, String host, int port) {
         super(null, outputTypes);
         this.host = host;
         this.port = port;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     @Override
