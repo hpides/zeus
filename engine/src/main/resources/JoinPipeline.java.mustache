@@ -71,9 +71,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         leftInput.reset();
         offsets.add(leftInput.getBuffer().position());
         
-        {{keyType}}2ObjectOpenHashMap<IntSet> rightWindow = rightWindows.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
-        if(rightWindow.containsKey(key)){
+        {{keyType}}2ObjectOpenHashMap<IntSet> rightWindow = rightWindows.getOrDefault(windowStart, null);
+        if(rightWindow != null && rightWindow.containsKey(key)){
             for ({{nativeKeyType}} rightOffset : rightWindow.get(key)) {
                 writeOutput(leftInput.getBuffer().position(), rightOffset);
             }
@@ -114,9 +113,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         rightInput.reset();
         offsets.add(rightInput.getBuffer().position());
         
-        {{keyType}}2ObjectOpenHashMap<IntSet> leftWindow = leftWindows.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
-        if(leftWindow.containsKey(key)){
+        {{keyType}}2ObjectOpenHashMap<IntSet> leftWindow = leftWindows.getOrDefault(windowStart, null);
+        if(leftWindow != null && leftWindow.containsKey(key)){
             for ({{nativeKeyType}} leftOffset : leftWindow.get(key)) {
                 writeOutput(leftOffset, rightInput.getBuffer().position());
             }   
@@ -159,12 +157,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         leftInput.getBuffer().get(out, 8, {{leftTupleLength}});
         rightInput.getBuffer().get(out, 8 + {{leftTupleLength}}, {{rightTupleLength}});
         b.put(8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
-        while (!dispatcher.write("{{pipelineId}}", out)) {
-            if(shutdownFlag) {
-                System.out.println("Aborted writing to sink");
-                break;
-            }
-        }
+        while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag); 
     }
 
     @Override

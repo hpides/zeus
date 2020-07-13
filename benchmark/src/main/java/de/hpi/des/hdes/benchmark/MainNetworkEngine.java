@@ -1,8 +1,12 @@
 package de.hpi.des.hdes.benchmark;
 
+import de.hpi.des.hdes.engine.CompiledEngine;
 import de.hpi.des.hdes.engine.JobManager;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.VulcanoEngine;
+import de.hpi.des.hdes.engine.cstream.CStream;
+import de.hpi.des.hdes.engine.generators.PrimitiveType;
+import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.DirectoryHelper;
 import de.hpi.des.hdes.engine.operation.Sink;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +18,7 @@ import picocli.CommandLine.Option;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -22,7 +27,7 @@ import java.util.function.Function;
 public class MainNetworkEngine implements Runnable {
 
   private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin", "hotcat",
-      "maxpric");
+      "maxpric", "compiledajoin", "compiledjoin");
 
   // CLI Options
   @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "120")
@@ -99,27 +104,43 @@ public class MainNetworkEngine implements Runnable {
     switch (benchmarkType) {
       case "bmap": {
         basicAddDeleteMap();
+        break;
       }
       case "bjoin": {
         basicAddDeleteJoin();
+        break;
       }
       case "bajoin": {
         basicAddDeleteAJoin();
+        break;
       }
       case "nfilter": {
         nexmarkLightAddRemoveQueryFilter();
+        break;
       }
       case "njoin": {
         nexmarkLightAddRemoveQueryPlainJoin();
+        break;
       }
       case "najoin": {
         nexmarkLightAddRemoveQueryAJoin();
+        break;
       }
       case "hotcat": {
         nexmarkLightHottestCategory();
+        break;
       }
       case "maxpric": {
         nexmarkLightHighestPricePerAuction();
+        break;
+      }
+      case "compiledajoin": {
+        executeCompiledAJoin();
+        break;
+      }
+      case "compiledjoin": {
+        executeCompiledJoin();
+        break;
       }
       default:
         log.warn("There was an error with benchmark {}", benchmarkType);
@@ -234,6 +255,52 @@ public class MainNetworkEngine implements Runnable {
   private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,
       List<NetworkSource> sources) {
     executeQuery(makeQuery, factory, sources, fixedQueries);
+  }
+
+  private void executeCompiledAJoin() {
+    JobManager manager = new JobManager(new CompiledEngine());
+    VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+
+    CStream sourceOne = builder.streamOfC(generatorHost, basicPort1);
+    builder.streamOfC(generatorHost, basicPort2)
+        .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0)
+        .to();
+
+    manager.addQuery(builder.buildAsQuery());
+    // Running engine
+    manager.runEngine();
+    try {
+      Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    manager.shutdown();
+  }
+
+  private void executeCompiledJoin() {
+    JobManager manager = new JobManager(new CompiledEngine());
+    VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+
+    CStream sourceOne = builder.streamOfC(generatorHost, basicPort1);
+    builder.streamOfC(generatorHost, basicPort2)
+        .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0)
+        .to();
+
+    manager.addQuery(builder.buildAsQuery());
+    // Running engine
+    manager.runEngine();
+    try {
+      Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    manager.shutdown();
   }
 
   private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,

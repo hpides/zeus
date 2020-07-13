@@ -173,12 +173,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         leftInput.getBuffer().get(out, 8, {{leftTupleLength}});
         rightInput.getBuffer().get(out, 8 + {{leftTupleLength}}, {{rightTupleLength}});
         b.put(8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
-        while (!dispatcher.write("{{pipelineId}}", out)) {
-            if(shutdownFlag) {
-                System.out.println("Aborted writing to sink");
-                break;
-            }
-        }
+        while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
     }
 
     @Override

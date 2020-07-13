@@ -10,8 +10,10 @@ import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.node.JoinGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
+@Slf4j
 public class JoinPipeline extends BinaryPipeline {
 
     protected JoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
@@ -27,6 +29,18 @@ public class JoinPipeline extends BinaryPipeline {
     }
 
     @Override
+    public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
+        this.compileClass();
+        try {
+            pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class,
+                    long.class, long.class).newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),
+                            dispatcher.getRightByteBufferForPipeline((BinaryPipeline) this), dispatcher, 1000, 1000);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            log.error("Slot had an exception during class load: ", e);
+        }
+    }
+
+    @Override
     public void accept(PipelineVisitor visitor) {
         visitor.visit(this);
     }
@@ -34,17 +48,5 @@ public class JoinPipeline extends BinaryPipeline {
     @Override
     public JoinGenerationNode getBinaryNode() {
         return (JoinGenerationNode) this.binaryNode;
-    }
-
-    
-    @Override
-    public void addParent(Pipeline pipeline, GenerationNode childNode) {
-      // TODO Auto-generated method stub
-    }
-  
-    @Override
-    public void addOperator(GenerationNode operator, GenerationNode childNode) {
-      // TODO Auto-generated method stub
-      
     }
 }
