@@ -1,2 +1,6 @@
-Function map = {{implementation}};
-element = element.transform(map.apply(element));
+{{#items}}
+{{#interfaceName}}
+{{{interfaceName}}} {{{interfaceName}}}map = ({{{signature}}}) -> {{{functionBody}}};
+{{/interfaceName}}
+{{{varName}}} = {{#interfaceName}}{{{interfaceName}}}map.apply({{{application}}}){{/interfaceName}}{{^interfaceName}}{{{functionBody}}}{{/interfaceName}};
+{{/items}}

@@ -33,10 +33,9 @@ public class DispatcherTest {
     @Test
     void writeToBuffer() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(source).filter(new PrimitiveType[]{}, "() -> true");
+        builder.streamOfC(new PrimitiveType[]{}, source).filter(new PrimitiveType[]{}, "() -> true");
         final PipelineTopology topology = PipelineTopology.pipelineTopologyOf(builder.build());
         final Dispatcher dispatcher = new Dispatcher(topology);
-
 
         byte[] bytes = {10, 11, 12};
         BufferedSourcePipeline pipeline = (BufferedSourcePipeline) topology.getPipelines().get(1);

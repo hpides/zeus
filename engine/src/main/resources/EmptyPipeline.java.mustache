@@ -1,23 +1,33 @@
 package de.hpi.des.hdes.engine.temp;
 
-import de.hpi.des.hdes.engine.execution.slot.Event;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import java.nio.ByteBuffer;
 
 public class {{{className}}} {
   private final ByteBuffer input;
   {{#hasChild}}
-  private final ByteBuffer output;
+  private final Dispatcher dispatcher;
+  private final byte[] output = new byte[{{{tupleLength}}}];
+  private final ByteBuffer outputBuffer = ByteBuffer.wrap(output);
   {{/hasChild}}
+
+  {{#interfaces}}
+  {{> InterfaceDefinition.java.mustache}}
+  {{/interfaces}}
   
-  public {{{className}}}(final ByteBuffer input{{#hasChild}}, final ByteBuffer output{{/hasChild}}) {
+  public {{{className}}}(final ByteBuffer input{{#hasChild}}, final Dispatcher dispacther{{/hasChild}}) {
     this.input = input;
     {{#hasChild}}
-    this.output = output;
+    this.dispatcher = dispatcher;
     {{/hasChild}}
   }
 
   public void processEvent(int offset){
     input.position(offset);
-    input.mark(offset);
+    input.mark();
+    {{#variables}}
+    {{> VariableDefiniton.java.mustache}}
+    {{/variables}}
     {{{implementation}}}
   }  
 }

@@ -1,10 +1,5 @@
 package de.hpi.des.hdes.engine.generators;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-import java.util.UUID;
-
 import com.github.mustachejava.Mustache;
 import com.google.common.collect.Lists;
 
@@ -13,10 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.StringWriter;
-import java.util.Arrays;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import de.hpi.des.hdes.engine.Query;
+import de.hpi.des.hdes.engine.generators.templatedata.*;
+import de.hpi.des.hdes.engine.generators.templatedata.AJoinData;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
@@ -28,161 +22,15 @@ import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.AJoinPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.NetworkSourcePipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.AggregationPipeline;
 
 // TODO If there is a JoinPipeline (No source), set at generation time for the preceding pipelines if they are left or right
 
 @Slf4j
-public class LocalGenerator implements PipelineVisitor {
-
+public class LocalGenerator extends PipelineVisitor {
     private final PipelineTopology pipelineTopology;
     private final StringWriter writer = new StringWriter();
-
-    @Getter
-    private class JoinData {
-        private final String pipelineId;
-        private final int leftTupleLength;
-        private final int rightTupleLength;
-        private final String keyType;
-        private final String nativeKeyType;
-        private final int leftKeyOffset;
-        private final int rightKeyOffset;
-
-        public JoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
-                final int leftKeyIndex, final int rightKeyIndex) {
-            this.pipelineId = pipelineId;
-            this.keyType = rightTypes[rightKeyIndex].getUppercaseName();
-            this.nativeKeyType = rightTypes[rightKeyIndex].getLowercaseName();
-            int leftOffset = 0;
-            int leftSize = 0;
-            for (int i = 0; i < leftTypes.length; i++) {
-                int length = leftTypes[i].getLength();
-                leftSize += length;
-                if (i < leftKeyIndex) {
-                    leftOffset += length;
-                }
-            }
-            this.leftKeyOffset = leftOffset;
-            this.leftTupleLength = leftSize;
-            int rightOffset = 0;
-            int rightSize = 0;
-            for (int i = 0; i < rightTypes.length; i++) {
-                int length = rightTypes[i].getLength();
-                rightSize += length;
-                if (i < rightKeyIndex) {
-                    rightOffset += length;
-                }
-            }
-            this.rightKeyOffset = rightOffset;
-            this.rightTupleLength = rightSize;
-        }
-    }
-
-    @Getter
-    private class AJoinData {
-        private final String pipelineId;
-        private final int leftTupleLength;
-        private final int rightTupleLength;
-        private final String keyType;
-        private final String nativeKeyType;
-        private final int leftKeyOffset;
-        private final int rightKeyOffset;
-
-        public AJoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
-                final int leftKeyIndex, final int rightKeyIndex) {
-            this.pipelineId = pipelineId;
-            this.keyType = rightTypes[rightKeyIndex].getUppercaseName();
-            this.nativeKeyType = rightTypes[rightKeyIndex].getLowercaseName();
-            int leftOffset = 0;
-            int leftSize = 0;
-            for (int i = 0; i < leftTypes.length; i++) {
-                int length = leftTypes[i].getLength();
-                leftSize += length;
-                if (i < leftKeyIndex) {
-                    leftOffset += length;
-                }
-            }
-            this.leftKeyOffset = leftOffset;
-            this.leftTupleLength = leftSize;
-            int rightOffset = 0;
-            int rightSize = 0;
-            for (int i = 0; i < rightTypes.length; i++) {
-                int length = rightTypes[i].getLength();
-                rightSize += length;
-                if (i < rightKeyIndex) {
-                    rightOffset += length;
-                }
-            }
-            this.rightKeyOffset = rightOffset;
-            this.rightTupleLength = rightSize;
-        }
-    }
-
-    @Getter
-    private class AggregationData {
-        private String className;
-        private String nextClassName;
-        private long slide;
-        private long length;
-        private String implementation;
-
-        public AggregationData(String className, String nextClassname, long slide, long length, String implementation) {
-            this.className = className;
-            this.slide = slide;
-            this.length = length;
-            this.implementation = implementation;
-            this.nextClassName = nextClassname;
-        }
-    }
-
-    @Getter
-    private class EmptyPipelineData {
-        private String className;
-        private String implementation;
-        private boolean hasChild;
-        private String nextPipeline;
-
-        public EmptyPipelineData(String className, String implementation, boolean hasChild, Pipeline nextPipeline) {
-            this.className = className;
-            this.implementation = implementation;
-            this.hasChild = hasChild;
-            if (nextPipeline != null)
-                this.nextPipeline = nextPipeline.getPipelineId();
-        }
-    }
-
-    @Getter
-    private class SourceData {
-        private String className;
-        private String nextPipelineClass;
-        private String nextPipelineFunction;
-
-        public SourceData(String className, String nextPipelineClass, String nextPipelineFunction) {
-            this.className = className;
-            this.nextPipelineClass = nextPipelineClass;
-            this.nextPipelineFunction = nextPipelineFunction;
-        }
-    }
-
-    @Getter
-    private class NetworkSourceData {
-        private String className;
-        private String numberBytes;
-
-        public NetworkSourceData(String className, String numberBytes) {
-            this.className = className;
-            this.numberBytes = numberBytes;
-        }
-    }
-
-    @Getter
-    private class SinkData {
-        private String className;
-
-        public SinkData(String className) {
-            this.className = className;
-        }
-    }
 
     public LocalGenerator(final PipelineTopology pipelineTopology) {
         this.pipelineTopology = pipelineTopology;
@@ -200,11 +48,14 @@ public class LocalGenerator implements PipelineVisitor {
 
     @Override
     public void visit(UnaryPipeline unaryPipeline) {
-        String implementation = unaryPipeline.hasChild() ? "nextPipeline.process(event);" : "";
+        String implementation = unaryPipeline.hasChild()
+                ? unaryPipeline.getWriteout("input").concat("dispatcher.write(\"").concat(unaryPipeline.getPipelineId())
+                        .concat("\", output);")
+                : "";
 
         for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                implementation = ((UnaryGenerationNode) node).getOperator().generate(implementation);
+                implementation = ((UnaryGenerationNode) node).getOperator().generate(unaryPipeline, implementation);
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
@@ -212,16 +63,14 @@ public class LocalGenerator implements PipelineVisitor {
 
         try {
             if (unaryPipeline.hasChild() && !(unaryPipeline.getChild() instanceof SinkPipeline)) {
-                Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
-                template.execute(writer,
-                        new AggregationData(unaryPipeline.getPipelineId(), unaryPipeline.getChild().getPipelineId(),
-                                1000, 1000, implementation))
-                        // TODO: Set length and slide
-                        .flush();
+                // TODO
             } else {
                 Mustache template = MustacheFactorySingleton.getInstance().compile("EmptyPipeline.java.mustache");
-                template.execute(writer, new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation,
-                        unaryPipeline.hasChild(), unaryPipeline.getChild())).flush();
+                template.execute(writer,
+                        new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation, unaryPipeline.hasChild(),
+                                unaryPipeline.getChild(), unaryPipeline.getInterfaces(), unaryPipeline.getVariables(),
+                                unaryPipeline.getOutputTypes()))
+                        .flush();
             }
             implementation = writer.toString();
             Files.writeString(
@@ -241,10 +90,10 @@ public class LocalGenerator implements PipelineVisitor {
                     .get(DirectoryHelper.getTempDirectoryPath() + joinPipeline.getPipelineId() + ".java").toFile());
             template.execute(out,
                     new JoinData(joinPipeline.getPipelineId(),
-                        joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
-                        joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
-                        joinPipeline.getBinaryNode().getOperator().getKeyPositionLeft(),
-                        joinPipeline.getBinaryNode().getOperator().getKeyPositionRight()))
+                            joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
+                            joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
+                            joinPipeline.getBinaryNode().getOperator().getKeyPositionLeft(),
+                            joinPipeline.getBinaryNode().getOperator().getKeyPositionRight()))
                     .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
@@ -271,8 +120,7 @@ public class LocalGenerator implements PipelineVisitor {
 
     @Override
     public void visit(BufferedSourcePipeline sourcePipeline) {
-        String nextPipelineFunction = this.pipelineTopology.getChildProcessMethod(sourcePipeline,
-                sourcePipeline.getChild());
+        String nextPipelineFunction = PipelineTopology.getChildProcessMethod(sourcePipeline, sourcePipeline.getChild());
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("Source.java.mustache");
             template.execute(writer, new SourceData(sourcePipeline.getPipelineId(),
@@ -295,6 +143,26 @@ public class LocalGenerator implements PipelineVisitor {
             String implementation = writer.toString();
             Files.writeString(
                     Paths.get(DirectoryHelper.getTempDirectoryPath() + sinkPipeline.getPipelineId() + ".java"),
+                    implementation);
+            writer.getBuffer().setLength(0);
+        } catch (IOException e) {
+            System.exit(1);
+        }
+    }
+
+    @Override
+    public void visit(AggregationPipeline aggregationPipeline) {
+        try {
+            Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
+            template.execute(writer,
+                    new AggregationData(aggregationPipeline.getPipelineId(),
+                            aggregationPipeline.getAggregationGenerationNode().getInputTypes(),
+                            aggregationPipeline.getAggregationGenerationNode().getOperator().getAggregateValueIndex(),
+                            aggregationPipeline.getAggregationGenerationNode().getOperator().getAggregateFunction()))
+                    .flush();
+            String implementation = writer.toString();
+            Files.writeString(
+                    Paths.get(DirectoryHelper.getTempDirectoryPath() + aggregationPipeline.getPipelineId() + ".java"),
                     implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {

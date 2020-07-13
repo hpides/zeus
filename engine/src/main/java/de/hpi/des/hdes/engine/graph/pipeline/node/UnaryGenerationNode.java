@@ -1,8 +1,11 @@
-package de.hpi.des.hdes.engine.graph.pipeline;
+package de.hpi.des.hdes.engine.graph.pipeline.node;
 
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import de.hpi.des.hdes.engine.generators.AggregateGenerator;
 import de.hpi.des.hdes.engine.generators.Generatable;
+import de.hpi.des.hdes.engine.generators.PrimitiveType;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
+import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 
 /**
  * Represents a unary operation in the logical plan.
@@ -14,13 +17,14 @@ public class UnaryGenerationNode extends GenerationNode {
 
     private final Generatable operator;
 
-    public UnaryGenerationNode(final Generatable operator) {
-        super(operator.toString());
+    public UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes, final Generatable operator) {
+        super(inputTypes, outputTypes, operator.toString());
         this.operator = operator;
     }
 
-    protected UnaryGenerationNode(final String identifier, final Generatable operator) {
-        super(identifier);
+    protected UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes, final String identifier,
+            final Generatable operator) {
+        super(inputTypes, outputTypes, identifier);
         this.operator = operator;
     }
 

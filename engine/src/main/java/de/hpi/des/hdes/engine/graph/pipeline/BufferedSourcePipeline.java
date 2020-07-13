@@ -16,9 +16,12 @@ import javax.tools.ToolProvider;
 
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSourceNode;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.Buffer;
 import de.hpi.des.hdes.engine.io.DirectoryHelper;
+import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ public class BufferedSourcePipeline extends Pipeline {
     private boolean shutdownFlag;
 
     public BufferedSourcePipeline(BufferedSourceNode sourceNode) {
+        super(new PrimitiveType[0]);
         this.sourceNode = sourceNode;
     }
 
@@ -54,12 +58,12 @@ public class BufferedSourcePipeline extends Pipeline {
     }
 
     @Override
-    public void addParent(Pipeline pipeline, Node childNode) {
+    public void addParent(Pipeline pipeline, GenerationNode childNode) {
         this.setChild(pipeline);
     }
 
     @Override
-    public void addOperator(Node operator, Node childNode) {
+    public void addOperator(GenerationNode operator, GenerationNode childNode) {
         // TODO Auto-generated method stub
 
     }

@@ -12,15 +12,15 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.StringAssert;
 
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.pipeline.JoinGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.JoinGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.JoinPipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSinkNode;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourceNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSinkNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSourceNode;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 

@@ -10,9 +10,10 @@ import java.nio.file.Paths;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.Buffer;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSinkNode;
 
 @Slf4j
 public class SinkPipeline extends Pipeline {
@@ -24,6 +25,7 @@ public class SinkPipeline extends Pipeline {
   private Pipeline parent;
 
   public SinkPipeline(BufferedSinkNode sinkNode) {
+    super(sinkNode.getInputTypes());
     this.sinkNode = sinkNode;
   }
 
@@ -50,13 +52,13 @@ public class SinkPipeline extends Pipeline {
   }
 
   @Override
-  public void addParent(Pipeline pipeline, Node childNode) {
+  public void addParent(Pipeline pipeline, GenerationNode childNode) {
     parent = pipeline;
     pipeline.setChild(this);
   }
 
   @Override
-  public void addOperator(Node operator, Node childNode) {
+  public void addOperator(GenerationNode operator, GenerationNode childNode) {
     // TODO Auto-generated method stub
 
   }

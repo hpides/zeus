@@ -5,27 +5,28 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import lombok.Getter;
 
 public class UnaryPipeline extends Pipeline {
 
     @Getter
-    private final List<Node> nodes;
+    private final List<GenerationNode> nodes;
     @Getter
     private Pipeline parent;
 
-    public UnaryPipeline(Node node) {
+    public UnaryPipeline(GenerationNode node) {
+        super(node.getInputTypes());
         this.nodes = Arrays.asList(node);
     }
 
-    protected UnaryPipeline(List<Node> nodes) {
-        super();
+    protected UnaryPipeline(List<GenerationNode> nodes) {
+        super(nodes.get(0).getInputTypes());
         this.nodes = nodes;
     }
 
-    public static UnaryPipeline of(final List<Node> nodes) {
+    public static UnaryPipeline of(final List<GenerationNode> nodes) {
         return new UnaryPipeline(nodes);
     }
 
@@ -39,13 +40,13 @@ public class UnaryPipeline extends Pipeline {
     }
 
     @Override
-    public void addParent(Pipeline pipeline, Node childNode) {
+    public void addParent(Pipeline pipeline, GenerationNode childNode) {
         this.parent = pipeline;
         pipeline.setChild(this);
     }
 
     @Override
-    public void addOperator(Node operator, Node childNode) {
+    public void addOperator(GenerationNode operator, GenerationNode childNode) {
         this.nodes.add(operator);
     }
 }

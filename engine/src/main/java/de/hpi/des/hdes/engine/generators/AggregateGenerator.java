@@ -5,26 +5,28 @@ import java.io.StringWriter;
 
 import com.github.mustachejava.Mustache;
 
+import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
+import de.hpi.des.hdes.engine.operation.AggregateFunction;
 import lombok.Getter;
 
 public class AggregateGenerator implements Generatable {
 
-    private final StringWriter writer = new StringWriter();
+  private final StringWriter writer = new StringWriter();
 
-    @Getter
-    private class AggregationData {
-    }
+  @Getter
+  private final AggregateFunction aggregateFunction;
+  @Getter
+  private final int aggregateValueIndex;
 
-    @Override
-    public String generate(String execution) {
-        try {
-            Mustache template = MustacheFactorySingleton.getInstance().compile("Aggregation.java.mustache");
-            template.execute(writer, new AggregationData()).flush();
-            return writer.toString();
-        } catch (IOException e) {
-            System.out.println(e);
-        }
-        return "";
-    }
+  public AggregateGenerator(AggregateFunction aggregateFunction, final int aggregateValueIndex) {
+    this.aggregateFunction = aggregateFunction;
+    this.aggregateValueIndex = aggregateValueIndex;
+  }
+
+  @Override
+  public String generate(Pipeline pipeline, String execution) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
 }

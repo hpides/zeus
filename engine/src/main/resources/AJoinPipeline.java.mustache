@@ -61,9 +61,6 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = windowStart;
         }
 
-
-        {{{operatorImplementationLeft}}}
-
         {{keyType}}2ObjectOpenHashMap<IntSet> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
         leftInput.getBuffer().position(leftInput.getBuffer().position()+{{leftKeyOffset}});

@@ -1,6 +1,10 @@
-package de.hpi.des.hdes.engine.graph.pipeline;
+package de.hpi.des.hdes.engine.graph.pipeline.node;
 
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
+import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
+import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import lombok.Getter;
 
 public class BufferedSourceNode extends GenerationNode {
@@ -8,7 +12,8 @@ public class BufferedSourceNode extends GenerationNode {
     @Getter
     private final BufferedSource source;
 
-    public BufferedSourceNode(BufferedSource source) {
+    public BufferedSourceNode(PrimitiveType[] outputTypes, BufferedSource source) {
+        super(null, outputTypes);
         this.source = source;
     }
 

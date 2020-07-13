@@ -9,7 +9,7 @@ import de.hpi.des.hdes.engine.execution.slot.SourceSlot;
 import de.hpi.des.hdes.engine.execution.slot.TwoInputPullSlot;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
-import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
 import de.hpi.des.hdes.engine.graph.vulcano.SourceNode;

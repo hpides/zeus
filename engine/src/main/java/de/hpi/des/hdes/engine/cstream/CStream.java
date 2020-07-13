@@ -3,35 +3,68 @@ package de.hpi.des.hdes.engine.cstream;
 import de.hpi.des.hdes.engine.generators.AJoinGenerator;
 import de.hpi.des.hdes.engine.generators.AggregateGenerator;
 import de.hpi.des.hdes.engine.generators.FilterGenerator;
-import de.hpi.des.hdes.engine.generators.FlatMapGenerator;
 import de.hpi.des.hdes.engine.generators.JoinGenerator;
 import de.hpi.des.hdes.engine.generators.MapGenerator;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.Node;
-import de.hpi.des.hdes.engine.graph.pipeline.JoinGenerationNode;
-import de.hpi.des.hdes.engine.graph.pipeline.AJoinGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.JoinGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.AJoinGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.UnaryGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.AggregationGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSink;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSinkNode;
-import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
-import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSinkNode;
+import de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
+import de.hpi.des.hdes.engine.operation.AggregateFunction;
 
 public class CStream extends AbstractCStream {
-
     public CStream(final VulcanoTopologyBuilder builder, final Node node) {
         super(builder, node);
     }
+    
+    /**
+     * Sums the elements of this stream.
+     *
+     * @return the aggregated stream
+     */
+    public CStream sum(final PrimitiveType[] types, final int aggregateValueIndex) {
+        return this.aggregate(AggregateFunction.SUM, types, aggregateValueIndex);
+    }
 
     /**
-     * Flat maps the elements of this stream.
+     * Averages the elements of this stream.
      *
-     * @param mapper the mapper
-     * @return the resulting stream with flat mapped elements
+     * @return the aggregated stream
      */
-    public CStream flatMap(final String mapper) {
-        final UnaryGenerationNode child = new UnaryGenerationNode(new FlatMapGenerator(mapper));
-        this.builder.addGraphNode(this.node, child);
-        return new CStream(this.builder, child);
+    public CStream average(final PrimitiveType[] types, final int aggregateValueIndex) {
+        return this.aggregate(AggregateFunction.AVERAGE, types, aggregateValueIndex);
+    }
+
+    /**
+     * Holds the minimum of all elements of this stream.
+     *
+     * @return the aggregated stream
+     */
+    public CStream minimum(final PrimitiveType[] types, final int aggregateValueIndex) {
+        return this.aggregate(AggregateFunction.MINIMUM, types, aggregateValueIndex);
+    }
+
+    /**
+     * Holds the maximum of all elements of this stream.
+     *
+     * @return the aggregated stream
+     */
+    public CStream maximum(final PrimitiveType[] types, final int aggregateValueIndex) {
+        return this.aggregate(AggregateFunction.MAXIMUM, types, aggregateValueIndex);
+    }
+
+    /**
+     * Counts the elements of this stream.
+     *
+     * @return the aggregated stream
+     */
+    public CStream count(final PrimitiveType[] types, final int aggregateValueIndex) {
+        return this.aggregate(AggregateFunction.COUNT, types, aggregateValueIndex);
     }
 
     /**
@@ -40,8 +73,10 @@ public class CStream extends AbstractCStream {
      * @param mapper the mapper
      * @return the resulting stream with flat mapped elements
      */
-    public CStream map(final String mapper) {
-        final UnaryGenerationNode child = new UnaryGenerationNode(new MapGenerator(mapper));
+    public CStream map(final Tuple mapper) {
+        Tuple firstTuple = mapper.getFirst();
+        final UnaryGenerationNode child = new UnaryGenerationNode(firstTuple.getTypes(), mapper.getTypes(),
+                new MapGenerator(mapper));
         this.builder.addGraphNode(this.node, child);
         return new CStream(this.builder, child);
     }
@@ -55,7 +90,7 @@ public class CStream extends AbstractCStream {
      * @return the filtered stream
      */
     public CStream filter(final PrimitiveType[] types, final String filter) {
-        final UnaryGenerationNode child = new UnaryGenerationNode(new FilterGenerator(types, filter));
+        final UnaryGenerationNode child = new UnaryGenerationNode(types, types, new FilterGenerator(types, filter));
         this.builder.addGraphNode(this.node, child);
         return new CStream(this.builder, child);
     }
@@ -68,25 +103,35 @@ public class CStream extends AbstractCStream {
      * @param filter the predicate
      * @return the filtered stream
      */
-    public CStream aggregate() {
-        final UnaryGenerationNode child = new UnaryGenerationNode(new AggregateGenerator());
+    private CStream aggregate(AggregateFunction function, final PrimitiveType[] types, final int aggregateValueIndex) {
+        final AggregationGenerationNode child = new AggregationGenerationNode(types,
+            new PrimitiveType[] { types[aggregateValueIndex] },
+            new AggregateGenerator(function, aggregateValueIndex)
+        );
         this.builder.addGraphNode(this.node, child);
         return new CStream(this.builder, child);
     }
 
     /**
-     * Joins the elements of two stream.
-     *
-     *
-     * @param stream2 second cstream
-     * @return joined cstream
+     * Ajoins the elements of two streams
+     * 
+     * @param rightStream     The (other) right stream
+     * @param leftInputTypes  An array of types, in which order they appear on the
+     *                        buffer for the current stream
+     * @param rightInputTypes An array of types, in which order they appear on the
+     *                        buffer for the right stream
+     * @param leftKeyIndex    A 0-based index of which element in the values is the
+     *                        key of the current stream
+     * @param rightKeyIndex   A 0-based index of which element in the values is the
+     *                        key of the right stream
+     * @return Joined Stream
      */
-    public CStream join(final CStream stream2, final PrimitiveType[] leftInputTypes,
-    final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex) {
-        final JoinGenerationNode child = new JoinGenerationNode(
-                new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex));
+    public CStream join(final CStream rightStream, final PrimitiveType[] leftInputTypes,
+                        final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex, final String joinMapper) {
+        final JoinGenerationNode child = new JoinGenerationNode(leftInputTypes, rightInputTypes, 
+        new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex));
         this.builder.addGraphNode(this.node, child);
-        this.builder.addGraphNode(stream2.getNode(), child);
+        this.builder.addGraphNode(rightStream.getNode(), child);
         return new CStream(this.builder, child);
     }
 
@@ -106,7 +151,7 @@ public class CStream extends AbstractCStream {
      */
     public CStream ajoin(final CStream rightStream, final PrimitiveType[] leftInputTypes,
             final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex) {
-        final AJoinGenerationNode child = new AJoinGenerationNode(
+        final AJoinGenerationNode child = new AJoinGenerationNode(leftInputTypes, rightInputTypes,
                 new AJoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex));
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(rightStream.getNode(), child);
@@ -116,8 +161,8 @@ public class CStream extends AbstractCStream {
     /**
      * Writes the elements of this stream into a sink.
      */
-    public void to(BufferedSink sink) {
-        final BufferedSinkNode child = new BufferedSinkNode(sink);
+    public void to(BufferedSink sink, PrimitiveType[] types) {
+        final BufferedSinkNode child = new BufferedSinkNode(types, sink);
         this.builder.addGraphNode(this.node, child);
     }
 }

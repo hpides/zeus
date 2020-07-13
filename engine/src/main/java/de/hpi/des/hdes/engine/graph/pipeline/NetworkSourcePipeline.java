@@ -1,24 +1,11 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
-
 import de.hpi.des.hdes.engine.execution.Dispatcher;
-import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.io.Buffer;
-import de.hpi.des.hdes.engine.io.DirectoryHelper;
+import de.hpi.des.hdes.engine.graph.pipeline.node.NetworkSourceNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +21,7 @@ public class NetworkSourcePipeline extends Pipeline {
     private boolean shutdownFlag;
 
     public NetworkSourcePipeline(NetworkSourceNode sourceNode) {
+        super(null);
         this.sourceNode = sourceNode;
     }
 
@@ -56,15 +44,13 @@ public class NetworkSourcePipeline extends Pipeline {
     }
 
     @Override
-    public void addParent(Pipeline pipeline, Node childNode) {
+    public void addParent(Pipeline pipeline, GenerationNode childNode) {
         this.setChild(pipeline);
-
     }
 
     @Override
-    public void addOperator(Node operator, Node childNode) {
+    public void addOperator(GenerationNode operator, GenerationNode childNode) {
         // TODO Auto-generated method stub
-
     }
 
 }

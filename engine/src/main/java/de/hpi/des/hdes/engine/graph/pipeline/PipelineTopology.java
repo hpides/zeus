@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.TempSink;
@@ -79,14 +80,14 @@ public class PipelineTopology {
     public void addNodeToPipeline(Node node) {
         Node childNode = node.getChild();
         Pipeline currentPipeline = this.nodeToPipeline.get(childNode);
-        currentPipeline.addOperator(node, childNode);
+        currentPipeline.addOperator((GenerationNode) node, (GenerationNode) childNode);
         this.nodeToPipeline.put(node, currentPipeline);
     }
 
     public void addPipelineAsParent(Pipeline pipeline, Node firstPipelineNode) {
         this.addPipelineAsLeaf(pipeline, firstPipelineNode);
         Node childNode = firstPipelineNode.getChild();
-        this.nodeToPipeline.get(childNode).addParent(pipeline, childNode);
+        this.nodeToPipeline.get(childNode).addParent(pipeline, (GenerationNode) childNode);
     }
 
     public void addPipelineAsLeaf(Pipeline pipeline, Node firstPipelineNode) {

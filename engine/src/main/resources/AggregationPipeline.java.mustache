@@ -1,35 +1,111 @@
+{{! 
+  hash used: {
+    pipelineId: string,
+    tupleLength: int,
+    keyType: string, // How do we support multiple keys? Object could do the trick with a custom key exctractor
+    nativeKeyType: string, // same as keyType except lowercased, except for Object2Object
+    keyOffset: int
+    aggImplementation: String,
+    shouldCountPerWindow: Bool
+  }
+}}
 package de.hpi.des.hdes.engine.temp;
 
-import java.util.HashMap;
+import java.nio.ByteBuffer;
 
-import de.hpi.des.hdes.engine.execution.slot.Event;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
+import de.hpi.des.hdes.engine.execution.Stoppable;
+import it.unimi.dsi.fastutil.longs.*;
+import it.unimi.dsi.fastutil.ints.*;
 
-public class {{{className}}} {
-
-    private final {{{nextClassName}}} nextPipeline;
-    private final HashMap<Long, Integer> windowToState;
-    private final long length = {{length}};
-    private final long slide = {{slide}};
+public class {{{pipelineId}}} implements Runnable, Stoppable {
+    final private long windowSlide;
+    final private long windowLength;
     private long earliestOpenWindow = Long.MAX_VALUE;
+    private long latestTimestamp = 0;
+    final private ReadBuffer input;
+    final private ByteBuffer inputByteBuffer;
+    final private Dispatcher dispatcher;
+    final byte[] out = new byte[8 + 1 + {{aggregationValueLength}}];
 
-    public {{{className}}}(final {{{nextClassName}}} nextPipeline) {
-        this.nextPipeline = nextPipeline;
-        this.windowToState = new HashMap<>();
+    final private Long2{{aggregationValueType}}OpenHashMap windowToState = new Long2{{aggregationValueType}}OpenHashMap();
+    
+    {{{#shouldCountPerWindow}}}
+    final private Long2IntOpenHashMap windowToCount = new Long2IntOpenHashMap();
+    {{{/shouldCountPerWindow}}}
+
+    private boolean shutdownFlag = false;
+
+    public {{{pipelineId}}} (final ReadBuffer input, final Dispatcher dispatcher, final long windowLength,
+            final long windowSlide) {
+        this.input = input;
+        this.dispatcher = dispatcher;
+        this.windowLength = windowLength;
+        this.windowSlide = windowSlide;
     }
 
-    public void process(final Event event) {
-        long windowStart = event.getEventTime() - (event.getEventTime() % length);
+    private void readEvent() {
+        input.mark();
+        final long eventTimestamp = input.getBuffer().getLong();
+        if (eventTimestamp < latestTimestamp) {
+            input.reset();
+            dispatcher.free(input, input.getBuffer().position());
+            input.getBuffer().position(input.getBuffer().position()+8+{{tupleLength}}+1);
+            return;
+        }
+        final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
         if (earliestOpenWindow > windowStart) {
             earliestOpenWindow = windowStart;
         }
 
-        {{{implementation}}}
-        
-        for (; earliestOpenWindow + length <= event.getEventTime(); earliestOpenWindow += slide) {
-            if (windowToState.containsKey(earliestOpenWindow)) {
-                this.nextPipeline.process(element);
-                this.windowToState.remove(earliestOpenWindow);
+        final {{nativeAggregationValueType}} state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
+
+        {{{#shouldCountPerWindow}}}
+        final int count = this.windowToState.computeIfAbsent(windowStart, w -> 0);
+        {{{/shouldCountPerWindow}}}
+
+        input.getBuffer().position(input.getBuffer().position()+{{aggregationValueOffset}});
+
+        final {{nativeAggregationValueType}} current = input.getBuffer().get{{aggregationValueType}};
+        final {{nativeAggregationValueType}} newState = {{{aggregateImplementation}}};
+
+        this.windowToState.put(windowStart, newState);
+
+        {{{#shouldCountPerWindow}}}
+        this.windowToCounts.put(windowStart, count + 1);
+        {{{/shouldCountPerWindow}}}
+
+        if (input.getBuffer().get() == (byte) 1) {
+            latestTimestamp = Math.max(latestTimestamp, eventTimestamp);
+            for (; earliestOpenWindow + windowLength <= latestTimestamp && earliestOpenWindow
+                    + windowLength <= latestTimestamp; earliestOpenWindow += windowSlide) {
+                trigger(earliestOpenWindow);
             }
         }
+        input.reset();
+        dispatcher.free(input, input.getBuffer().position());
+    }
+
+    private void trigger(long eventTimestamp) {
+        {{nativeAggregationValueType}} value = windowToState.remove(eventTimestamp);
+        ByteBuffer.wrap(out).putLong(0, eventTimestamp).put{{aggregationValueType}}(8, value).put(8 + {{aggregationValueLength}}, (byte) 0);
+        while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
+    }
+
+    @Override
+    public void run() {
+        while (!Thread.interrupted() && !shutdownFlag) {
+            if (input.hasRemaining())
+                readEvent();
+            if (input.getBuffer().position() == input.getBuffer().capacity()) {
+                dispatcher.resetReadLimit(input);
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        shutdownFlag = true;
     }
 }

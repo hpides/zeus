@@ -1,14 +1,4 @@
-private interface FilterInterface {
-    boolean filter(
-        {{{signature}}}
-    );
-}
-
-{{#materilization}}
-{{> Materialization.java.mustache}}
-{{/materilization}}
-
-FilterInterface filter = ({{{signature}}}) -> {{{condition}}};
-if(filter.apply({{{application}}})){
+{{interfaceName}} {{interfaceName}}filter = ({{{signature}}}) -> {{{condition}}};
+if({{interfaceName}}filter.apply({{{application}}})){
     {{{execution}}}
 }

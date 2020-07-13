@@ -1,4 +1,0 @@
-for (; windowStart <= event.getEventTime(); windowStart += slide) {
-    final Integer state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
-    this.windowToState.put(windowStart, (state + event.getValue()));
-}

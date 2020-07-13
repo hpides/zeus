@@ -33,7 +33,8 @@ public class LocalGeneratorTest {
     @Test
     public void sourceSinkStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(source).to(sink);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source).to(sink,
+                new PrimitiveType[] { PrimitiveType.LONG });
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);
@@ -45,7 +46,8 @@ public class LocalGeneratorTest {
     // @Test
     public void sourceFilterStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(source).filter(new PrimitiveType[] { PrimitiveType.LONG }, "v1 -> v1 > 1");
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source)
+                .filter(new PrimitiveType[] { PrimitiveType.LONG }, "v1 -> v1 > 1");
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);
@@ -57,7 +59,9 @@ public class LocalGeneratorTest {
     // @Test
     public void sourceFilterSinkStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(source).filter(new PrimitiveType[] { PrimitiveType.LONG }, "v1 -> v1 > 1");
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source)
+                .filter(new PrimitiveType[] { PrimitiveType.LONG }, "v1 -> v1 > 1")
+                .to(sink, new PrimitiveType[] { PrimitiveType.LONG });
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);
@@ -70,9 +74,10 @@ public class LocalGeneratorTest {
     @Test
     public void sourceJoinStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        var stream = builder.streamOfC(source);
-        builder.streamOfC(source).join(stream, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0);
+        var stream = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source).join(stream,
+                new PrimitiveType[] { PrimitiveType.LONG }, new PrimitiveType[] { PrimitiveType.LONG }, 1, 2,
+                "(l,r) -> l+r");
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);
@@ -84,12 +89,25 @@ public class LocalGeneratorTest {
     }
 
     @Test
+    public void sourceAverageStreamTest() {
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source)
+                .average(new PrimitiveType[] { PrimitiveType.LONG }, 0)
+                .to(sink, new PrimitiveType[] { PrimitiveType.LONG });
+        LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+        PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
+        generator.extend(pt);
+    }
+
+    @Test
     public void sourceAJoinStreamTest() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        var stream = builder.streamOfC(source);
-        builder.streamOfC(source).ajoin(stream, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0).to(sink);
-        ;
+        var stream = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, source)
+                .ajoin(stream, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0)
+                .to(sink, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT });
         LocalGenerator generator = new LocalGenerator(new PipelineTopology());
         PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.build());
         generator.extend(pt);

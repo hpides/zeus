@@ -1,6 +1,5 @@
 package de.hpi.des.hdes.engine.graph;
 
-import de.hpi.des.hdes.engine.graph.pipeline.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.BinaryOperationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
 import de.hpi.des.hdes.engine.graph.vulcano.SourceNode;

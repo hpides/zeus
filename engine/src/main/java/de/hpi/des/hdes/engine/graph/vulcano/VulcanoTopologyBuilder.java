@@ -6,8 +6,9 @@ import de.hpi.des.hdes.engine.astream.AStream;
 import de.hpi.des.hdes.engine.cstream.CStream;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourceNode;
-import de.hpi.des.hdes.engine.graph.pipeline.NetworkSourceNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSourceNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.NetworkSourceNode;
+import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.operation.Source;
 import lombok.Getter;
 
@@ -61,8 +62,8 @@ public class VulcanoTopologyBuilder {
    * @param source a source to read data from
    * @return a new a stream
    */
-  public CStream streamOfC(BufferedSource source) {
-    final BufferedSourceNode sourceNode = new BufferedSourceNode(source);
+  public CStream streamOfC(PrimitiveType[] types, BufferedSource source) {
+    final BufferedSourceNode sourceNode = new BufferedSourceNode(types, source);
     this.nodes.add(sourceNode);
     return new CStream(this, sourceNode);
   }
@@ -73,8 +74,8 @@ public class VulcanoTopologyBuilder {
    * @param source a source to read data from
    * @return a new a stream
    */
-  public CStream streamOfC(String host, int port) {
-    final NetworkSourceNode sourceNode = new NetworkSourceNode(host, port);
+  public CStream streamOfC(PrimitiveType[] types, String host, int port) {
+    final NetworkSourceNode sourceNode = new NetworkSourceNode(types, host, port);
     this.nodes.add(sourceNode);
     return new CStream(this, sourceNode);
   }

@@ -1,0 +1,5 @@
+{{#fromBuffer}}
+  input.reset();
+  input.position(input.position() + {{{index}}});
+{{/fromBuffer}}
+{{{type.lowercaseName}}} {{{varName}}}{{#fromBuffer}} = input.get{{{uppercaseName}}}(){{/fromBuffer}};

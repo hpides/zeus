@@ -5,6 +5,8 @@ import java.util.List;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.node.AJoinGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -13,15 +15,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AJoinPipeline extends BinaryPipeline {
 
-    protected AJoinPipeline(List<Node> leftNodes, List<Node> rightNodes, Node binaryNode) {
+    protected AJoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
         super(leftNodes, rightNodes, binaryNode);
     }
 
-    protected AJoinPipeline(Node binaryNode) {
+    public AJoinPipeline(Node binaryNode) {
         super(binaryNode);
     }
 
-    public static AJoinPipeline of(List<Node> leftNodes, List<Node> rightNodes, Node binaryNode) {
+    public static AJoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
         return new AJoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 
@@ -47,4 +49,14 @@ public class AJoinPipeline extends BinaryPipeline {
         return (AJoinGenerationNode) this.binaryNode;
     }
 
+    @Override
+    public void addParent(Pipeline pipeline, GenerationNode childNode) {
+      // TODO Auto-generated method stub
+    }
+  
+    @Override
+    public void addOperator(GenerationNode operator, GenerationNode childNode) {
+      // TODO Auto-generated method stub
+      
+    }
 }
