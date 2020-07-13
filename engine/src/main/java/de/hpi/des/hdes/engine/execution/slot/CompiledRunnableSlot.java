@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
-import de.hpi.des.hdes.engine.execution.CompiledQuery;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.io.Buffer;
 import lombok.extern.slf4j.Slf4j;

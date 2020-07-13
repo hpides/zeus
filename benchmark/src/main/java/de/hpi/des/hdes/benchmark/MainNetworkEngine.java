@@ -134,14 +134,14 @@ public class MainNetworkEngine implements Runnable {
         nexmarkLightHighestPricePerAuction();
         break;
       }
-      case "compiledajoin": {
-        executeCompiledAJoin();
-        break;
-      }
-      case "compiledjoin": {
-        executeCompiledJoin();
-        break;
-      }
+      // case "compiledajoin": {
+      //   executeCompiledAJoin();
+      //   break;
+      // }
+      // case "compiledjoin": {
+      //   executeCompiledJoin();
+      //   break;
+      // }
       default:
         log.warn("There was an error with benchmark {}", benchmarkType);
     }
@@ -257,51 +257,51 @@ public class MainNetworkEngine implements Runnable {
     executeQuery(makeQuery, factory, sources, fixedQueries);
   }
 
-  private void executeCompiledAJoin() {
-    JobManager manager = new JobManager(new CompiledEngine());
-    VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+  // private void executeCompiledAJoin() {
+  //   JobManager manager = new JobManager(new CompiledEngine());
+  //   VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
-    CStream sourceOne = builder.streamOfC(generatorHost, basicPort1);
-    builder.streamOfC(generatorHost, basicPort2)
-        .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0)
-        .to();
+  //   CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1);
+  //   builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
+  //       .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+  //           new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0)
+  //       .to();
 
-    manager.addQuery(builder.buildAsQuery());
-    // Running engine
-    manager.runEngine();
-    try {
-      Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
-    } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+  //   manager.addQuery(builder.buildAsQuery());
+  //   // Running engine
+  //   manager.runEngine();
+  //   try {
+  //     Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+  //   } catch (InterruptedException e) {
+  //     // TODO Auto-generated catch block
+  //     e.printStackTrace();
+  //   }
 
-    manager.shutdown();
-  }
+  //   manager.shutdown();
+  // }
 
-  private void executeCompiledJoin() {
-    JobManager manager = new JobManager(new CompiledEngine());
-    VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+  // private void executeCompiledJoin() {
+  //   JobManager manager = new JobManager(new CompiledEngine());
+  //   VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
-    CStream sourceOne = builder.streamOfC(generatorHost, basicPort1);
-    builder.streamOfC(generatorHost, basicPort2)
-        .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0)
-        .to();
+  //   CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1);
+  //   builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
+  //       .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+  //           new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0)
+  //       .to();
 
-    manager.addQuery(builder.buildAsQuery());
-    // Running engine
-    manager.runEngine();
-    try {
-      Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
-    } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+  //   manager.addQuery(builder.buildAsQuery());
+  //   // Running engine
+  //   manager.runEngine();
+  //   try {
+  //     Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+  //   } catch (InterruptedException e) {
+  //     // TODO Auto-generated catch block
+  //     e.printStackTrace();
+  //   }
 
-    manager.shutdown();
-  }
+  //   manager.shutdown();
+  // }
 
   private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,
       List<NetworkSource> sources, int fileSinksAmount) {

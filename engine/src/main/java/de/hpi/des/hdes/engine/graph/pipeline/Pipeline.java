@@ -21,7 +21,9 @@ import de.hpi.des.hdes.engine.io.DirectoryHelper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import lombok.Getter;
@@ -35,6 +37,12 @@ public abstract class Pipeline {
     protected Class pipelineKlass;
     @Setter
     protected Object pipelineObject;
+    @Setter
+    @Getter
+    private boolean isLoaded = false;
+    private final Set<String> queryIds = new HashSet<>();
+    @Getter
+    private String initialQueryId;
     private static URLClassLoader tempClassLoader;
     private final HashMap<String, InterfaceData> interfaces = new HashMap<>();
     private final HashMap<String, MaterializationData> variables = new HashMap<>();
@@ -193,6 +201,7 @@ public abstract class Pipeline {
 
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
+        this.setLoaded(true);
         try {
             pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass)
                     .newInstance(dispatcher.getReadByteBufferForPipeline((UnaryPipeline) this), dispatcher);
@@ -200,4 +209,15 @@ public abstract class Pipeline {
             log.error("Slot had an exception during class load: ", e);
         }
     }
+
+    public abstract void replaceParent(Pipeline newParentPipeline);
+
+    public void addQueryId(String queryId) {
+        this.queryIds.add(queryId);   
+	}
+
+    public void setInitialQueryId(String queryId) {
+        this.queryIds.add(queryId);
+        this.initialQueryId = queryId;
+	}
 }

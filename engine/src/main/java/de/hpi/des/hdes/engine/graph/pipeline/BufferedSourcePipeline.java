@@ -33,6 +33,7 @@ public class BufferedSourcePipeline extends Pipeline {
     @Override
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
+        this.setLoaded(true);
         try {
             pipelineObject = (Runnable) pipelineKlass.getDeclaredConstructor(Buffer.class, childKlass)
                     .newInstance(sourceNode.getSource().getInputBuffer());
@@ -51,5 +52,11 @@ public class BufferedSourcePipeline extends Pipeline {
         // TODO Auto-generated method stub
 
     }
+
+	@Override
+	public void replaceParent(Pipeline newParentPipeline) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

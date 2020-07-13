@@ -30,6 +30,7 @@ public class AJoinPipeline extends BinaryPipeline {
     @Override
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
+        this.setLoaded(true);
         try {
             pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class,
                     long.class, long.class).newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),

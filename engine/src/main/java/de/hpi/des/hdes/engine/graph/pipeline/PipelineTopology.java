@@ -4,15 +4,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.TempSink;
 import lombok.Getter;
@@ -24,17 +25,41 @@ public class PipelineTopology {
 
     private final List<Pipeline> pipelines = new ArrayList<>();
     private final Map<Node, Pipeline> nodeToPipeline = new HashMap<Node, Pipeline>();
+    private final Map<String, Pipeline> pipelineIdToPipeline = new HashMap<String, Pipeline>();
     private TempSink sink;
     private Dispatcher dispatcher;
 
-    public static PipelineTopology pipelineTopologyOf(Topology queryTopology) {
+    public static PipelineTopology pipelineTopologyOf(Query query) {
         PipelineTopology pipelineTopology = new PipelineTopology();
 
-        for (Node node : Lists.reverse(queryTopology.getTopologicalOrdering())) {
+        for (Node node : Lists.reverse(query.getTopology().getTopologicalOrdering())) {
             ((GenerationNode) node).accept(pipelineTopology);
         }
+        pipelineTopology.getPipelines().stream().forEach(pipeline -> {
+            pipeline.setInitialQueryId(query.getId().toString());
+            pipelineTopology.pipelineIdToPipeline.put(pipeline.getPipelineId(), pipeline);
+        });
 
         return pipelineTopology;
+    }
+
+    public List<Pipeline> extend(PipelineTopology newPipelineTopology) {
+        List<Pipeline> newPipelines = new LinkedList<>();
+        boolean foundMatch = false;
+        for (Pipeline pipeline : newPipelineTopology.getPipelines()) {
+            if (pipelineIdToPipeline.containsKey(pipeline.getPipelineId())) {
+                Pipeline existingPipeline = this.pipelineIdToPipeline.get(pipeline.getPipelineId());
+                existingPipeline.addQueryId(pipeline.getInitialQueryId());
+                if (!foundMatch) {
+                    pipeline.getChild().replaceParent(existingPipeline);
+                    foundMatch = true;
+                }
+            } else {
+                newPipelines.add(pipeline);
+                pipelineIdToPipeline.put(pipeline.getPipelineId(), pipeline);
+            }
+        }
+        return newPipelines;
     }
 
     public void loadPipelines(Dispatcher dispatcher) {
@@ -47,7 +72,10 @@ public class PipelineTopology {
         }
         pipelines.get(0).loadPipeline(dispatcher, TempSink.class);
         for (Pipeline pipeline : pipelines.subList(1, pipelines.size())) {
-            pipeline.loadPipeline(dispatcher, pipeline.getChild().getPipelineKlass());
+            if (!pipeline.isLoaded()) {
+                pipeline.loadPipeline(dispatcher, pipeline.getChild().getPipelineKlass());
+                pipeline.setLoaded(true);
+            }
         }
     }
 

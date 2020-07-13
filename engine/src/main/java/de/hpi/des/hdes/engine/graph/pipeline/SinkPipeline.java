@@ -35,6 +35,7 @@ public class SinkPipeline extends Pipeline {
   }
 
   void loadPipeline(Object child) {
+    this.setLoaded(true);
     Path javaFile = Paths.get(this.getFilePath());
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     compiler.run(null, null, null, javaFile.toFile().getAbsolutePath());
@@ -62,4 +63,10 @@ public class SinkPipeline extends Pipeline {
     // TODO Auto-generated method stub
 
   }
+
+@Override
+public void replaceParent(Pipeline newParentPipeline) {
+    parent = newParentPipeline;
+    newParentPipeline.setChild(this);
+}
 }

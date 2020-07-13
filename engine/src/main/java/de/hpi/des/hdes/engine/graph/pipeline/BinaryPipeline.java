@@ -8,8 +8,10 @@ import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.operation.Operator;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
+@Slf4j
 public abstract class BinaryPipeline extends Pipeline {
     protected final List<GenerationNode> leftNodes;
     protected final List<GenerationNode> rightNodes;
@@ -62,5 +64,18 @@ public abstract class BinaryPipeline extends Pipeline {
         } else {
             this.rightNodes.add(operator);
         }
+    }
+
+    @Override
+    public void replaceParent(Pipeline newParentPipeline) {
+        if (this.leftParent.getPipelineId().equals(newParentPipeline.getPipelineId())) {
+            this.leftParent = newParentPipeline;
+        } else if (this.rightParent.getPipelineId().equals(newParentPipeline.getPipelineId())) {
+            this.rightParent = newParentPipeline;
+        } else {
+            log.error("Tried replace parent in binary pipeline with pipelineID {} but found no matching parent",
+                    newParentPipeline.getPipelineId());
+        }
+        newParentPipeline.setChild(this);
     }
 }

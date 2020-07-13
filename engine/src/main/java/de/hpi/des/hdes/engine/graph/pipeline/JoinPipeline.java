@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.node.JoinGenerationNode;
@@ -31,6 +33,7 @@ public class JoinPipeline extends BinaryPipeline {
     @Override
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
+        this.setLoaded(true);
         try {
             pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class,
                     long.class, long.class).newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),

@@ -69,9 +69,9 @@ public class CompiledExecutionPlan {
      * @return a new plan
      */
     public static CompiledExecutionPlan extend(final CompiledExecutionPlan executionPlan,
-            final Topology queryTopology) {
+            final Query query) {
         if (executionPlan.isEmpty()) {
-            PipelineTopology newPipelineTopology = PipelineTopology.pipelineTopologyOf(queryTopology);
+            PipelineTopology newPipelineTopology = PipelineTopology.pipelineTopologyOf(query);
 
             LocalGenerator generator = new LocalGenerator(new PipelineTopology());
             generator.extend(newPipelineTopology);
@@ -79,7 +79,7 @@ public class CompiledExecutionPlan {
 
             newPipelineTopology.loadPipelines(dispatcher);
 
-            return new CompiledExecutionPlan(queryTopology, newPipelineTopology);
+            return new CompiledExecutionPlan(query.getTopology(), newPipelineTopology);
         } else {
             // TODO engine
         }
@@ -94,7 +94,7 @@ public class CompiledExecutionPlan {
      * @return a new execution plan
      */
     public static CompiledExecutionPlan createPlan(final Query query) {
-        return extend(emptyExecutionPlan(), query.getTopology());
+        return extend(emptyExecutionPlan(), query);
     }
 
     /**

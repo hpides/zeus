@@ -146,7 +146,7 @@ public class LocalGenerator extends PipelineVisitor {
                     implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
-            System.exit(1);
+            log.error("Compile Error: {}", e);
         }
     }
 
@@ -176,7 +176,7 @@ public class LocalGenerator extends PipelineVisitor {
                     implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
-            System.exit(1);
+            log.error("Compile Error: {}", e);
         }
     }
 

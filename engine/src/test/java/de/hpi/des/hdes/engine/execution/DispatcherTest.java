@@ -2,6 +2,7 @@ package de.hpi.des.hdes.engine.execution;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
@@ -34,7 +35,7 @@ public class DispatcherTest {
     void writeToBuffer() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         builder.streamOfC(new PrimitiveType[]{}, source).filter(new PrimitiveType[]{}, "() -> true");
-        final PipelineTopology topology = PipelineTopology.pipelineTopologyOf(builder.build());
+        final PipelineTopology topology = PipelineTopology.pipelineTopologyOf(builder.buildAsQuery());
         final Dispatcher dispatcher = new Dispatcher(topology);
 
         byte[] bytes = {10, 11, 12};

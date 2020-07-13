@@ -48,8 +48,7 @@ public class CompiledEngine implements Engine {
 
     @Override
     public void addQuery(Query query) {
-        Topology topology = query.getTopology();
-        this.plan = CompiledExecutionPlan.extend(this.plan, topology);
+        this.plan = CompiledExecutionPlan.extend(this.plan, query);
     }
 
     @Override

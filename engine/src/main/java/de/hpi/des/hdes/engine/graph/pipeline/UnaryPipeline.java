@@ -54,4 +54,10 @@ public class UnaryPipeline extends Pipeline {
     public void addOperator(GenerationNode operator, GenerationNode childNode) {
         this.nodes.add(operator);
     }
+
+	@Override
+	public void replaceParent(Pipeline newParentPipeline) {
+        this.parent = newParentPipeline;
+        newParentPipeline.setChild(this);
+	}
 }
