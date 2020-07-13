@@ -35,13 +35,7 @@ public class JoinGenerationNode extends GenerationNode {
 
     @Override
     public void accept(PipelineTopology pipelineTopology) {
-        if (this.getChildren().isEmpty()) {
-            JoinPipeline currentPipeline = new JoinPipeline(this);
-            pipelineTopology.addPipelineAsLeaf(currentPipeline, this);
-        } else {
-            // TODO create new pipeline
-            log.error("Used execution branch which is not implemented yet");
-            pipelineTopology.addNodeToPipeline(this);
-        }
+        JoinPipeline pipeline = new JoinPipeline(this);
+        pipelineTopology.addPipelineAsParent(pipeline, this);
     }
 }
