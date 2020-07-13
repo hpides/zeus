@@ -34,6 +34,8 @@ public abstract class Pipeline {
     @Setter
     protected Object pipelineObject;
     private static URLClassLoader tempClassLoader;
+    @Setter
+    private Pipeline child;
 
     public static URLClassLoader getClassLoader() {
         if (tempClassLoader == null) {
@@ -47,9 +49,6 @@ public abstract class Pipeline {
 
         return tempClassLoader;
     }
-
-    @Setter
-    private Pipeline child;
 
     protected Pipeline() {
         this.pipelineId = "c".concat(UUID.randomUUID().toString().replaceAll("-", ""));
