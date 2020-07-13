@@ -27,15 +27,19 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final private ReadBuffer input;
     final private ByteBuffer inputByteBuffer;
     final private Dispatcher dispatcher;
-    final byte[] out = new byte[8 + 1 + {{aggregationValueLength}}];
+    final byte[] out = new byte[8 + 1 + {{aggregationValueType.length}}];
 
-    final private Long2{{aggregationValueType}}OpenHashMap windowToState = new Long2{{aggregationValueType}}OpenHashMap();
+    final private Long2{{aggregationValueType.uppercaseName}}OpenHashMap windowToState = new Long2{{aggregationValueType.uppercaseName}}OpenHashMap();
     
     {{{#shouldCountPerWindow}}}
     final private Long2IntOpenHashMap windowToCount = new Long2IntOpenHashMap();
     {{{/shouldCountPerWindow}}}
 
     private boolean shutdownFlag = false;
+
+    {{#interfaces}}
+    {{> InterfaceDefinition.java.mustache}}
+    {{/interfaces}}
 
     public {{{pipelineId}}} (final ReadBuffer input, final Dispatcher dispatcher, final long windowLength,
             final long windowSlide) {
@@ -58,22 +62,28 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         if (earliestOpenWindow > windowStart) {
             earliestOpenWindow = windowStart;
         }
+        
+        {{#variables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/variables}}
 
-        final {{nativeAggregationValueType}} state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
+        {{{operators}}}
+
+        final {{aggregationValueType.lowercaseName}} state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
 
         {{{#shouldCountPerWindow}}}
-        final int count = this.windowToState.computeIfAbsent(windowStart, w -> 0);
+        final int count = this.windowToCount.computeIfAbsent(windowStart, w -> 0);
         {{{/shouldCountPerWindow}}}
 
         input.getBuffer().position(input.getBuffer().position()+{{aggregationValueOffset}});
 
-        final {{nativeAggregationValueType}} current = input.getBuffer().get{{aggregationValueType}};
-        final {{nativeAggregationValueType}} newState = {{{aggregateImplementation}}};
+        final {{aggregationValueType.lowercaseName}} current = {{{aggregationVariable}}};
+        final {{aggregationValueType.lowercaseName}} newState = {{{aggregateImplementation}}};
 
         this.windowToState.put(windowStart, newState);
 
         {{{#shouldCountPerWindow}}}
-        this.windowToCounts.put(windowStart, count + 1);
+        this.windowToCount.put(windowStart, count + 1);
         {{{/shouldCountPerWindow}}}
 
         if (input.getBuffer().get() == (byte) 1) {
@@ -88,12 +98,12 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(long eventTimestamp) {
-        {{nativeAggregationValueType}} value = windowToState.remove(eventTimestamp);
-        ByteBuffer.wrap(out).putLong(0, eventTimestamp).put{{aggregationValueType}}(8, value).put(8 + {{aggregationValueLength}}, (byte) 0);
+        {{aggregationValueType.lowercaseName}} value = windowToState.remove(eventTimestamp);
+        ByteBuffer.wrap(out).putLong(0, eventTimestamp).put{{aggregationValueType.uppercaseName}}(8, value).put(8 + {{aggregationValueType.length}}, (byte) 0);
         while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
     }
 
-    @Override
+    @Override+
     public void run() {
         while (!Thread.interrupted() && !shutdownFlag) {
             if (input.hasRemaining())

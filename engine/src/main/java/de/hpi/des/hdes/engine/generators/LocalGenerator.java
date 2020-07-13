@@ -152,15 +152,25 @@ public class LocalGenerator extends PipelineVisitor {
 
     @Override
     public void visit(AggregationPipeline aggregationPipeline) {
+        String implementation = "";
+        for (Node node : Lists.reverse(aggregationPipeline.getNodes())) {
+            if (node instanceof UnaryGenerationNode) {
+                implementation = ((UnaryGenerationNode) node).getOperator().generate(aggregationPipeline,
+                        implementation);
+            } else {
+                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+            }
+        }
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
             template.execute(writer,
                     new AggregationData(aggregationPipeline.getPipelineId(),
                             aggregationPipeline.getAggregationGenerationNode().getInputTypes(),
                             aggregationPipeline.getAggregationGenerationNode().getOperator().getAggregateValueIndex(),
-                            aggregationPipeline.getAggregationGenerationNode().getOperator().getAggregateFunction()))
+                            aggregationPipeline.getAggregationGenerationNode().getOperator().getAggregateFunction(),
+                            aggregationPipeline.getInterfaces(), aggregationPipeline.getVariables(), implementation))
                     .flush();
-            String implementation = writer.toString();
+            implementation = writer.toString();
             Files.writeString(
                     Paths.get(DirectoryHelper.getTempDirectoryPath() + aggregationPipeline.getPipelineId() + ".java"),
                     implementation);

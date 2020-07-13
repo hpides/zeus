@@ -8,15 +8,17 @@ import lombok.Getter;
 public class AggregationData {
     private final String pipelineId;
     private final int tupleLength;
-    private final String aggregationValueType;
-    private final String nativeAggregationValueType;
-    private final int aggregationValueLength;
+    private final PrimitiveType aggregationValueType;
     private final int aggregationValueOffset;
     private final String aggregateImplementation;
     private final boolean shouldCountPerWindow;
+    private final InterfaceData[] interfaces;
+    private final MaterializationData[] variables;
+    private final String operators;
 
-    public AggregationData(final String pipelineId, final PrimitiveType[] types, 
-                           final int aggregateValueIndex, final AggregateFunction aggregateFunction) {
+    public AggregationData(final String pipelineId, final PrimitiveType[] types, final int aggregateValueIndex,
+            final AggregateFunction aggregateFunction, final InterfaceData[] interfaces,
+            final MaterializationData[] variables, String operators) {
         this.pipelineId = pipelineId;
 
         int offset = 0;
@@ -29,45 +31,11 @@ public class AggregationData {
         }
         this.aggregationValueOffset = offset;
         this.tupleLength = size;
-        this.aggregationValueLength = types[aggregateValueIndex].getLength();
-
-        switch(aggregateFunction) {
-            case AVERAGE:
-                aggregateImplementation = "(state * count + current) / (count + 1)"; 
-                shouldCountPerWindow = true;
-                aggregationValueType = types[aggregateValueIndex].getUppercaseName();
-                nativeAggregationValueType = types[aggregateValueIndex].getLowercaseName();
-                break;
-            case COUNT:
-                aggregateImplementation =  "state + 1";
-                shouldCountPerWindow = false;
-                aggregationValueType = "Int";
-                nativeAggregationValueType = "int";
-                break;
-            case MINIMUM:
-                aggregateImplementation = "Math.min(current, state)";
-                shouldCountPerWindow = false;
-                aggregationValueType = types[aggregateValueIndex].getUppercaseName();
-                nativeAggregationValueType = types[aggregateValueIndex].getLowercaseName();
-                break;
-            case MAXIMUM:
-                aggregateImplementation = "Math.max(current, state)";
-                shouldCountPerWindow = false;
-                aggregationValueType = types[aggregateValueIndex].getUppercaseName();
-                nativeAggregationValueType = types[aggregateValueIndex].getLowercaseName();
-                break;
-            case SUM:
-                aggregateImplementation = "current + state";
-                shouldCountPerWindow = false;
-                aggregationValueType = types[aggregateValueIndex].getUppercaseName();
-                nativeAggregationValueType = types[aggregateValueIndex].getLowercaseName();
-                break;
-            default:
-                aggregateImplementation = "state";
-                shouldCountPerWindow = false;
-                aggregationValueType = types[aggregateValueIndex].getUppercaseName();
-                nativeAggregationValueType = types[aggregateValueIndex].getLowercaseName();
-                break;
-        }
+        this.interfaces = interfaces;
+        this.variables = variables;
+        this.operators = operators;
+        this.aggregateImplementation = aggregateFunction.getAggregateImplementation();
+        this.shouldCountPerWindow = aggregateFunction.isShouldCountPerWindow();
+        this.aggregationValueType = types[aggregateValueIndex];
     }
 }
