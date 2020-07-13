@@ -21,7 +21,7 @@ public class NetworkSourcePipeline extends Pipeline {
     private boolean shutdownFlag;
 
     public NetworkSourcePipeline(NetworkSourceNode sourceNode) {
-        super(null);
+        super(sourceNode.getOutputTypes());
         this.sourceNode = sourceNode;
     }
 

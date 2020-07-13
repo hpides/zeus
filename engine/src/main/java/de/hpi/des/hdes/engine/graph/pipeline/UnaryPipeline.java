@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,7 +19,8 @@ public class UnaryPipeline extends Pipeline {
 
     public UnaryPipeline(GenerationNode node) {
         super(node.getInputTypes());
-        this.nodes = Arrays.asList(node);
+        this.nodes = new ArrayList<GenerationNode>();
+        nodes.add(node);
     }
 
     protected UnaryPipeline(List<GenerationNode> nodes) {
