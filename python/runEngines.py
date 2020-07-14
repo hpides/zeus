@@ -2,11 +2,18 @@ import os
 import subprocess
 from time import sleep
 
+import psutil
+import datetime
+
 prefix = ['cmd.exe', '/c'] if os.name == 'nt' else []
 compileJava = False
 
 tis = 120
 gh = '127.0.0.1'
+TYPE = 'bjoin'
+
+MEASURE_UTILIZATION = true
+UPDATE_RATE = 1
 
 if compileJava:
     c = subprocess.run(prefix + ['mvn', 'package', '-DskipTests'], cwd='../')
@@ -29,9 +36,19 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
             '-fq', initial]
     args = [str(arg) for arg in args]
     try:
-        c = subprocess.run(args,
-                           cwd='../')
-        print(c)
+        with subprocess.popen(args, cwd='../') as proc:
+            if MEASURE_UTILIZATION:
+                py = psutil.Process(proc.pid)
+                timestamp = datetime.now()
+                save_path = f"../output/utilization_{TYPE}_{timestamp}.csv"
+                with open(save_path, "a") as monitor_file:
+                    monitor_file.write("cpu_usage, memory_usage")
+                    while proc.poll() != None:
+                        usage_in_gb = round(py.memory_info().rss / 10 ** 9, 2)
+                        usage_cpu = py.cpu_percent()
+                        monitor_file.write(f"{usage_cpu}, {usage_in_gb}\n")
+                        sleep(1)
+            
     except subprocess.TimeoutExpired as e:
         print('timedout', e)
 
@@ -114,7 +131,7 @@ def run_flink(op):
 #run_add_remove('hotcat')
 #run_add_remove('maxpric')
 
-run_engine(0, 0, 0, 'najoin', 1)
+run_engine(0, 0, 0, TYPE, 1)
 
 #run_flink('2')
 #run_flink('4')
