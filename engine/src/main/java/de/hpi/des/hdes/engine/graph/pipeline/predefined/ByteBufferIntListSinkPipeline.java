@@ -24,8 +24,8 @@ public class ByteBufferIntListSinkPipeline extends SinkPipeline {
 
     @Override
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
-        pipelineObject = new ByteBufferIntSink(dispatcher, dispatcher.getReadByteBufferForPipeline((SinkPipeline) this),
-                resultList);
+        pipelineObject = new ByteBufferIntListSink(dispatcher,
+                dispatcher.getReadByteBufferForPipeline((SinkPipeline) this), resultList);
     }
 
     @Override

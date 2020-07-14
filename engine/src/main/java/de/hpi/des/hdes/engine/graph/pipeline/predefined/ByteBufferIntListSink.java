@@ -9,13 +9,13 @@ import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.Stoppable;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 
-public class ByteBufferIntSink implements Runnable, Stoppable {
+public class ByteBufferIntListSink implements Runnable, Stoppable {
     private final List<Tuple4<Long, Integer, Integer, Boolean>> resultList;
     private boolean shutdownFlag = false;
     private final Dispatcher dispatcher;
     private final ReadBuffer input;
 
-    public ByteBufferIntSink(Dispatcher dispatcher, ReadBuffer input,
+    public ByteBufferIntListSink(Dispatcher dispatcher, ReadBuffer input,
             List<Tuple4<Long, Integer, Integer, Boolean>> resultList) {
         this.dispatcher = dispatcher;
         this.input = input;
