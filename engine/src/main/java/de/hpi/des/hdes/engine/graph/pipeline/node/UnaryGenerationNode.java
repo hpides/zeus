@@ -17,14 +17,15 @@ public class UnaryGenerationNode extends GenerationNode {
 
     private final Generatable operator;
 
-    public UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes, final Generatable operator) {
-        super(inputTypes, outputTypes, operator.toString());
+    public UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes,
+            final Generatable operator) {
+        super(inputTypes, outputTypes, operator);
         this.operator = operator;
     }
 
-    protected UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes, final String identifier,
-            final Generatable operator) {
-        super(inputTypes, outputTypes, identifier);
+    protected UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes,
+            final String identifier, final Generatable operator) {
+        super(inputTypes, outputTypes, operator, identifier);
         this.operator = operator;
     }
 

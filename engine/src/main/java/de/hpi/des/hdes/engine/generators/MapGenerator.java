@@ -83,4 +83,9 @@ public class MapGenerator implements Generatable {
         }
         return "";
     }
+
+    @Override
+    public String getOperatorId() {
+        return mapper.getId();
+    }
 }

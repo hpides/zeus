@@ -12,13 +12,13 @@ public class BufferedSinkNode extends GenerationNode {
   private final BufferedSink sink;
 
   public BufferedSinkNode(PrimitiveType[] inputTypes, BufferedSink sink) {
-      super(inputTypes, null);
-      this.sink = sink;
+    super(inputTypes, null, null);
+    this.sink = sink;
   }
 
   @Override
   public void accept(NodeVisitor visitor) {
-      // TODO Auto-generated method stub
+    // TODO Auto-generated method stub
 
   }
 

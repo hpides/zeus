@@ -1,9 +1,10 @@
 package de.hpi.des.hdes.engine.generators;
 
+import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import lombok.Getter;
 
 @Getter
-public class AJoinGenerator implements BinaryGeneratable {
+public class AJoinGenerator implements Generatable {
 
   private final int keyPositionLeft;
   private final int keyPositionRight;
@@ -19,9 +20,23 @@ public class AJoinGenerator implements BinaryGeneratable {
   }
 
   @Override
-  public String generate(String execution, String nextPipelineFunction, boolean isLeft) {
+  public String generate(Pipeline pipeline, String execution) {
     // TODO
     return "";
+  }
+
+  @Override
+  public String getOperatorId() {
+    String hashBase = "ajoin";
+    for (PrimitiveType t : leftTypes) {
+      hashBase.concat(t.name());
+    }
+    hashBase.concat(Integer.toString(keyPositionLeft));
+    for (PrimitiveType t : rightTypes) {
+      hashBase.concat(t.name());
+    }
+    hashBase.concat(Integer.toString(keyPositionRight));
+    return hashBase;
   }
 
 }

@@ -1,17 +1,10 @@
 package de.hpi.des.hdes.engine.generators;
 
-import java.io.IOException;
-import java.io.StringWriter;
-
-import com.github.mustachejava.Mustache;
-
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.operation.AggregateFunction;
 import lombok.Getter;
 
 public class AggregateGenerator implements Generatable {
-
-  private final StringWriter writer = new StringWriter();
 
   @Getter
   private final AggregateFunction aggregateFunction;
@@ -27,6 +20,11 @@ public class AggregateGenerator implements Generatable {
   public String generate(Pipeline pipeline, String execution) {
     // TODO Auto-generated method stub
     return null;
+  }
+
+  @Override
+  public String getOperatorId() {
+    return aggregateFunction.name().concat(Integer.toString(aggregateValueIndex));
   }
 
 }

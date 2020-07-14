@@ -27,18 +27,18 @@ public class PipelineTest {
     PrimitiveType[] types = new PrimitiveType[] { PrimitiveType.INT };
     VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
     builder.streamOfC(types, "192.168.172.199", 80).filter(types, "() -> true").map(new Tuple(types).get(0));
-    PipelineTopology pt1 = PipelineTopology.pipelineTopologyOf(builder.build());
+    PipelineTopology pt1 = PipelineTopology.pipelineTopologyOf(builder.buildAsQuery());
     VulcanoTopologyBuilder builder2 = new VulcanoTopologyBuilder();
     builder2.streamOfC(types, "192.168.172.199", 80).filter(types, "() -> true").map(new Tuple(types).get(0));
-    PipelineTopology pt2 = PipelineTopology.pipelineTopologyOf(builder2.build());
+    PipelineTopology pt2 = PipelineTopology.pipelineTopologyOf(builder2.buildAsQuery());
     assertThat(pt1.getPipelines()).containsAll(pt2.getPipelines());
     VulcanoTopologyBuilder builder3 = new VulcanoTopologyBuilder();
     builder3.streamOfC(types, "192.168.172.199", 90).filter(types, "() -> true").map(new Tuple(types).get(0));
-    PipelineTopology pt3 = PipelineTopology.pipelineTopologyOf(builder3.build());
+    PipelineTopology pt3 = PipelineTopology.pipelineTopologyOf(builder3.buildAsQuery());
     assertThat(pt3.getPipelines()).doesNotContainAnyElementsOf(pt1.getPipelines());
     VulcanoTopologyBuilder builder4 = new VulcanoTopologyBuilder();
     builder4.streamOfC(types, "192.168.172.199", 90).filter(types, "() -> false").map(new Tuple(types).get(0));
-    PipelineTopology pt4 = PipelineTopology.pipelineTopologyOf(builder4.build());
+    PipelineTopology pt4 = PipelineTopology.pipelineTopologyOf(builder4.buildAsQuery());
     for (Pipeline p : pt3.getPipelines()) {
       if (p instanceof NetworkSourcePipeline) {
         assertThat(pt4.getPipelines()).contains(p);

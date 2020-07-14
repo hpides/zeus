@@ -10,13 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AggregationGenerationNode extends GenerationNode {
-
-    @Getter
-    private final AggregateGenerator operator;
-
-    public AggregationGenerationNode(final PrimitiveType[] inputTypes, PrimitiveType[] outputTypes, final AggregateGenerator operator) {
-        super(inputTypes, outputTypes);
-        this.operator = operator;
+    public AggregationGenerationNode(final PrimitiveType[] inputTypes, PrimitiveType[] outputTypes,
+            final AggregateGenerator operator) {
+        super(inputTypes, outputTypes, operator);
     }
 
     @Override

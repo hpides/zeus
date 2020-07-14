@@ -14,13 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 public class AJoinGenerationNode extends GenerationNode {
     final private PrimitiveType[] joinInputTypes;
 
-    @Getter
-    private final AJoinGenerator operator;
-
-    public AJoinGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] joinTypes, final AJoinGenerator operator) {
-        super(inputTypes, Stream.concat(Arrays.stream(inputTypes),
-                Arrays.stream(joinTypes)).toArray(PrimitiveType[]::new));
-        this.operator = operator;
+    public AJoinGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] joinTypes,
+            final AJoinGenerator operator) {
+        super(inputTypes,
+                Stream.concat(Arrays.stream(inputTypes), Arrays.stream(joinTypes)).toArray(PrimitiveType[]::new),
+                operator);
         this.joinInputTypes = joinTypes;
     }
 

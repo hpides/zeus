@@ -34,4 +34,13 @@ public class FilterGenerator implements Generatable {
         }
         return "";
     }
+
+    @Override
+    public String getOperatorId() {
+        String hashBase = filter;
+        for (PrimitiveType t : types) {
+            hashBase.concat(t.name());
+        }
+        return hashBase;
+    }
 }

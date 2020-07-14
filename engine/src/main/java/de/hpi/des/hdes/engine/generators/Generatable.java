@@ -6,4 +6,5 @@ public interface Generatable {
 
     String generate(Pipeline pipeline, String execution);
 
+    String getOperatorId();
 }

@@ -88,13 +88,9 @@ public class LocalGenerator extends PipelineVisitor {
             Mustache template = MustacheFactorySingleton.getInstance().compile("JoinPipeline.java.mustache");
             FileWriter out = new FileWriter(Paths
                     .get(DirectoryHelper.getTempDirectoryPath() + joinPipeline.getPipelineId() + ".java").toFile());
-            template.execute(out,
-                    new JoinData(joinPipeline.getPipelineId(),
-                            joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
-                            joinPipeline.getBinaryNode().getOperator().getLeftTypes(),
-                            joinPipeline.getBinaryNode().getOperator().getKeyPositionLeft(),
-                            joinPipeline.getBinaryNode().getOperator().getKeyPositionRight()))
-                    .flush();
+            JoinGenerator operator = (JoinGenerator) joinPipeline.getBinaryNode().getOperator();
+            template.execute(out, new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(),
+                    operator.getLeftTypes(), operator.getKeyPositionLeft(), operator.getKeyPositionRight())).flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
         }
@@ -106,13 +102,9 @@ public class LocalGenerator extends PipelineVisitor {
             Mustache template = MustacheFactorySingleton.getInstance().compile("AJoinPipeline.java.mustache");
             FileWriter out = new FileWriter(Paths
                     .get(DirectoryHelper.getTempDirectoryPath() + aJoinPipeline.getPipelineId() + ".java").toFile());
-            template.execute(out,
-                    new AJoinData(aJoinPipeline.getPipelineId(),
-                            aJoinPipeline.getBinaryNode().getOperator().getLeftTypes(),
-                            aJoinPipeline.getBinaryNode().getOperator().getLeftTypes(),
-                            aJoinPipeline.getBinaryNode().getOperator().getKeyPositionLeft(),
-                            aJoinPipeline.getBinaryNode().getOperator().getKeyPositionRight()))
-                    .flush();
+            AJoinGenerator operator = (AJoinGenerator) aJoinPipeline.getBinaryNode().getOperator();
+            template.execute(out, new AJoinData(aJoinPipeline.getPipelineId(), operator.getLeftTypes(),
+                    operator.getLeftTypes(), operator.getKeyPositionLeft(), operator.getKeyPositionRight())).flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
         }
@@ -163,11 +155,12 @@ public class LocalGenerator extends PipelineVisitor {
         }
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
+            AggregateGenerator operator = (AggregateGenerator) aggregationPipeline.getAggregationGenerationNode()
+                    .getOperator();
             template.execute(writer,
                     new AggregationData(aggregationPipeline.getPipelineId(),
                             aggregationPipeline.getAggregationGenerationNode().getInputTypes(),
-                            aggregationPipeline.getAggregationGenerationNode().getOperator().getAggregateValueIndex(),
-                            aggregationPipeline.getAggregationGenerationNode().getOperator().getAggregateFunction(),
+                            operator.getAggregateValueIndex(), operator.getAggregateFunction(),
                             aggregationPipeline.getInterfaces(), aggregationPipeline.getVariables(), implementation))
                     .flush();
             implementation = writer.toString();

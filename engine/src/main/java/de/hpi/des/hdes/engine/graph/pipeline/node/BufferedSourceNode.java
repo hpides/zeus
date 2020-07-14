@@ -13,7 +13,7 @@ public class BufferedSourceNode extends GenerationNode {
     private final BufferedSource source;
 
     public BufferedSourceNode(PrimitiveType[] outputTypes, BufferedSource source) {
-        super(null, outputTypes);
+        super(null, outputTypes, null);
         this.source = source;
     }
 

@@ -38,6 +38,16 @@ public class Tuple {
     return this.nextTuple == null;
   }
 
+  public String getId() {
+    if (isLast())
+      return this.getPreviousTuple().getId();
+    String hashBase = operation.name().concat(Integer.toString(index)).concat(type == null ? "" : type.name())
+        .concat(transformation);
+    if (isFirst())
+      return hashBase;
+    return hashBase.concat(this.getPreviousTuple().getId());
+  }
+
   /**
    * Gets a value at a specified index. All further operations only have that one
    * available
@@ -48,7 +58,7 @@ public class Tuple {
   public Tuple get(int index) {
     if (index < 0 || index >= types.length)
       throw new Error("Tuple index out of bounds");
-    this.transformation = null;
+    this.transformation = "";
     this.index = index;
     this.operation = OperationType.GET;
     this.type = types[index];
@@ -105,7 +115,7 @@ public class Tuple {
   public Tuple remove(int index) {
     if (index < 0 || index >= types.length)
       throw new Error("Tuple index out of bounds");
-    this.transformation = null;
+    this.transformation = "";
     this.index = index;
     this.operation = OperationType.REMOVE;
     this.type = null;

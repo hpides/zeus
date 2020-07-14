@@ -13,7 +13,7 @@ public class NetworkSourceNode extends GenerationNode {
     private final int port;
 
     public NetworkSourceNode(final PrimitiveType[] outputTypes, String host, int port) {
-        super(null, outputTypes);
+        super(null, outputTypes, null);
         this.host = host;
         this.port = port;
     }
