@@ -19,8 +19,7 @@ public class UnaryPipeline extends Pipeline {
 
     public UnaryPipeline(GenerationNode node) {
         super(node.getInputTypes());
-        this.nodes = new ArrayList<GenerationNode>();
-        nodes.add(node);
+        this.nodes = Arrays.asList(node);
     }
 
     protected UnaryPipeline(List<GenerationNode> nodes) {
@@ -57,9 +56,9 @@ public class UnaryPipeline extends Pipeline {
         this.nodes.add(operator);
     }
 
-	@Override
-	public void replaceParent(Pipeline newParentPipeline) {
+    @Override
+    public void replaceParent(Pipeline newParentPipeline) {
         this.parent = newParentPipeline;
         newParentPipeline.setChild(this);
-	}
+    }
 }

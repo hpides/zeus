@@ -1,5 +1,11 @@
 package de.hpi.des.hdes.engine.cstream;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.jooq.lambda.tuple.Tuple3;
+import org.jooq.lambda.tuple.Tuple4;
+
 import de.hpi.des.hdes.engine.generators.AJoinGenerator;
 import de.hpi.des.hdes.engine.generators.AggregateGenerator;
 import de.hpi.des.hdes.engine.generators.FilterGenerator;
@@ -7,21 +13,24 @@ import de.hpi.des.hdes.engine.generators.JoinGenerator;
 import de.hpi.des.hdes.engine.generators.MapGenerator;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.predefined.ByteBufferIntListSinkNode;
+import de.hpi.des.hdes.engine.graph.vulcano.SinkNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.JoinGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.AJoinGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.AggregationGenerationNode;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSink;
-import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSinkNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.FileSinkNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.operation.AggregateFunction;
 
 public class CStream extends AbstractCStream {
-    public CStream(final VulcanoTopologyBuilder builder, final Node node) {
+
+    public CStream(final VulcanoTopologyBuilder builder, final GenerationNode node) {
         super(builder, node);
     }
-    
+
     /**
      * Sums the elements of this stream.
      *
@@ -105,9 +114,8 @@ public class CStream extends AbstractCStream {
      */
     private CStream aggregate(AggregateFunction function, final PrimitiveType[] types, final int aggregateValueIndex) {
         final AggregationGenerationNode child = new AggregationGenerationNode(types,
-            new PrimitiveType[] { types[aggregateValueIndex] },
-            new AggregateGenerator(function, aggregateValueIndex)
-        );
+                new PrimitiveType[] { types[aggregateValueIndex] },
+                new AggregateGenerator(function, aggregateValueIndex));
         this.builder.addGraphNode(this.node, child);
         return new CStream(this.builder, child);
     }
@@ -127,9 +135,10 @@ public class CStream extends AbstractCStream {
      * @return Joined Stream
      */
     public CStream join(final CStream rightStream, final PrimitiveType[] leftInputTypes,
-                        final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex, final String joinMapper) {
-        final JoinGenerationNode child = new JoinGenerationNode(leftInputTypes, rightInputTypes, 
-        new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex));
+            final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex,
+            final String joinMapper, final int windowLength) {
+        final JoinGenerationNode child = new JoinGenerationNode(leftInputTypes, rightInputTypes,
+                new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, windowLength));
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(rightStream.getNode(), child);
         return new CStream(this.builder, child);
@@ -150,19 +159,29 @@ public class CStream extends AbstractCStream {
      * @return Joined Stream
      */
     public CStream ajoin(final CStream rightStream, final PrimitiveType[] leftInputTypes,
-            final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex) {
+            final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex,
+            final int windowLength) {
         final AJoinGenerationNode child = new AJoinGenerationNode(leftInputTypes, rightInputTypes,
-                new AJoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex));
+                new AJoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, windowLength));
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(rightStream.getNode(), child);
         return new CStream(this.builder, child);
     }
 
     /**
-     * Writes the elements of this stream into a sink.
+     * Writes the elements of this stream into a list sink.
      */
-    public void to(BufferedSink sink, PrimitiveType[] types) {
-        final BufferedSinkNode child = new BufferedSinkNode(types, sink);
+    public void toStaticList(List<Tuple4<Long, Integer, Integer, Boolean>> resultList) {
+        final ByteBufferIntListSinkNode child = new ByteBufferIntListSinkNode(resultList);
         this.builder.addGraphNode(this.node, child);
     }
+
+    /**
+     * Writes the elements of this stream into a file sink.
+     */
+    public void toFile(PrimitiveType[] types, int writeEveryX) {
+        final FileSinkNode child = new FileSinkNode(types, writeEveryX);
+        this.builder.addGraphNode(this.node, child);
+    }
+
 }

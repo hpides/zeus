@@ -1,72 +1,48 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import javax.tools.ToolProvider;
-import javax.tools.JavaCompiler;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
+import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
-import de.hpi.des.hdes.engine.graph.PipelineVisitor;
-import de.hpi.des.hdes.engine.io.Buffer;
-import de.hpi.des.hdes.engine.graph.pipeline.node.BufferedSinkNode;
 
 @Slf4j
-public class SinkPipeline extends Pipeline {
-
-  private final BufferedSinkNode sinkNode;
-  private Runnable pipelineObject;
-  private boolean shutdownFlag;
-  @Getter
-  private Pipeline parent;
-
-  public SinkPipeline(BufferedSinkNode sinkNode) {
-    super(sinkNode.getInputTypes());
-    this.sinkNode = sinkNode;
-  }
-
-  @Override
-  public void accept(PipelineVisitor visitor) {
-    visitor.visit(this);
-  }
-
-  void loadPipeline(Object child) {
-    this.setLoaded(true);
-    Path javaFile = Paths.get(this.getFilePath());
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    compiler.run(null, null, null, javaFile.toFile().getAbsolutePath());
-    Path javaClass = javaFile.getParent().resolve(this.getPipelineId() + ".class");
-    try {
-      URL classURl = javaClass.getParent().toFile().toURI().toURL();
-      URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { classURl });
-      pipelineKlass = Class.forName("de.hpi.des.hdes.engine.temp." + this.getPipelineId(), true, classLoader);
-      Object temp = pipelineKlass.getDeclaredConstructor(Buffer.class)
-          .newInstance(sinkNode.getSink().getOutputBuffer());
-      pipelineObject = (Runnable) temp;
-    } catch (MalformedURLException | ReflectiveOperationException | RuntimeException e) {
-      log.error("Slot had an exception during class load: ", e);
+public abstract class SinkPipeline extends Pipeline {
+    protected SinkPipeline(PrimitiveType[] types) {
+        super(types);
     }
-  }
 
-  @Override
-  public void addParent(Pipeline pipeline, GenerationNode childNode) {
-    parent = pipeline;
-    pipeline.setChild(this);
-  }
+    @Getter
+    private Pipeline parent;
 
-  @Override
-  public void addOperator(GenerationNode operator, GenerationNode childNode) {
-    // TODO Auto-generated method stub
+    @Override
+    public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
+        this.compileClass();
+        try {
+            pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, Dispatcher.class)
+                    .newInstance(dispatcher.getReadByteBufferForPipeline((SinkPipeline) this), dispatcher);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            log.error("Slot had an exception during class load: ", e);
+        }
+    }
 
-  }
+    @Override
+    public void addParent(Pipeline pipeline, GenerationNode childNode) {
+        this.parent = pipeline;
+        pipeline.setChild(this);
+    }
 
-@Override
-public void replaceParent(Pipeline newParentPipeline) {
-    parent = newParentPipeline;
-    newParentPipeline.setChild(this);
-}
+    @Override
+    public void addOperator(GenerationNode operator, GenerationNode childNode) {
+        log.warn("Tried to add {} with childe Node {} to a {} ({})", operator, childNode, this.getClass().getName(),
+                getPipelineId());
+    }
+
+    @Override
+    public void replaceParent(Pipeline newParentPipeline) {
+        parent = newParentPipeline;
+        newParentPipeline.setChild(this);
+    }
+
 }

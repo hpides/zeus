@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.io.StringWriter;
 import lombok.extern.slf4j.Slf4j;
 import de.hpi.des.hdes.engine.generators.templatedata.*;
-import de.hpi.des.hdes.engine.generators.templatedata.AJoinData;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
@@ -20,7 +19,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.AJoinPipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.FileSinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.NetworkSourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.node.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.AggregationPipeline;
@@ -29,16 +28,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.AggregationPipeline;
 
 @Slf4j
 public class LocalGenerator extends PipelineVisitor {
-    private final PipelineTopology pipelineTopology;
     private final StringWriter writer = new StringWriter();
-
-    public LocalGenerator(final PipelineTopology pipelineTopology) {
-        this.pipelineTopology = pipelineTopology;
-    }
-
-    public static LocalGenerator build(final PipelineTopology pipelineTopology) {
-        return new LocalGenerator(pipelineTopology);
-    }
 
     public void extend(final PipelineTopology pipelineTopology) {
         for (Pipeline pipeline : pipelineTopology.getPipelines()) {
@@ -89,8 +79,10 @@ public class LocalGenerator extends PipelineVisitor {
             FileWriter out = new FileWriter(Paths
                     .get(DirectoryHelper.getTempDirectoryPath() + joinPipeline.getPipelineId() + ".java").toFile());
             JoinGenerator operator = (JoinGenerator) joinPipeline.getBinaryNode().getOperator();
-            template.execute(out, new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(),
-                    operator.getLeftTypes(), operator.getKeyPositionLeft(), operator.getKeyPositionRight())).flush();
+            template.execute(out,
+                    new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
+                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength()))
+                    .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
         }
@@ -103,38 +95,26 @@ public class LocalGenerator extends PipelineVisitor {
             FileWriter out = new FileWriter(Paths
                     .get(DirectoryHelper.getTempDirectoryPath() + aJoinPipeline.getPipelineId() + ".java").toFile());
             AJoinGenerator operator = (AJoinGenerator) aJoinPipeline.getBinaryNode().getOperator();
-            template.execute(out, new AJoinData(aJoinPipeline.getPipelineId(), operator.getLeftTypes(),
-                    operator.getLeftTypes(), operator.getKeyPositionLeft(), operator.getKeyPositionRight())).flush();
+            template.execute(out,
+                    new AJoinData(aJoinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
+                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength()))
+                    .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
         }
     }
 
     @Override
-    public void visit(BufferedSourcePipeline sourcePipeline) {
-        String nextPipelineFunction = PipelineTopology.getChildProcessMethod(sourcePipeline, sourcePipeline.getChild());
+    public void visit(NetworkSourcePipeline sourcePipeline) {
         try {
-            Mustache template = MustacheFactorySingleton.getInstance().compile("Source.java.mustache");
-            template.execute(writer, new SourceData(sourcePipeline.getPipelineId(),
-                    sourcePipeline.getChild().getPipelineId(), nextPipelineFunction)).flush();
+            Mustache template = MustacheFactorySingleton.getInstance().compile("NetworkSource.java.mustache");
+            template.execute(writer, new NetworkSourceData(sourcePipeline.getPipelineId(),
+                    (sourcePipeline.getInputTupleLength() + 9) + "",
+                    sourcePipeline.getSourceNode().getHost().toString(), sourcePipeline.getSourceNode().getHost()))
+                    .flush();
             String implementation = writer.toString();
             Files.writeString(
                     Paths.get(DirectoryHelper.getTempDirectoryPath() + sourcePipeline.getPipelineId() + ".java"),
-                    implementation);
-            writer.getBuffer().setLength(0);
-        } catch (IOException e) {
-            log.error("Compile Error: {}", e);
-        }
-    }
-
-    @Override
-    public void visit(SinkPipeline sinkPipeline) {
-        try {
-            Mustache template = MustacheFactorySingleton.getInstance().compile("Sink.java.mustache");
-            template.execute(writer, new SinkData(sinkPipeline.getPipelineId())).flush();
-            String implementation = writer.toString();
-            Files.writeString(
-                    Paths.get(DirectoryHelper.getTempDirectoryPath() + sinkPipeline.getPipelineId() + ".java"),
                     implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {
@@ -174,13 +154,16 @@ public class LocalGenerator extends PipelineVisitor {
     }
 
     @Override
-    public void visit(NetworkSourcePipeline sourcePipeline) {
+    public void visit(FileSinkPipeline fileSinkPipeline) {
         try {
-            Mustache template = MustacheFactorySingleton.getInstance().compile("NetworkSource.java.mustache");
-            template.execute(writer, new NetworkSourceData(sourcePipeline.getPipelineId(), "1024")).flush();
+            Mustache template = MustacheFactorySingleton.getInstance().compile("FileSink.java.mustache");
+            template.execute(writer,
+                    new FileSinkData(fileSinkPipeline.getPipelineId(),
+                            (fileSinkPipeline.getInputTupleLength() + 9) + "", fileSinkPipeline.getWriteEveryX() + ""))
+                    .flush();
             String implementation = writer.toString();
             Files.writeString(
-                    Paths.get(DirectoryHelper.getTempDirectoryPath() + sourcePipeline.getPipelineId() + ".java"),
+                    Paths.get(DirectoryHelper.getTempDirectoryPath() + fileSinkPipeline.getPipelineId() + ".java"),
                     implementation);
             writer.getBuffer().setLength(0);
         } catch (IOException e) {

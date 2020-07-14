@@ -15,15 +15,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AJoinPipeline extends BinaryPipeline {
 
-    protected AJoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
+    protected AJoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
+            GenerationNode binaryNode) {
         super(leftNodes, rightNodes, binaryNode);
     }
 
-    public AJoinPipeline(Node binaryNode) {
+    public AJoinPipeline(GenerationNode binaryNode) {
         super(binaryNode);
     }
 
-    public static AJoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
+    public static AJoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
+            GenerationNode binaryNode) {
         return new AJoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 
@@ -32,9 +34,9 @@ public class AJoinPipeline extends BinaryPipeline {
         this.compileClass();
         this.setLoaded(true);
         try {
-            pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class,
-                    long.class, long.class).newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),
-                            dispatcher.getRightByteBufferForPipeline((BinaryPipeline) this), dispatcher, 1000, 1000);
+            pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class)
+                    .newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),
+                            dispatcher.getRightByteBufferForPipeline((BinaryPipeline) this), dispatcher);
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }
@@ -48,16 +50,5 @@ public class AJoinPipeline extends BinaryPipeline {
     @Override
     public AJoinGenerationNode getBinaryNode() {
         return (AJoinGenerationNode) this.binaryNode;
-    }
-
-    @Override
-    public void addParent(Pipeline pipeline, GenerationNode childNode) {
-      // TODO Auto-generated method stub
-    }
-  
-    @Override
-    public void addOperator(GenerationNode operator, GenerationNode childNode) {
-      // TODO Auto-generated method stub
-      
     }
 }

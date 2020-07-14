@@ -11,6 +11,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
+import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.generators.templatedata.InterfaceData;
 import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
@@ -30,18 +32,16 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-@Getter
 @Slf4j
+@Getter
 public abstract class Pipeline {
 
     protected Class pipelineKlass;
     @Setter
     protected Object pipelineObject;
     @Setter
-    @Getter
     private boolean isLoaded = false;
     private final Set<String> queryIds = new HashSet<>();
-    @Getter
     private String initialQueryId;
     private static URLClassLoader tempClassLoader;
     private final HashMap<String, InterfaceData> interfaces = new HashMap<>();
@@ -170,6 +170,22 @@ public abstract class Pipeline {
         return types;
     }
 
+    public int getInputTupleLength() {
+        int length = 0;
+        for (PrimitiveType pt : inputTypes) {
+            length += pt.getLength();
+        }
+        return length;
+    }
+
+    public int getOutputTupleLength() {
+        int length = 0;
+        for (PrimitiveType pt : getOutputTypes()) {
+            length += pt.getLength();
+        }
+        return length;
+    }
+
     public abstract void accept(PipelineVisitor visitor);
 
     public abstract void addParent(Pipeline pipeline, GenerationNode childNode);
@@ -203,7 +219,7 @@ public abstract class Pipeline {
         this.compileClass();
         this.setLoaded(true);
         try {
-            pipelineObject = pipelineKlass.getDeclaredConstructor(childKlass)
+            pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, Dispatcher.class)
                     .newInstance(dispatcher.getReadByteBufferForPipeline((UnaryPipeline) this), dispatcher);
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
@@ -213,11 +229,11 @@ public abstract class Pipeline {
     public abstract void replaceParent(Pipeline newParentPipeline);
 
     public void addQueryId(String queryId) {
-        this.queryIds.add(queryId);   
-	}
+        this.queryIds.add(queryId);
+    }
 
     public void setInitialQueryId(String queryId) {
         this.queryIds.add(queryId);
         this.initialQueryId = queryId;
-	}
+    }
 }

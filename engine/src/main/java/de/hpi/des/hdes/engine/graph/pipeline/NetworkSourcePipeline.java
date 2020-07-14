@@ -15,10 +15,6 @@ public class NetworkSourcePipeline extends Pipeline {
 
     @Getter
     private final NetworkSourceNode sourceNode;
-    @Setter
-    @Getter
-    private Runnable pipelineObject;
-    private boolean shutdownFlag;
 
     public NetworkSourcePipeline(NetworkSourceNode sourceNode) {
         super(sourceNode.getOutputTypes());
@@ -56,13 +52,15 @@ public class NetworkSourcePipeline extends Pipeline {
 
     @Override
     public void addOperator(GenerationNode operator, GenerationNode childNode) {
-        // TODO Auto-generated method stub
+        log.warn("Tried to add {} with childe Node {} to a {} ({})", operator, childNode, this.getClass().getName(),
+                getPipelineId());
     }
 
-	@Override
-	public void replaceParent(Pipeline newParentPipeline) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void replaceParent(Pipeline newParentPipeline) {
+        log.error("Tried to replace parent of source pipeline {} ({}) with pipeline {} ({})", this,
+                this.getPipelineId(), newParentPipeline, newParentPipeline.getPipelineId());
+
+    }
 
 }

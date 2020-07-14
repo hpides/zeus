@@ -1,7 +1,5 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,7 +13,6 @@ import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
-import de.hpi.des.hdes.engine.generators.TempSink;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,9 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PipelineTopology {
 
     private final List<Pipeline> pipelines = new ArrayList<>();
-    private final Map<Node, Pipeline> nodeToPipeline = new HashMap<Node, Pipeline>();
+    private final Map<GenerationNode, Pipeline> nodeToPipeline = new HashMap<GenerationNode, Pipeline>();
     private final Map<String, Pipeline> pipelineIdToPipeline = new HashMap<String, Pipeline>();
-    private TempSink sink;
     private Dispatcher dispatcher;
 
     public static PipelineTopology pipelineTopologyOf(Query query) {
@@ -64,16 +60,10 @@ public class PipelineTopology {
 
     public void loadPipelines(Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
-        try {
-            this.sink = new TempSink(new FileWriter("output/compiled_out.csv"));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        pipelines.get(0).loadPipeline(dispatcher, TempSink.class);
+        pipelines.get(0).loadPipeline(dispatcher, Object.class);
         for (Pipeline pipeline : pipelines.subList(1, pipelines.size())) {
             if (!pipeline.isLoaded()) {
-                pipeline.loadPipeline(dispatcher, pipeline.getChild().getPipelineKlass());
+                pipeline.loadPipeline(dispatcher, null);
                 pipeline.setLoaded(true);
             }
         }
@@ -100,25 +90,25 @@ public class PipelineTopology {
         }
     }
 
-    public Pipeline getPipelineByChild(Node node) {
-        Node childNode = node.getChild();
+    public Pipeline getPipelineByChild(GenerationNode node) {
+        GenerationNode childNode = (GenerationNode) node.getChild();
         return this.nodeToPipeline.get(childNode);
     }
 
-    public void addNodeToPipeline(Node node) {
-        Node childNode = node.getChild();
+    public void addNodeToPipeline(GenerationNode node) {
+        GenerationNode childNode = (GenerationNode) node.getChild();
         Pipeline currentPipeline = this.nodeToPipeline.get(childNode);
         currentPipeline.addOperator((GenerationNode) node, (GenerationNode) childNode);
         this.nodeToPipeline.put(node, currentPipeline);
     }
 
-    public void addPipelineAsParent(Pipeline pipeline, Node firstPipelineNode) {
+    public void addPipelineAsParent(Pipeline pipeline, GenerationNode firstPipelineNode) {
         this.addPipelineAsLeaf(pipeline, firstPipelineNode);
-        Node childNode = firstPipelineNode.getChild();
-        this.nodeToPipeline.get(childNode).addParent(pipeline, (GenerationNode) childNode);
+        GenerationNode childNode = (GenerationNode) firstPipelineNode.getChild();
+        this.nodeToPipeline.get(childNode).addParent(pipeline, childNode);
     }
 
-    public void addPipelineAsLeaf(Pipeline pipeline, Node firstPipelineNode) {
+    public void addPipelineAsLeaf(Pipeline pipeline, GenerationNode firstPipelineNode) {
         this.pipelines.add(pipeline);
         this.nodeToPipeline.put(firstPipelineNode, pipeline);
     }

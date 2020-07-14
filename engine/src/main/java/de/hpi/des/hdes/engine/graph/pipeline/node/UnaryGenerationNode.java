@@ -1,6 +1,7 @@
 package de.hpi.des.hdes.engine.graph.pipeline.node;
 
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
+import de.hpi.des.hdes.engine.graph.pipeline.predefined.ByteBufferIntListSinkNode;
 import de.hpi.des.hdes.engine.generators.AggregateGenerator;
 import de.hpi.des.hdes.engine.generators.Generatable;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
@@ -43,7 +44,8 @@ public class UnaryGenerationNode extends GenerationNode {
     public void accept(PipelineTopology pipelineTopology) {
         if (this.getChildren().isEmpty()) {
             pipelineTopology.addPipelineAsLeaf(new UnaryPipeline(this), this);
-        } else if (this.getOperator() instanceof AggregateGenerator || this.getChild() instanceof BufferedSinkNode) {
+        } else if (this.getOperator() instanceof AggregateGenerator
+                || this.getChild() instanceof ByteBufferIntListSinkNode) {
             pipelineTopology.addPipelineAsParent(new UnaryPipeline(this), this);
         } else {
             pipelineTopology.addNodeToPipeline(this);

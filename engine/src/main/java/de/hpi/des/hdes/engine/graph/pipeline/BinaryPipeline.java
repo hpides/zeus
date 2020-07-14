@@ -15,12 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BinaryPipeline extends Pipeline {
     protected final List<GenerationNode> leftNodes;
     protected final List<GenerationNode> rightNodes;
-    protected Node binaryNode;
+    protected GenerationNode binaryNode;
     protected Pipeline leftParent;
     protected Pipeline rightParent;
     final protected PrimitiveType[] joinInputTypes;
 
-    protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
+    protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
+            GenerationNode binaryNode) {
         super(leftNodes.get(leftNodes.size() - 1).getInputTypes());
         this.joinInputTypes = rightNodes.get(rightNodes.size() - 1).getInputTypes();
         this.binaryNode = binaryNode;
@@ -28,7 +29,7 @@ public abstract class BinaryPipeline extends Pipeline {
         this.rightNodes = rightNodes;
     }
 
-    protected BinaryPipeline(Node binaryNode) {
+    protected BinaryPipeline(GenerationNode binaryNode) {
         super(new PrimitiveType[0]);
         this.joinInputTypes = new PrimitiveType[0];
         this.binaryNode = binaryNode;

@@ -3,8 +3,6 @@ package de.hpi.des.hdes.engine.graph.pipeline.node;
 import de.hpi.des.hdes.engine.generators.Generatable;
 import de.hpi.des.hdes.engine.generators.JoinGenerator;
 import de.hpi.des.hdes.engine.graph.NodeVisitor;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSource;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.pipeline.JoinPipeline;

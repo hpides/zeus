@@ -6,9 +6,8 @@ import java.util.UUID;
 import de.hpi.des.hdes.engine.generators.templatedata.InterfaceData;
 import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
 import de.hpi.des.hdes.engine.graph.pipeline.AJoinPipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.FileSinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.JoinPipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.BufferedSourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.NetworkSourcePipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.AggregationPipeline;
@@ -39,9 +38,7 @@ public abstract class PipelineVisitor {
 
     public abstract void visit(JoinPipeline binaryPipeline);
 
-    public abstract void visit(BufferedSourcePipeline sourcePipeline);
-
     public abstract void visit(NetworkSourcePipeline sourcePipeline);
 
-    public abstract void visit(SinkPipeline sinkPipeline);
+    public abstract void visit(FileSinkPipeline fileSinkPipeline);
 }

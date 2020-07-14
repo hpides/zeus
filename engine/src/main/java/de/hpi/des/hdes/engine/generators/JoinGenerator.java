@@ -1,41 +1,36 @@
 package de.hpi.des.hdes.engine.generators;
 
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class JoinGenerator implements Generatable {
 
-  private final int keyPositionLeft;
-  private final int keyPositionRight;
-  private final PrimitiveType[] leftTypes;
-  private final PrimitiveType[] rightTypes;
+    private final PrimitiveType[] leftTypes;
+    private final PrimitiveType[] rightTypes;
+    private final int keyPositionLeft;
+    private final int keyPositionRight;
+    private final int windowLength;
 
-  public JoinGenerator(PrimitiveType[] leftTypes, PrimitiveType[] rightTypes, int keyPositionLeft,
-      int keyPositionRight) {
-    this.leftTypes = leftTypes;
-    this.rightTypes = rightTypes;
-    this.keyPositionLeft = keyPositionLeft;
-    this.keyPositionRight = keyPositionRight;
-  }
-
-  @Override
-  public String generate(Pipeline pipeline, String execution) {
-    // TODO
-    return "";
-  }
-
-  @Override
-  public String getOperatorId() {
-    String hashBase = "join";
-    for (PrimitiveType t : leftTypes) {
-      hashBase.concat(t.name());
+    @Override
+    public String generate(Pipeline pipeline, String execution) {
+        // TODO
+        return "";
     }
-    hashBase.concat(Integer.toString(keyPositionLeft));
-    for (PrimitiveType t : rightTypes) {
-      hashBase.concat(t.name());
+
+    @Override
+    public String getOperatorId() {
+        String hashBase = "join";
+        for (PrimitiveType t : leftTypes) {
+            hashBase.concat(t.name());
+        }
+        hashBase.concat(Integer.toString(keyPositionLeft));
+        for (PrimitiveType t : rightTypes) {
+            hashBase.concat(t.name());
+        }
+        hashBase.concat(Integer.toString(keyPositionRight));
+        return hashBase;
     }
-    hashBase.concat(Integer.toString(keyPositionRight));
-    return hashBase;
-  }
 }

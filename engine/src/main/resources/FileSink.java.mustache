@@ -1,0 +1,92 @@
+package de.hpi.des.hdes.engine.temp;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
+
+public class {{{pipelineId}}} implements Runnable, Stoppable {
+
+    private final Dispatcher dispatcher;
+    private final ReadBuffer input;
+    private BufferedWriter out;
+    private int writtenTuples = 0;
+    private boolean shutdownFlag = false;
+
+    public ByteNetworkSink(final Dispatcher dispatcher, final ReadBuffer input) {
+        this.dispatcher = dispatcher;
+        this.input = input;
+        var filePath = System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_"
+                + {{{pipelineId}}} + ".csv";
+        System.out.println(filePath.toString());
+        try {
+            Date date = Calendar.getInstance().getTime();
+            DateFormat dateFormat = new SimpleDateFormat("hh-mm-ss");
+            String strDate = dateFormat.format(date);
+
+            File file = new File(filePath.replace(".csv", "_t") + strDate + ".csv");
+            if (file.createNewFile()) {
+                this.out = new BufferedWriter(new FileWriter(file), 10_000_000);
+                this.out.write("eventTime,proccessingTime\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void run() {
+        ByteBuffer buffer = input.getBuffer();
+        int initialPosition;
+        while (!Thread.interrupted() && !shutdownFlag) {
+            if (!input.hasRemaining()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    return;
+                }
+                continue;
+            }
+            try {
+                initialPosition = buffer.position();
+                if (this.writtenTuples % {{{writeEveryX}}} == 0) {
+                    out.write(buffer.getLong() + "," + buffer.getLong() + "\n");
+                    buffer.get();
+                    this.writtenTuples = 0;
+                } else {
+                    buffer.position(initialPosition + {{{inputTupleLength}}});
+                }
+                dispatcher.free(input, initialPosition);
+                if (buffer.position() == buffer.capacity()) {
+                    dispatcher.resetReadLimit(input);
+                }
+                this.writtenTuples += 1;
+            } catch (IOException e) {
+                this.flush();
+                e.printStackTrace();
+            }
+        }
+        this.flush();
+
+    }
+
+    public void flush() {
+        try {
+            this.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        shutdownFlag = true;
+    }
+}

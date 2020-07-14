@@ -41,7 +41,7 @@ These example calls demonstrates how you can utilize the benchmark package to ru
 
 3 - Run the engine
 
-`java -Xms10g -Xmx10g -jar benchmark/target/engine-jar-with-dependencies.jar -gh=127.0.0.1 -tis=300 -op="bjoin"`
+`java -Xms10g -Xmx10g -jar benchmark/target/engine-jar-with-dependencies.jar -gh=127.0.0.1 -tis=300 -op="compiled"`
 
 ### Engine Parameters
 

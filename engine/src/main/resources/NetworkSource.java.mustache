@@ -1,0 +1,79 @@
+package de.hpi.des.hdes.engine.temp;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ConnectException;
+import java.net.Socket;
+import java.util.UUID;
+
+
+public class {{{pipelineId}}} implements Runnable, Stoppable {
+
+    private boolean exit = false;
+    private Socket objectSocket;
+    private final Dispatcher dispatcher;
+
+    public {{{pipelineId}}}(Dispatcher dispatcher) {
+        this.dispatcher = dispatcher;
+
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Client server on {{{port}}}");
+        System.out.println("Started Source ({{{pipelineId}}}) with Thread ID: " + Thread.currentThread().getId());
+        var isConnected = false;
+        try {
+            while (!isConnected) {
+                try {
+                    objectSocket = new Socket({{{host}}}, {{{port}}});
+                    isConnected = true;
+                } catch (ConnectException ignore) {
+                }
+            }
+            System.out.println("Client connected on {{{host}}} at {{{port}}}");
+            BufferedInputStream in = new BufferedInputStream(objectSocket.getInputStream(), {{{eventLength}}} * 1_000);
+
+            byte[] objectInput = new byte[{{{eventLength}}}];
+            int lastPosition = 0;
+            while (!exit) {
+                int bytesRead = in.read(objectInput, lastPosition, {{{eventLength}}} - lastPosition);
+                if (bytesRead < {{{eventLength}}}) {
+                    lastPosition = bytesRead;
+                    continue;
+                } else {
+                    lastPosition = 0;
+                }
+
+                try {
+                    while (!this.dispatcher.write({{{pipelineId}}}, objectInput)) {
+                        if (exit) {
+                            System.out.println("Aborted writing to Join from pipeline {{{pipelineId}}}");
+                            break;
+                        }
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+
+                    }
+                } catch (IllegalStateException e) {
+                    System.out.println("Dropped input buffer of " + objectInput.getClass());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Network Source was shutdown or crashed unexpectedly" + e);
+        }
+
+    }
+
+    @Override
+    public void shutdown() {
+        exit = true;
+
+    }
+
+}

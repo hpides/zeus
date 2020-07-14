@@ -18,15 +18,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JoinPipeline extends BinaryPipeline {
 
-    protected JoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
+    protected JoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, GenerationNode binaryNode) {
         super(leftNodes, rightNodes, binaryNode);
     }
 
-    public JoinPipeline(Node binaryNode) {
+    public JoinPipeline(GenerationNode binaryNode) {
         super(binaryNode);
     }
 
-    public static JoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, Node binaryNode) {
+    public static JoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
+            GenerationNode binaryNode) {
         return new JoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 
@@ -37,7 +38,7 @@ public class JoinPipeline extends BinaryPipeline {
         try {
             pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class,
                     long.class, long.class).newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),
-                            dispatcher.getRightByteBufferForPipeline((BinaryPipeline) this), dispatcher, 1000, 1000);
+                            dispatcher.getRightByteBufferForPipeline((BinaryPipeline) this), dispatcher);
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }

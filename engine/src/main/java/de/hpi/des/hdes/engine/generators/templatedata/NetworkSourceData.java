@@ -6,6 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class NetworkSourceData {
-  private String className;
-  private String numberBytes;
+    private String pipelineId;
+    private String eventLength;
+    private String host;
+    private String port;
 }

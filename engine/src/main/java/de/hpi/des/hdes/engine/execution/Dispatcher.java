@@ -11,11 +11,11 @@ import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.predefined.ByteBufferIntListSinkPipeline;
 
 public class Dispatcher {
 
     // TODO Should be saved per buffer during initialization
-    private static int TUPLE_SIZE = 17; // size of one tuple in bytes
     private static int TUPLE_AMOUNT = 24000000;
 
     private final PipelineTopology pipelineTopology;
@@ -32,11 +32,12 @@ public class Dispatcher {
 
     private void prepare() {
         for (final Pipeline pipeline : pipelineTopology.getPipelines()) {
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(TUPLE_SIZE * TUPLE_AMOUNT);
+            int outputTupleSize = pipeline.getOutputTupleLength() + 9;
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(outputTupleSize * TUPLE_AMOUNT);
             final ByteBuffer readBuffer = buffer.asReadOnlyBuffer();
             final BufferWrapper bufferWrapper = new BufferWrapper(buffer,
-                    new ReadBuffer(readBuffer, pipeline.getPipelineId(), counter++), buffer.limit() / TUPLE_SIZE,
-                    new boolean[TUPLE_AMOUNT], TUPLE_SIZE);
+                    new ReadBuffer(readBuffer, pipeline.getPipelineId(), counter++), buffer.limit() / outputTupleSize,
+                    new boolean[TUPLE_AMOUNT], outputTupleSize);
             writeBuffers.put(pipeline.getPipelineId(), bufferWrapper);
             readBufferToBufferWrapper.put(bufferWrapper.getReadBuffer(), bufferWrapper);
         }
@@ -46,7 +47,7 @@ public class Dispatcher {
         return writeBuffers.get(pipeline.getParent().getPipelineId()).getReadBuffer();
     }
 
-    public ReadBuffer getReadByteBufferForPipeline(final SinkPipeline pipeline) {
+    public ReadBuffer getReadByteBufferForPipeline(SinkPipeline pipeline) {
         return writeBuffers.get(pipeline.getParent().getPipelineId()).getReadBuffer();
     }
 

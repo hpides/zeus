@@ -68,12 +68,11 @@ public class CompiledExecutionPlan {
      * @param topology      the new query
      * @return a new plan
      */
-    public static CompiledExecutionPlan extend(final CompiledExecutionPlan executionPlan,
-            final Query query) {
+    public static CompiledExecutionPlan extend(final CompiledExecutionPlan executionPlan, final Query query) {
         if (executionPlan.isEmpty()) {
             PipelineTopology newPipelineTopology = PipelineTopology.pipelineTopologyOf(query);
 
-            LocalGenerator generator = new LocalGenerator(new PipelineTopology());
+            LocalGenerator generator = new LocalGenerator();
             generator.extend(newPipelineTopology);
             Dispatcher dispatcher = new Dispatcher(newPipelineTopology);
 

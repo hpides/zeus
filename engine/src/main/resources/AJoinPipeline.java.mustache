@@ -23,8 +23,8 @@ import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.ints.*;
 
 public class {{{pipelineId}}} implements Runnable, Stoppable {
-    final private long windowSlide;
-    final private long windowLength;
+    final private long windowSlide = {{{windowLength}}};
+    final private long windowLength = {{{windowLength}}};
     private long earliestOpenWindowJoin = Long.MAX_VALUE;
     private long latestTimestampLeft = 0;
     private long latestTimestampRight = 0;
@@ -38,13 +38,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntSet>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
     private boolean shutdownFlag = false;
 
-    public {{{pipelineId}}} (final ReadBuffer left, final ReadBuffer right, final Dispatcher dispatcher, final long windowLength,
-            final long windowSlide) {
+    public {{{pipelineId}}} (final ReadBuffer left, final ReadBuffer right, final Dispatcher dispatcher) {
         leftInput = left;
         rightInput = right;
         this.dispatcher = dispatcher;
-        this.windowLength = windowLength;
-        this.windowSlide = windowSlide;
     }
 
     public void readEventLeft() {
@@ -167,9 +164,9 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     
 
     public void writeOutput(int leftOffset, int rightOffset) {
-        leftInput.getBuffer().position(leftOffset);
-        rightInput.getBuffer().position(rightOffset);
         ByteBuffer b = ByteBuffer.wrap(out).putLong(0,((long)(leftInput.getBuffer().getLong(leftOffset)+rightInput.getBuffer().getLong(rightOffset))/2));
+        leftInput.getBuffer().position(leftOffset+8);
+        rightInput.getBuffer().position(rightOffset+8);
         leftInput.getBuffer().get(out, 8, {{leftTupleLength}});
         rightInput.getBuffer().get(out, 8 + {{leftTupleLength}}, {{rightTupleLength}});
         b.put(8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
