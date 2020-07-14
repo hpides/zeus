@@ -7,9 +7,9 @@ compileJava = False
 if compileJava:
   c = subprocess.run(prefix + ['mvn', 'package', '-DskipTests'], cwd='../', )
   print(c)
-eps = 550_000
-tis = 120  # should be ~10 more than the engine
-t = 'nexmark'  # type
+eps = 2_000_000
+tis = 310  # should be ~10 more than the engine
+t = 'basic'  # type
 ams = 2
 nr_single_source = 0  # number of queries that need single source
 count = 0
