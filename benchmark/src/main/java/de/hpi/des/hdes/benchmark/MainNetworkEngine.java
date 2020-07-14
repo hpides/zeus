@@ -54,7 +54,7 @@ public class MainNetworkEngine implements Runnable {
   private int fixedQueries;
   @Option(names = { "--type", "-t" }, defaultValue = "bmap")
   private String benchmarkType;
-  @Option(names = { "--networkBufferSize", "-nbs" }, defaultValue = "10")
+  @Option(names = { "--networkBufferSize", "-nbs" }, defaultValue = "1000")
   private int bufferinK;
   @Option(names = { "--packageRoot" }, defaultValue = "")
   private String packageRoot;
@@ -158,7 +158,7 @@ public class MainNetworkEngine implements Runnable {
     var s1 = this.prepareIntSources(basicPort1);
     var s2 = this.prepareIntSources(basicPort2);
     executeQuery((sink) -> Queries.makePlainJoin0Measured(s1, s2, sink),
-        new FileSinkFactory("basic_join", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        new FileSinkFactory("basic_join", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 10000),
         List.of(s1, s2));
   }
 
@@ -166,7 +166,7 @@ public class MainNetworkEngine implements Runnable {
     var s1 = this.prepareIntSources(basicPort1);
     var s2 = this.prepareIntSources(basicPort2);
     executeQuery((sink) -> Queries.makeAJoin0Measured(s1, s2, sink),
-        new FileSinkFactory("basic_ajoin", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+        new FileSinkFactory("basic_ajoin", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 10000),
         List.of(s1, s2));
   }
 

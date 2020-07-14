@@ -53,7 +53,7 @@ public class Queries {
 
     var s1 = tp.streamOf(source1).map(Queries::prepare);
     var s2 = tp.streamOf(source2).map(Queries::prepare);
-    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5))).join(s2, makeJoinF(), t1 -> t1.v1, t2 -> t2.v1,
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(1))).join(s2, makeJoinF(), t1 -> t1.v1, t2 -> t2.v1,
         WatermarkGenerator.seconds(0, 1_000), TimestampExtractor.currentTimeNS());
     return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
   }
@@ -221,7 +221,7 @@ public class Queries {
 
     var s1 = tp.streamOf(source1).map(Queries::prepare);
     var s2 = tp.streamOf(source2).map(Queries::prepare);
-    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5))).ajoin(s2, t1 -> t1.v1, t2 -> t2.v1, makeJoinF(),
+    var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(1))).ajoin(s2, t1 -> t1.v1, t2 -> t2.v1, makeJoinF(),
         "join0measured");
     return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
   }
