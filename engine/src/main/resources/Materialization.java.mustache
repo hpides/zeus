@@ -1,4 +1,4 @@
 {{#type}}
-input.position(input.position() + {{offset}});
-{{lowercaseName}} {{varName}} = input.get{{uppercaseName}}();
+input.getBuffer().position(input.getBuffer().position() + {{offset}});
+{{lowercaseName}} {{varName}} = input.getBuffer().get{{uppercaseName}}();
 {{/type}}

@@ -1,10 +1,11 @@
 package de.hpi.des.hdes.engine.temp;
 
 import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import java.nio.ByteBuffer;
 
 public class {{{className}}} {
-  private final ByteBuffer input;
+  private final ReadBuffer input;
   {{#hasChild}}
   private final Dispatcher dispatcher;
   private final byte[] output = new byte[{{{tupleLength}}}];
@@ -15,7 +16,7 @@ public class {{{className}}} {
   {{> InterfaceDefinition.java.mustache}}
   {{/interfaces}}
   
-  public {{{className}}}(final ByteBuffer input{{#hasChild}}, final Dispatcher dispacther{{/hasChild}}) {
+  public {{{className}}}(final ReadBuffer input{{#hasChild}}, final Dispatcher dispatcher{{/hasChild}}) {
     this.input = input;
     {{#hasChild}}
     this.dispatcher = dispatcher;
@@ -23,7 +24,7 @@ public class {{{className}}} {
   }
 
   public void processEvent(int offset){
-    input.position(offset);
+    input.getBuffer().position(offset);
     input.mark();
     {{#variables}}
     {{> VariableDefiniton.java.mustache}}

@@ -12,6 +12,9 @@ public class DirectoryHelper {
     public static String getPackageRoot() {
         if (packageRoot == null) {
             packageRoot = System.getProperty("user.dir");
+            if (!packageRoot.endsWith("/engine")) {
+                packageRoot += "/engine";
+            }
             packageRoot = packageRoot.substring(0, packageRoot.indexOf("engine", 0));
             packageRoot += "engine/src/main/java/";
             log.info("Determined the packageRoot path through user.Dir. Setting it to: {}", packageRoot);

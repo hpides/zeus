@@ -71,7 +71,7 @@ public abstract class Pipeline {
     }
 
     public String getPipelineId() {
-        return "c".concat(Integer.toString(hashCode()));
+        return "c".concat(Integer.toString(Math.abs(hashCode())));
     }
 
     @Override

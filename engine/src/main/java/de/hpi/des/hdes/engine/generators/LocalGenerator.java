@@ -108,9 +108,10 @@ public class LocalGenerator extends PipelineVisitor {
     public void visit(NetworkSourcePipeline sourcePipeline) {
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("NetworkSource.java.mustache");
-            template.execute(writer, new NetworkSourceData(sourcePipeline.getPipelineId(),
-                    (sourcePipeline.getInputTupleLength() + 9) + "",
-                    sourcePipeline.getSourceNode().getHost().toString(), sourcePipeline.getSourceNode().getHost()))
+            template.execute(writer,
+                    new NetworkSourceData(sourcePipeline.getPipelineId(),
+                            (sourcePipeline.getInputTupleLength() + 9) + "", sourcePipeline.getSourceNode().getHost(),
+                            sourcePipeline.getSourceNode().getPort() + ""))
                     .flush();
             String implementation = writer.toString();
             Files.writeString(

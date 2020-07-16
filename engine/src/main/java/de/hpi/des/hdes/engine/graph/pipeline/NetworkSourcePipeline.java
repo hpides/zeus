@@ -36,7 +36,7 @@ public class NetworkSourcePipeline extends Pipeline {
         this.compileClass();
         this.setLoaded(true);
         try {
-            pipelineObject = (Runnable) pipelineKlass.getDeclaredConstructor(Buffer.class, childKlass).newInstance();// dispatcher.getReadByteBufferForPipeline(this),
+            pipelineObject = (Runnable) pipelineKlass.getDeclaredConstructor(Dispatcher.class).newInstance(dispatcher);// dispatcher.getReadByteBufferForPipeline(this),
                                                                                                                      // dispatcher,
                                                                                                                      // sourceNode.getHost(),
                                                                                                                      // sourceNode.getPort());

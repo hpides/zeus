@@ -45,7 +45,7 @@ public class UnaryGenerationNode extends GenerationNode {
         if (this.getChildren().isEmpty()) {
             pipelineTopology.addPipelineAsLeaf(new UnaryPipeline(this), this);
         } else if (this.getOperator() instanceof AggregateGenerator
-                || this.getChild() instanceof ByteBufferIntListSinkNode) {
+                || this.getChild() instanceof ByteBufferIntListSinkNode || this.getChild() instanceof FileSinkNode) {
             pipelineTopology.addPipelineAsParent(new UnaryPipeline(this), this);
         } else {
             pipelineTopology.addNodeToPipeline(this);

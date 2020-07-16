@@ -10,6 +10,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.Stoppable;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 
 public class {{{pipelineId}}} implements Runnable, Stoppable {
@@ -20,11 +22,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private int writtenTuples = 0;
     private boolean shutdownFlag = false;
 
-    public ByteNetworkSink(final Dispatcher dispatcher, final ReadBuffer input) {
+    public {{{pipelineId}}}(final ReadBuffer input, final Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
         this.input = input;
         var filePath = System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_"
-                + {{{pipelineId}}} + ".csv";
+                + "{{{pipelineId}}}" + ".csv";
         System.out.println(filePath.toString());
         try {
             Date date = Calendar.getInstance().getTime();

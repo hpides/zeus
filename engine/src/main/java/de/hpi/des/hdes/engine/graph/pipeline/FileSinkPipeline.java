@@ -2,11 +2,11 @@ package de.hpi.des.hdes.engine.graph.pipeline;
 
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
+import de.hpi.des.hdes.engine.graph.pipeline.node.FileSinkNode;
 import lombok.Getter;
 
 @Getter
 public class FileSinkPipeline extends SinkPipeline {
-    private Pipeline parent;
     final private int writeEveryX;
 
     public FileSinkPipeline(PrimitiveType[] inputTypes, int writeEveryX) {

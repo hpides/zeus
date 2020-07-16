@@ -35,8 +35,8 @@ public abstract class SinkPipeline extends Pipeline {
 
     @Override
     public void addOperator(GenerationNode operator, GenerationNode childNode) {
-        log.warn("Tried to add {} with childe Node {} to a {} ({})", operator, childNode, this.getClass().getName(),
-                getPipelineId());
+        log.warn("Tried to add operator {} with childe Node {} to a {} ({})", operator, childNode,
+                this.getClass().getName(), getPipelineId());
     }
 
     @Override

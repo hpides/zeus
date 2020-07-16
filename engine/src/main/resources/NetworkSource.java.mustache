@@ -9,6 +9,9 @@ import java.net.Socket;
 import java.util.UUID;
 
 
+import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.Stoppable;
+
 public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     private boolean exit = false;
@@ -28,7 +31,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         try {
             while (!isConnected) {
                 try {
-                    objectSocket = new Socket({{{host}}}, {{{port}}});
+                    objectSocket = new Socket("{{{host}}}", {{{port}}});
                     isConnected = true;
                 } catch (ConnectException ignore) {
                 }
@@ -48,7 +51,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                 }
 
                 try {
-                    while (!this.dispatcher.write({{{pipelineId}}}, objectInput)) {
+                    while (!this.dispatcher.write("{{{pipelineId}}}", objectInput)) {
                         if (exit) {
                             System.out.println("Aborted writing to Join from pipeline {{{pipelineId}}}");
                             break;
