@@ -57,12 +57,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             try {
                 initialPosition = buffer.position();
                 if (this.writtenTuples % {{{writeEveryX}}} == 0) {
-                    out.write(buffer.getLong() + "," + buffer.getLong() + "\n");
+                    out.write(buffer.getLong(initialPosition) + "," + buffer.getLong(initialPosition + {{{inputTupleLength}}} - 8) + "\n");
                     buffer.get();
                     this.writtenTuples = 0;
-                } else {
-                    buffer.position(initialPosition + {{{inputTupleLength}}});
                 }
+                buffer.position(initialPosition + {{{inputTupleLength}}});
                 dispatcher.free(input, initialPosition);
                 if (buffer.position() == buffer.capacity()) {
                     dispatcher.resetReadLimit(input);

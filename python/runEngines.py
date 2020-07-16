@@ -8,9 +8,9 @@ from datetime import datetime
 prefix = ['cmd.exe', '/c'] if os.name == 'nt' else []
 compileJava = False
 
-tis = 300
+tis = 50
 gh = '127.0.0.1'
-TYPE = 'bjoin'
+TYPE = 'compiledajoin'
 
 MEASURE_UTILIZATION = True
 UPDATE_RATE = 1

@@ -116,11 +116,12 @@ public class MainNetworkDataGenerator implements Runnable {
     private void newBenchmarkTwoSources() {
         log.printf(Level.INFO, "Running with %,d EPS, %ds. In total %,d", eventsPerSecond, timeInSeconds,
                 eventsPerSecond * timeInSeconds);
-        final ExecutorService executor = Executors.newFixedThreadPool(4);
-        final var generator1 = new ByteGenerator(eventsPerSecond, timeInSeconds, executor, 1);
-        final var generator2 = new ByteGenerator(eventsPerSecond, timeInSeconds, executor, 2);
-        // log.printf(Level.INFO, "Expecting %,d join tupel",
-        // generator1.expectedJoinSize(generator2, eventsPerSecond, timeInSeconds, 5));
+        final ExecutorService executor1 = Executors.newFixedThreadPool(1);
+        final ExecutorService executor2 = Executors.newFixedThreadPool(1);
+        final var generator1 = new ByteGenerator(eventsPerSecond, timeInSeconds, executor1, 1);
+        final var generator2 = new ByteGenerator(eventsPerSecond, timeInSeconds, executor2, 2);
+        log.printf(Level.INFO, "Expecting %,d join tupel",
+                generator1.expectedJoinSize(generator2, eventsPerSecond, timeInSeconds, 1));
 
         try {
             AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();

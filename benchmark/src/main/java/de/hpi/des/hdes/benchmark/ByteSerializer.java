@@ -10,7 +10,7 @@ public class ByteSerializer extends AbstractSerializer<byte[]> {
     @Override
     public String serialize(byte[] obj) {
         try {
-            return new String(obj, "ISO-8859-1") + "\n";
+            return new String(obj, "ISO-8859-1");
         } catch (UnsupportedEncodingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
