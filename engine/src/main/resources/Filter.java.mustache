@@ -1,4 +1,4 @@
 {{interfaceName}} {{interfaceName}}filter = ({{{signature}}}) -> {{{condition}}};
-if({{interfaceName}}filter.apply({{{application}}})){
-    {{{execution}}}
+if(!{{interfaceName}}filter.apply({{{application}}})){
+    return;
 }

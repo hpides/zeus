@@ -28,7 +28,7 @@ public class MapGenerator implements Generatable {
     }
 
     @Override
-    public String generate(Pipeline pipeline, String execution) {
+    public String generate(Pipeline pipeline) {
         try {
             List<MapData> data = new ArrayList<>();
             Tuple t = this.mapper.getFirst();
@@ -59,6 +59,7 @@ public class MapGenerator implements Generatable {
                                 .collect(Collectors.joining(", "));
                         data.add(new MapData(d.getVarName(), l.getSignature(), l.getExecution(), application,
                                 interfaceName.getInterfaceName()));
+                        break;
                     }
                     case MUTATE: {
                         MaterializationData d = pipeline.getVariableAtIndex(t.getIndex());

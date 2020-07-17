@@ -15,7 +15,7 @@ public class AJoinGenerator implements Generatable {
     private final int windowLength;
 
     @Override
-    public String generate(Pipeline pipeline, String execution) {
+    public String generate(Pipeline pipeline) {
         // TODO
         return "";
     }

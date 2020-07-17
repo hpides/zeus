@@ -43,4 +43,9 @@ public class ReadBuffer {
         return limit;
     }
 
+    public ReadBuffer get(byte[] dest, int offset, int length){
+        buffer.get(dest, offset, length);
+        return this;
+    }
+
 }

@@ -16,7 +16,7 @@ public class FilterGeneratorTest {
         PrimitiveType[] types = new PrimitiveType[0];
         FilterGenerator generator = new FilterGenerator(types, "v1 > 1");
         UnaryPipeline l = new UnaryPipeline(new UnaryGenerationNode(types, types, generator));
-        assertThatThrownBy(() -> generator.generate(l, "implementation")).hasMessageContaining("Malformatted function");
+        assertThatThrownBy(() -> generator.generate(l)).hasMessageContaining("Malformatted function");
     }
 
     @Test
@@ -24,7 +24,7 @@ public class FilterGeneratorTest {
         PrimitiveType[] types = new PrimitiveType[0];
         FilterGenerator generator = new FilterGenerator(types, "(v1, v2, v3) -> v1 > 1");
         UnaryPipeline l = new UnaryPipeline(new UnaryGenerationNode(types, types, generator));
-        assertThatThrownBy(() -> generator.generate(l, "implementation"))
+        assertThatThrownBy(() -> generator.generate(l))
                 .hasMessageContaining("Malformatted parameters");
     }
 
@@ -33,7 +33,7 @@ public class FilterGeneratorTest {
         PrimitiveType[] types = new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT };
         FilterGenerator generator = new FilterGenerator(types, "(v1, v2, v3) -> v1 > 1");
         UnaryPipeline l = new UnaryPipeline(new UnaryGenerationNode(types, types, generator));
-        String out = generator.generate(l, "implementation");
+        String out = generator.generate(l);
         assertThat(out).containsPattern(Pattern.compile("(v1) ->  v1 > 1", Pattern.LITERAL));
         assertThat(out).containsPattern(Pattern.compile("filter.apply($0))", Pattern.LITERAL));
         assertThat(l.getCurrentTypes()).containsExactly("$0", null, null);
@@ -44,7 +44,7 @@ public class FilterGeneratorTest {
         PrimitiveType[] types = new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT };
         FilterGenerator generator = new FilterGenerator(types, "(v1, v2, v3) -> v1 > 1 && v2 > v1");
         UnaryPipeline l = new UnaryPipeline(new UnaryGenerationNode(types, types, generator));
-        String out = generator.generate(l, "implementation");
+        String out = generator.generate(l);
         assertThat(out).containsPattern(Pattern.compile("(v1, v2) ->  v1 > 1 && v2 > v1", Pattern.LITERAL));
         assertThat(out).containsPattern(Pattern.compile("filter.apply($0, $1))", Pattern.LITERAL));
         assertThat(l.getCurrentTypes()).containsExactly("$0", "$1", null);
@@ -55,7 +55,7 @@ public class FilterGeneratorTest {
         PrimitiveType[] types = new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT };
         FilterGenerator generator = new FilterGenerator(types, "(v1, v2, v3) -> v1 > 1 && v3 > v1");
         UnaryPipeline l = new UnaryPipeline(new UnaryGenerationNode(types, types, generator));
-        String out = generator.generate(l, "implementation");
+        String out = generator.generate(l);
         assertThat(out).containsPattern(Pattern.compile("(v1, v3) ->  v1 > 1 && v3 > v1", Pattern.LITERAL));
         assertThat(out).containsPattern(Pattern.compile("filter.apply($0, $1))", Pattern.LITERAL));
         assertThat(l.getCurrentTypes()).containsExactly("$0", null, "$1");
@@ -66,7 +66,7 @@ public class FilterGeneratorTest {
         PrimitiveType[] types = new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT };
         FilterGenerator generator = new FilterGenerator(types, "(v1, v2, v3) -> true");
         UnaryPipeline l = new UnaryPipeline(new UnaryGenerationNode(types, types, generator));
-        String out = generator.generate(l, "implementation");
+        String out = generator.generate(l);
         assertThat(out).containsPattern(Pattern.compile("() ->  true", Pattern.LITERAL));
         assertThat(out).containsPattern(Pattern.compile("filter.apply())", Pattern.LITERAL));
         assertThat(l.getCurrentTypes()).containsExactly(null, null, null);
@@ -77,7 +77,7 @@ public class FilterGeneratorTest {
         PrimitiveType[] types = new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT };
         FilterGenerator generator = new FilterGenerator(types, "(_, _, _) -> true");
         UnaryPipeline l = new UnaryPipeline(new UnaryGenerationNode(types, types, generator));
-        String out = generator.generate(l, "implementation");
+        String out = generator.generate(l);
         assertThat(out).containsPattern(Pattern.compile("() ->  true", Pattern.LITERAL));
         assertThat(out).containsPattern(Pattern.compile("filter.apply())", Pattern.LITERAL));
         assertThat(l.getCurrentTypes()).containsExactly(null, null, null);

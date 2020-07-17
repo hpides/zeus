@@ -14,9 +14,8 @@ public class FilterData {
   final private String signature;
   final private String condition;
   final private String application;
-  final private String execution;
 
-  public FilterData(Pipeline pipeline, PrimitiveType[] types, String condition, String execution) {
+  public FilterData(Pipeline pipeline, PrimitiveType[] types, String condition) {
     LambdaString lambda = LambdaString.analyze(types, condition);
     this.condition = lambda.getExecution();
     this.signature = lambda.getSignature();
@@ -25,7 +24,6 @@ public class FilterData {
       MaterializationData var = pipeline.getVariableAtIndex(m);
       return var.getVarName();
     }).collect(Collectors.joining(", "));
-    this.execution = execution;
     // Registers the interface on the generator
     this.interfaceName = pipeline.registerInterface("boolean", lambda.getInterfaceDef()).getInterfaceName();
   }

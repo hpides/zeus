@@ -23,9 +23,9 @@ public class FilterGenerator implements Generatable {
     }
 
     @Override
-    public String generate(Pipeline pipeline, String execution) {
+    public String generate(Pipeline pipeline) {
         try {
-            FilterData data = new FilterData(pipeline, types, filter, execution);
+            FilterData data = new FilterData(pipeline, types, filter);
             Mustache template = MustacheFactorySingleton.getInstance().compile("Filter.java.mustache");
             template.execute(writer, data).flush();
             return writer.toString();

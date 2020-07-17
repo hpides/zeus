@@ -17,7 +17,7 @@ public class AggregateGenerator implements Generatable {
   }
 
   @Override
-  public String generate(Pipeline pipeline, String execution) {
+  public String generate(Pipeline pipeline) {
     // TODO Auto-generated method stub
     return null;
   }

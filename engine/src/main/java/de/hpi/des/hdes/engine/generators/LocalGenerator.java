@@ -38,18 +38,20 @@ public class LocalGenerator extends PipelineVisitor {
 
     @Override
     public void visit(UnaryPipeline unaryPipeline) {
-        String implementation = unaryPipeline.hasChild()
-                ? unaryPipeline.getWriteout("input").concat("dispatcher.write(\"").concat(unaryPipeline.getPipelineId())
-                        .concat("\", output);")
-                : "";
+        String implementation = "";
 
         for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                implementation = ((UnaryGenerationNode) node).getOperator().generate(unaryPipeline, implementation);
+                implementation = ((UnaryGenerationNode) node).getOperator().generate(unaryPipeline);
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
         }
+
+        implementation = unaryPipeline.hasChild()
+                ? implementation.concat(unaryPipeline.getWriteout("input")).concat("dispatcher.write(\"").concat(unaryPipeline.getPipelineId())
+                        .concat("\", output);")
+                : implementation;
 
         try {
             if (unaryPipeline.hasChild() && !(unaryPipeline.getChild() instanceof SinkPipeline)) {
@@ -128,8 +130,7 @@ public class LocalGenerator extends PipelineVisitor {
         String implementation = "";
         for (Node node : Lists.reverse(aggregationPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                implementation = ((UnaryGenerationNode) node).getOperator().generate(aggregationPipeline,
-                        implementation);
+                implementation = ((UnaryGenerationNode) node).getOperator().generate(aggregationPipeline);
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
