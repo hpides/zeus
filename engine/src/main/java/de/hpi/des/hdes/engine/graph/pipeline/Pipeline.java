@@ -127,10 +127,11 @@ public abstract class Pipeline {
     }
 
     public String getWriteout(String bufferName) {
-        // TODO OPtimize Timestamp and watermark copy
+        // TODO Optimize Timestamp and watermark copy
         String implementation = "input.reset();\n";
         implementation = implementation.concat("outputBuffer.clear();\n").concat(bufferName)
                 .concat(".getBuffer().get(output, 0, 8);\n");
+        implementation = implementation.concat("outputBuffer.position(8);\n");
         int copyLength = 0;
         int arrayOffset = 8;
         for (int i = 0; i < currentTypes.size(); i++) {
@@ -142,6 +143,7 @@ public abstract class Pipeline {
                     implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, ")
                             .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
                             .concat(");\n");
+                    implementation = implementation.concat("outputBuffer.position(outputBuffer.position()+").concat(Integer.toString(copyLength)).concat(");\n");
                     copyLength = 0;
                 }
                 implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
