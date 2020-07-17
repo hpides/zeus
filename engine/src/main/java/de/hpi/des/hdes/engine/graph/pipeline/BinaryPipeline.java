@@ -79,4 +79,13 @@ public abstract class BinaryPipeline extends Pipeline {
         }
         newParentPipeline.setChild(this);
     }
+
+    @Override
+    public int getOutputTupleLength() {
+        int length = 0;
+        for (PrimitiveType pt : binaryNode.getOutputTypes()) {
+            length += pt.getLength();
+        }
+        return length;
+    }
 }

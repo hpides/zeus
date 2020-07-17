@@ -49,8 +49,8 @@ public class LocalGenerator extends PipelineVisitor {
         }
 
         implementation = unaryPipeline.hasChild()
-                ? implementation.concat(unaryPipeline.getWriteout("input")).concat("dispatcher.write(\"").concat(unaryPipeline.getPipelineId())
-                        .concat("\", output);")
+                ? implementation.concat(unaryPipeline.getWriteout("input")).concat("dispatcher.write(\"")
+                        .concat(unaryPipeline.getPipelineId()).concat("\", output);")
                 : implementation;
 
         try {
@@ -61,7 +61,7 @@ public class LocalGenerator extends PipelineVisitor {
                 template.execute(writer,
                         new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation, unaryPipeline.hasChild(),
                                 unaryPipeline.getChild(), unaryPipeline.getInterfaces(), unaryPipeline.getVariables(),
-                                unaryPipeline.getOutputTypes()))
+                                unaryPipeline.getInputTypes(), unaryPipeline.getOutputTypes()))
                         .flush();
             }
             implementation = writer.toString();

@@ -11,7 +11,7 @@ public class {{{className}}} implements Runnable, Stoppable {
   private boolean shutdownFlag = false;
   {{#hasChild}}
   private final Dispatcher dispatcher;
-  private final byte[] output = new byte[{{{tupleLength}}}];
+  private final byte[] output = new byte[{{{outputEventLength}}}];
   private final ByteBuffer outputBuffer = ByteBuffer.wrap(output);
   {{/hasChild}}
 
@@ -28,10 +28,12 @@ public class {{{className}}} implements Runnable, Stoppable {
 
   public void readEvent(){
     input.mark();
+    int nextPosition = input.getBuffer().position() + {{inputEventLength}};
     {{#variables}}
     {{> VariableDefiniton.java.mustache}}
     {{/variables}}
     {{{implementation}}}
+    input.getBuffer().position(nextPosition);
   }
 
   @Override

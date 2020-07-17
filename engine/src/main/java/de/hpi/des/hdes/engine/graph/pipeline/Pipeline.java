@@ -129,9 +129,10 @@ public abstract class Pipeline {
     public String getWriteout(String bufferName) {
         // TODO OPtimize Timestamp and watermark copy
         String implementation = "input.reset();\n";
-        implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, 0, 8);\n");
+        implementation = implementation.concat("outputBuffer.clear();\n").concat(bufferName)
+                .concat(".getBuffer().get(output, 0, 8);\n");
         int copyLength = 0;
-        int arrayOffset = 0;
+        int arrayOffset = 8;
         for (int i = 0; i < currentTypes.size(); i++) {
             if (currentTypes.get(i) == null) {
                 copyLength += inputTypes[i].getLength();
@@ -140,12 +141,11 @@ public abstract class Pipeline {
                 if (copyLength != 0) {
                     implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, ")
                             .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
-                            .concat(");\n").concat("outputBuffer.position(outputBuffer.position() + ")
-                            .concat(Integer.toString(copyLength)).concat(");\n");
+                            .concat(");\n");
                     copyLength = 0;
                 }
                 implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
-                    .concat("(").concat(var.getVarName()).concat(");\n");
+                        .concat("(").concat(var.getVarName()).concat(");\n");
                 arrayOffset += var.getType().getLength();
             }
         }
@@ -155,8 +155,9 @@ public abstract class Pipeline {
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }
-        implementation = implementation.concat(bufferName.concat(".getBuffer().get(output, ").concat(Integer.toString(8+getInputTupleLength())).concat(", 8);\n"));
-        return implementation.concat("outputBuffer.clear();\n");
+        implementation = implementation.concat(bufferName.concat(".getBuffer().get(output, ")
+                .concat(Integer.toString(8 + getInputTupleLength())).concat(", 8);\n"));
+        return implementation;
     }
 
     public PrimitiveType[] getOutputTypes() {

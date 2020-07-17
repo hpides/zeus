@@ -59,7 +59,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             try {
                 initialPosition = buffer.position();
                 if (this.writtenTuples % {{{writeEveryX}}} == 0) {
-                    out.write(buffer.getLong(initialPosition) + "," + buffer.getLong(initialPosition + {{{inputTupleLength}}} - 8) + "\n");
+                    out.write(buffer.getLong(initialPosition) + "," + buffer.getLong(initialPosition + {{{inputTupleLength}}} - 8 - 1) + "\n");
                     buffer.get();
                     this.writtenTuples = 0;
                 }

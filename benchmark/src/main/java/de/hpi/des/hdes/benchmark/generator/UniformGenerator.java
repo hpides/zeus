@@ -70,9 +70,8 @@ public abstract class UniformGenerator<E> implements Generator<E> {
           blockingSource.offer(this.generateEvent());
           totalSentEvents += 1;
         } catch (IllegalStateException e) {
-          log.printf(Level.WARN, "Events left %,d, Events sent %,d", totalEvents - totalSentEvents,
-              totalSentEvents,
-              e);
+          log.info("Events remaining {} Events sent {}", totalEvents - totalSentEvents,
+              totalSentEvents);
           this.shutdown();
           return false;
         }
