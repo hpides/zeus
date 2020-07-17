@@ -155,8 +155,9 @@ public abstract class Pipeline {
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }
-        implementation = implementation.concat(bufferName.concat(".getBuffer().get(output, ")
-                .concat(Integer.toString(8 + getInputTupleLength())).concat(", 8);\n"));
+        // implementation =
+        // implementation.concat(bufferName.concat(".getBuffer().get(output, ")
+        // .concat(Integer.toString(8 + getInputTupleLength())).concat(", 8);\n"));
         return implementation;
     }
 
