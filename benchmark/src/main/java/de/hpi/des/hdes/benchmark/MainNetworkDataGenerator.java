@@ -136,6 +136,8 @@ public class MainNetworkDataGenerator implements Runnable {
             var s2 = new BlockingSocket<>(basicPort2, serializerInstance, socket2File, this.timeInSeconds);
             s1.setByteFlag(true);
             s2.setByteFlag(true);
+            s1.setByteLength(17);
+            s2.setByteLength(17);
             s1.waitForConnection();
             s2.waitForConnection();
             long startTime = System.nanoTime();
