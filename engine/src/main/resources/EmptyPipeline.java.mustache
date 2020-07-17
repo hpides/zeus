@@ -2,10 +2,13 @@ package de.hpi.des.hdes.engine.temp;
 
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
+import de.hpi.des.hdes.engine.execution.Stoppable;
+
 import java.nio.ByteBuffer;
 
-public class {{{className}}} {
+public class {{{className}}} implements Runnable, Stoppable {
   private final ReadBuffer input;
+  private boolean shutdownFlag = false;
   {{#hasChild}}
   private final Dispatcher dispatcher;
   private final byte[] output = new byte[{{{tupleLength}}}];
@@ -23,12 +26,28 @@ public class {{{className}}} {
     {{/hasChild}}
   }
 
-  public void processEvent(int offset){
-    input.getBuffer().position(offset);
+  public void readEvent(){
     input.mark();
     {{#variables}}
     {{> VariableDefiniton.java.mustache}}
     {{/variables}}
     {{{implementation}}}
-  }  
+  }
+
+  @Override
+    public void run() {
+        while (!Thread.interrupted() && !shutdownFlag) {
+            if (input.getBuffer().position() == input.getBuffer().capacity()) {
+                dispatcher.resetReadLimit(input);
+            }
+            if (input.hasRemaining()) {
+                readEvent();
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        shutdownFlag = true;
+    }
 }

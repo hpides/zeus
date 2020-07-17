@@ -127,8 +127,9 @@ public abstract class Pipeline {
     }
 
     public String getWriteout(String bufferName) {
-        // TODO Account for copy of watermark and timestamp
-        String implementation = "";
+        // TODO OPtimize Timestamp and watermark copy
+        String implementation = "input.reset();\n";
+        implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, 0, 8);\n");
         int copyLength = 0;
         int arrayOffset = 0;
         for (int i = 0; i < currentTypes.size(); i++) {
@@ -137,25 +138,25 @@ public abstract class Pipeline {
             } else {
                 MaterializationData var = variables.get(currentTypes.get(i));
                 if (copyLength != 0) {
-                    implementation = implementation.concat(bufferName).concat(".get(output, ")
+                    implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, ")
                             .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
                             .concat(");\n").concat("outputBuffer.position(outputBuffer.position() + ")
                             .concat(Integer.toString(copyLength)).concat(");\n");
                     copyLength = 0;
-                } else {
-                    implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
-                            .concat("(").concat(var.getVarName()).concat(");\n");
                 }
+                implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
+                    .concat("(").concat(var.getVarName()).concat(");\n");
                 arrayOffset += var.getType().getLength();
             }
         }
         if (copyLength != 0) {
-            implementation = implementation.concat(bufferName).concat(".get(output, ")
+            implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, ")
                     .concat(Integer.toString(arrayOffset)).concat(", ")
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }
-        return implementation;
+        implementation = implementation.concat(bufferName.concat(".getBuffer().get(output, ").concat(Integer.toString(8+getInputTupleLength())).concat(", 8);\n"));
+        return implementation.concat("outputBuffer.clear();\n");
     }
 
     public PrimitiveType[] getOutputTypes() {
