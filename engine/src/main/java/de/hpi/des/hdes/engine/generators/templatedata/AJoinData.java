@@ -1,5 +1,6 @@
 package de.hpi.des.hdes.engine.generators.templatedata;
 
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import lombok.Getter;
 
@@ -14,6 +15,7 @@ public class AJoinData {
     private final int leftKeyOffset;
     private final int rightKeyOffset;
     private final int windowLength;
+    private final int batchSize = Dispatcher.TUPLES_PER_BATCH();
 
     public AJoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
             final int leftKeyIndex, final int rightKeyIndex, final int windowLength) {

@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.StringWriter;
 import lombok.extern.slf4j.Slf4j;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.templatedata.*;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
@@ -48,10 +49,7 @@ public class LocalGenerator extends PipelineVisitor {
             }
         }
 
-        implementation = unaryPipeline.hasChild()
-                ? implementation.concat(unaryPipeline.getWriteout("input")).concat("dispatcher.write(\"")
-                        .concat(unaryPipeline.getPipelineId()).concat("\", output);")
-                : implementation;
+        implementation = implementation.concat(unaryPipeline.getWriteout("input"));
 
         try {
             if (unaryPipeline.hasChild() && !(unaryPipeline.getChild() instanceof SinkPipeline)) {
@@ -59,8 +57,8 @@ public class LocalGenerator extends PipelineVisitor {
             } else {
                 Mustache template = MustacheFactorySingleton.getInstance().compile("EmptyPipeline.java.mustache");
                 template.execute(writer,
-                        new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation, unaryPipeline.hasChild(),
-                                unaryPipeline.getChild(), unaryPipeline.getInterfaces(), unaryPipeline.getVariables(),
+                        new EmptyPipelineData(unaryPipeline.getPipelineId(), implementation, unaryPipeline.getChild(),
+                                unaryPipeline.getInterfaces(), unaryPipeline.getVariables(),
                                 unaryPipeline.getInputTypes(), unaryPipeline.getOutputTypes()))
                         .flush();
             }
@@ -113,7 +111,7 @@ public class LocalGenerator extends PipelineVisitor {
             template.execute(writer,
                     new NetworkSourceData(sourcePipeline.getPipelineId(),
                             (sourcePipeline.getInputTupleLength() + 9) + "", sourcePipeline.getSourceNode().getHost(),
-                            sourcePipeline.getSourceNode().getPort() + ""))
+                            sourcePipeline.getSourceNode().getPort() + "", Dispatcher.TUPLES_PER_BATCH() + ""))
                     .flush();
             String implementation = writer.toString();
             Files.writeString(
@@ -161,7 +159,8 @@ public class LocalGenerator extends PipelineVisitor {
             Mustache template = MustacheFactorySingleton.getInstance().compile("FileSink.java.mustache");
             template.execute(writer,
                     new FileSinkData(fileSinkPipeline.getPipelineId(),
-                            (fileSinkPipeline.getInputTupleLength() + 9) + "", fileSinkPipeline.getWriteEveryX() + ""))
+                            (fileSinkPipeline.getInputTupleLength() + 9) + "", fileSinkPipeline.getWriteEveryX() + "",
+                            Dispatcher.TUPLES_PER_BATCH() + ""))
                     .flush();
             String implementation = writer.toString();
             Files.writeString(

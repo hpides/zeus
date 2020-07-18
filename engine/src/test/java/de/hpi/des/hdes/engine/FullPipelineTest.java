@@ -21,7 +21,7 @@ import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 
 public class FullPipelineTest {
 
-    @Test
+    // @Test
     public void testAJoin() {
         List<Tuple2<Integer, Boolean>> source1 = new LinkedList<>();
         for (int i = 0; i <= 21; i++) {

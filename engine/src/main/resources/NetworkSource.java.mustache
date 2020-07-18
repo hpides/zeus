@@ -39,11 +39,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             System.out.println("Client connected on {{{host}}} at {{{port}}}");
             BufferedInputStream in = new BufferedInputStream(objectSocket.getInputStream(), {{{eventLength}}} * 1_000);
 
-            byte[] objectInput = new byte[{{{eventLength}}}];
+            byte[] objectInput = new byte[{{{batchSize}}}*{{{eventLength}}}];
             int lastPosition = 0;
             while (!exit) {
-                int bytesRead = in.read(objectInput, lastPosition, {{{eventLength}}} - lastPosition);
-                if (bytesRead < {{{eventLength}}}) {
+                int bytesRead = in.read(objectInput, lastPosition, {{{batchSize}}}*{{{eventLength}}} - lastPosition);
+                if (bytesRead+lastPosition < {{{batchSize}}}*{{{eventLength}}}) {
                     lastPosition = bytesRead;
                     continue;
                 } else {
@@ -56,11 +56,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                             System.out.println("Aborted writing to Join from pipeline {{{pipelineId}}}");
                             break;
                         }
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
+
 
                     }
                 } catch (IllegalStateException e) {

@@ -28,14 +28,20 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private long earliestOpenWindowJoin = Long.MAX_VALUE;
     private long latestTimestampLeft = 0;
     private long latestTimestampRight = 0;
+    final private int[] leftFreeableOffsets = new int[{{{batchSize}}}];
+    private int leftFreeableIndex = 0;
+    final private int[] rightFreeableOffsets = new int[{{{batchSize}}}];
+    private int rightFreeableIndex = 0;
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
-    final byte[] out = new byte[8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1];
+    final byte[] out = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{batchSize}}}];
+    final private ByteBuffer outputBuffer = ByteBuffer.wrap(out);
+    private int outputCounter = 0;
 
 
-    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntSet>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
-    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntSet>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntList>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntList>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
     private boolean shutdownFlag = false;
 
     public {{{pipelineId}}} (final ReadBuffer left, final ReadBuffer right, final Dispatcher dispatcher) {
@@ -49,7 +55,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         final long eventTimestamp = leftInput.getBuffer().getLong();
         if (eventTimestamp < latestTimestampLeft) {
             leftInput.reset();
-            dispatcher.free(leftInput, leftInput.getBuffer().position());
+            freeLeft(leftInput.getBuffer().position());
             leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
             return;
         }
@@ -58,10 +64,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = windowStart;
         }
 
-        {{keyType}}2ObjectOpenHashMap<IntSet> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
+        {{keyType}}2ObjectOpenHashMap<IntList> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
+                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
         leftInput.getBuffer().position(leftInput.getBuffer().position()+{{leftKeyOffset}});
-        IntSet set = bucket.computeIfAbsent(leftInput.getBuffer().get{{keyType}}(), w -> new {{keyType}}ArraySet());
+        IntList set = bucket.computeIfAbsent(leftInput.getBuffer().get{{keyType}}(), w -> new {{keyType}}ArrayList());
         leftInput.reset();
         set.add(leftInput.getBuffer().position());
         leftInput.getBuffer().position(leftInput.getBuffer().position() + 8 + {{leftTupleLength}});
@@ -81,7 +87,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         
         if (eventTimestamp < latestTimestampRight) {
             rightInput.reset();
-            dispatcher.free(rightInput, rightInput.getBuffer().position());
+            freeRight(rightInput.getBuffer().position());
             rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
             return;
         }
@@ -93,10 +99,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{{operatorImplementationRight}}}
 
-        {{keyType}}2ObjectOpenHashMap<IntSet> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
+        {{keyType}}2ObjectOpenHashMap<IntList> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
+                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
         rightInput.getBuffer().position(rightInput.getBuffer().position() + {{rightKeyOffset}});
-        IntSet set = bucket.computeIfAbsent(rightInput.getBuffer().get{{keyType}}(), w -> new {{keyType}}ArraySet());
+        IntList set = bucket.computeIfAbsent(rightInput.getBuffer().get{{keyType}}(), w -> new IntArrayList());
         rightInput.reset();
         set.add(rightInput.getBuffer().position());
         rightInput.getBuffer().position(rightInput.getBuffer().position() + 8 + {{rightTupleLength}});
@@ -111,20 +117,22 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(final long timestamp) {
-        {{keyType}}2ObjectOpenHashMap<IntSet> leftBucket = leftWindowsToBuckets.get(timestamp);
-        {{keyType}}2ObjectOpenHashMap<IntSet> rightBucket = rightWindowsToBuckets.get(timestamp);
+        {{keyType}}2ObjectOpenHashMap<IntList> leftBucket = leftWindowsToBuckets.get(timestamp);
+        {{keyType}}2ObjectOpenHashMap<IntList> rightBucket = rightWindowsToBuckets.get(timestamp);
         if(leftBucket == null && rightBucket != null) {
             for ({{nativeKeyType}} key : rightBucket.keySet()) {
-                for (int rightOffset : rightBucket.get(key)) {
-                    dispatcher.free(rightInput, rightOffset);
+                IntList rightOffsets = rightBucket.get(key);
+                for(int i = 0; i < rightOffsets.size(); i++) {
+                    freeRight(rightOffsets.getInt(i));
                 }
             }
             rightWindowsToBuckets.remove(timestamp);
             return;
         } else if(rightBucket == null && leftBucket != null) {
-            for ({{nativeKeyType}} key : leftBucket.keySet()) {
-                for (int leftOffset : leftBucket.get(key)) {
-                    dispatcher.free(leftInput, leftOffset);
+            for ({{nativeKeyType}} key : leftBucket.keySet().to{{{keyType}}}Array()) {
+                IntList leftOffsets = leftBucket.get(key);
+                for(int i = 0; i < leftOffsets.size(); i++) {
+                    freeLeft(leftOffsets.getInt(i));
                 }
             }
             leftWindowsToBuckets.remove(timestamp);
@@ -132,25 +140,31 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         } else if(leftBucket == null && rightBucket == null) {
             return;
         }
-        for ({{nativeKeyType}} key : leftBucket.keySet()) {
+        for ({{nativeKeyType}} key : leftBucket.keySet().to{{{keyType}}}Array()) {
             if (rightBucket.containsKey(key)) {
-                for (int leftOffset : leftBucket.get(key)) {                
-                    for (int rightOffset : rightBucket.get(key)) {
+                IntList leftOffsets = leftBucket.get(key);
+                IntList rightOffsets = rightBucket.get(key);
+                for(int leftIndex = 0; leftIndex < leftOffsets.size(); leftIndex++) {
+                    int leftOffset = leftOffsets.getInt(leftIndex);
+                    for(int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
+                        int rightOffset = rightOffsets.getInt(rightIndex);
                         this.writeOutput(leftOffset, rightOffset);
-                        dispatcher.free(rightInput, rightOffset);
+                        freeRight(rightOffset);
                     }
-                    dispatcher.free(leftInput, leftOffset);
+                    freeLeft(leftOffset);
                 }
                 rightBucket.remove(key);
             } else {
-                for (int leftOffset : leftBucket.get(key)) {
-                    dispatcher.free(leftInput, leftOffset);
+                IntList leftOffsets = leftBucket.get(key);
+                for(int i = 0; i < leftOffsets.size(); i++) {
+                    freeLeft(leftOffsets.getInt(i));
                 }
             }
         }
-        for ({{nativeKeyType}} key : rightBucket.keySet()) {
-            for (int rightOffset : rightBucket.get(key)) {
-                dispatcher.free(rightInput, rightOffset);
+        for ({{nativeKeyType}} key : rightBucket.keySet().to{{{keyType}}}Array()) {
+            IntList rightOffsets = rightBucket.get(key);
+            for(int i = 0; i < rightOffsets.size(); i++) {
+                freeRight(rightOffsets.getInt(i));
             }
         }
         leftWindowsToBuckets.remove(timestamp);
@@ -164,13 +178,36 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     
 
     public void writeOutput(int leftOffset, int rightOffset) {
-        ByteBuffer b = ByteBuffer.wrap(out).putLong(0,Math.max(leftInput.getBuffer().getLong(leftOffset),rightInput.getBuffer().getLong(rightOffset)));
+        int initialOutputOffset = this.outputCounter * (8 + {{leftTupleLength}} + {{rightTupleLength}} + 1);
+        outputBuffer.putLong(initialOutputOffset,Math.max(leftInput.getBuffer().getLong(leftOffset),rightInput.getBuffer().getLong(rightOffset)));
         leftInput.getBuffer().position(leftOffset+8);
         rightInput.getBuffer().position(rightOffset+8);
-        leftInput.getBuffer().get(out, 8, {{leftTupleLength}});
-        rightInput.getBuffer().get(out, 8 + {{leftTupleLength}}, {{rightTupleLength}});
-        b.put(8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
-        while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
+        leftInput.getBuffer().get(out, initialOutputOffset + 8, {{leftTupleLength}});
+        rightInput.getBuffer().get(out, initialOutputOffset + 8 + {{leftTupleLength}}, {{rightTupleLength}});
+        outputBuffer.put(initialOutputOffset + 8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
+        this.outputCounter++;
+        if(this.outputCounter == {{{batchSize}}}) {
+            while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
+            this.outputCounter = 0;
+        }
+    }
+
+    private void freeLeft(int offset) {
+        leftFreeableOffsets[leftFreeableIndex] = offset;
+        leftFreeableIndex++;
+        if(leftFreeableIndex == {{{batchSize}}}) {
+            dispatcher.free(leftInput, leftFreeableOffsets);
+            leftFreeableIndex = 0;
+        }
+    }
+
+    private void freeRight(int offset) {
+        rightFreeableOffsets[rightFreeableIndex] = offset;
+        rightFreeableIndex++;
+        if(rightFreeableIndex == {{{batchSize}}}) {
+            dispatcher.free(rightInput, rightFreeableOffsets);
+            rightFreeableIndex = 0;
+        }
     }
 
     @Override
@@ -182,10 +219,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             if (rightInput.getBuffer().position() == rightInput.getBuffer().capacity()) {
                 dispatcher.resetReadLimit(rightInput);
             }
-            if (leftInput.hasRemaining()) {
+            for (int remainingBytes=Math.min(leftInput.remainingBytes(), 100*(8 + {{{leftTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{leftTupleLength}}} + 1)) {
                 readEventLeft();
             }
-            if (rightInput.hasRemaining()) {
+            for (int remainingBytes=Math.min(rightInput.remainingBytes(), 100*(8 + {{{rightTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{rightTupleLength}}} + 1)) {
                 readEventRight();
             }
         }

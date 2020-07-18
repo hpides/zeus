@@ -9,30 +9,41 @@ import java.nio.ByteBuffer;
 public class {{{className}}} implements Runnable, Stoppable {
   private final ReadBuffer input;
   private boolean shutdownFlag = false;
-  {{#hasChild}}
   private final Dispatcher dispatcher;
-  private final byte[] output = new byte[{{{outputEventLength}}}];
+  private final byte[] output = new byte[{{{outputEventLength}}}*{{{batchSize}}}];
   private final ByteBuffer outputBuffer = ByteBuffer.wrap(output);
-  {{/hasChild}}
+  private int outputCounter = 0;
+  private final int[] freeableOffsets = new int[{{{batchSize}}}];
+  private int freeableIndex = 0;
 
   {{#interfaces}}
   {{> InterfaceDefinition.java.mustache}}
   {{/interfaces}}
   
-  public {{{className}}}(final ReadBuffer input{{#hasChild}}, final Dispatcher dispatcher{{/hasChild}}) {
+  public {{{className}}}(final ReadBuffer input, final Dispatcher dispatcher) {
     this.input = input;
-    {{#hasChild}}
     this.dispatcher = dispatcher;
-    {{/hasChild}}
   }
 
   public void readEvent(){
     input.mark();
     int nextPosition = input.getBuffer().position() + {{inputEventLength}};
+    int initialOutputOffset = outputCounter * {{{outputEventLength}}};
     {{#variables}}
     {{> VariableDefiniton.java.mustache}}
     {{/variables}}
     {{{implementation}}}
+    outputCounter++;
+    freeableOffsets[freeableIndex] = nextPosition - {{inputEventLength}};
+    freeableIndex++;
+    if(freeableIndex == {{{batchSize}}}) {
+        dispatcher.free(input, freeableOffsets);
+        freeableIndex = 0;
+    }
+    if(outputCounter == {{{batchSize}}}) {
+        while (!dispatcher.write("{{className}}", output) && !shutdownFlag); 
+        outputCounter = 0;
+    }
     input.getBuffer().position(nextPosition);
   }
 

@@ -12,11 +12,16 @@ import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.predefined.ByteBufferIntListSinkPipeline;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 public class Dispatcher {
 
     // TODO Should be saved per buffer during initialization
-    private static int TUPLE_AMOUNT = 24000000;
+    private static int BATCH_AMOUNT = 50000;
+    @Accessors(fluent = true)
+    @Getter
+    private static int TUPLES_PER_BATCH = 900;
 
     private final PipelineTopology pipelineTopology;
     private final Map<String, BufferWrapper> writeBuffers = new HashMap<>();
@@ -33,11 +38,11 @@ public class Dispatcher {
     private void prepare() {
         for (final Pipeline pipeline : pipelineTopology.getPipelines()) {
             int outputTupleSize = pipeline.getOutputTupleLength() + 9;
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(outputTupleSize * TUPLE_AMOUNT);
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(outputTupleSize * BATCH_AMOUNT * TUPLES_PER_BATCH);
             final ByteBuffer readBuffer = buffer.asReadOnlyBuffer();
             final BufferWrapper bufferWrapper = new BufferWrapper(buffer,
                     new ReadBuffer(readBuffer, pipeline.getPipelineId(), counter++), buffer.limit() / outputTupleSize,
-                    new boolean[TUPLE_AMOUNT], outputTupleSize);
+                    new boolean[BATCH_AMOUNT * TUPLES_PER_BATCH], outputTupleSize);
             writeBuffers.put(pipeline.getPipelineId(), bufferWrapper);
             readBufferToBufferWrapper.put(bufferWrapper.getReadBuffer(), bufferWrapper);
         }
@@ -63,9 +68,15 @@ public class Dispatcher {
         final BufferWrapper bufferWrapper = writeBuffers.get(pipeline);
         if (bufferWrapper.hasRemaining(bytes.length)) {
             final ByteBuffer writeBuffer = bufferWrapper.getWriteBuffer();
+
+            // loop over ever bytes array
+            // for every bufferWrapper.getTupleSize() bytes set the index in the bitmask to
+            // true
             int index = writeBuffer.position() / bufferWrapper.getTupleSize();
             boolean[] bitmask = bufferWrapper.getBitmask();
-            bitmask[index] = true;
+            for (int count = 0; count < bytes.length / bufferWrapper.getTupleSize(); count++, index++) {
+                bitmask[index] = true;
+            }
             int position = writeBuffer.put(bytes).position();
             int old_limit = bufferWrapper.getReadBuffer().limit();
             if (position > old_limit) {
@@ -79,8 +90,8 @@ public class Dispatcher {
         return false;
     }
 
-    public void free(final ReadBuffer readBuffer, final int offset) {
-        readBufferToBufferWrapper.get(readBuffer).free(offset);
+    public void free(final ReadBuffer readBuffer, final int[] offsets) {
+        readBufferToBufferWrapper.get(readBuffer).free(offsets);
     }
 
     public void resetReadLimit(final ReadBuffer readBuffer) {

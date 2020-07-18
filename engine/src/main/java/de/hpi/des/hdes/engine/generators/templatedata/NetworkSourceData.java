@@ -10,4 +10,5 @@ public class NetworkSourceData {
     private String eventLength;
     private String host;
     private String port;
+    private String batchSize;
 }

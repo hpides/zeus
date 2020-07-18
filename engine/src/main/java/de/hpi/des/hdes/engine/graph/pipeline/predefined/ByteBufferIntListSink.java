@@ -43,7 +43,7 @@ public class ByteBufferIntListSink implements Runnable, Stoppable {
             resultList.add(
                     new Tuple4<Long, Integer, Integer, Boolean>(input.getBuffer().getLong(), input.getBuffer().getInt(),
                             input.getBuffer().getInt(), input.getBuffer().get() == (byte) 1 ? true : false));
-            dispatcher.free(input, initialPosition);
+            dispatcher.free(input, new int[] { initialPosition });
         }
     }
 
