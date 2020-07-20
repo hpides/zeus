@@ -1,6 +1,7 @@
 package de.hpi.des.hdes.engine.graph.pipeline.predefined;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.jooq.lambda.tuple.Tuple2;
 
@@ -50,8 +51,7 @@ public class ByteBufferIntSourcePipeline extends Pipeline {
 
     @Override
     public String getPipelineId() {
-        // TODO Auto-generated method stub
-        return null;
+        return UUID.randomUUID().toString();
     }
 
 }

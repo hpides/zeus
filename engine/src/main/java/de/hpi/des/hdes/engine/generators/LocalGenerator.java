@@ -133,14 +133,15 @@ public class LocalGenerator extends PipelineVisitor {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
         }
+        AggregateGenerator operator = (AggregateGenerator) aggregationPipeline.getAggregationGenerationNode()
+                .getOperator();
+        String variableName = aggregationPipeline.getVariableAtIndex(operator.getAggregateValueIndex()).getVarName();
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("AggregationPipeline.java.mustache");
-            AggregateGenerator operator = (AggregateGenerator) aggregationPipeline.getAggregationGenerationNode()
-                    .getOperator();
             template.execute(writer,
                     new AggregationData(aggregationPipeline.getPipelineId(),
                             aggregationPipeline.getAggregationGenerationNode().getInputTypes(),
-                            operator.getAggregateValueIndex(), operator.getAggregateFunction(),
+                            operator.getAggregateValueIndex(), variableName, operator.getAggregateFunction(),
                             aggregationPipeline.getInterfaces(), aggregationPipeline.getVariables(), implementation))
                     .flush();
             implementation = writer.toString();

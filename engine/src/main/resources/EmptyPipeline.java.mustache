@@ -32,6 +32,7 @@ public class {{{className}}} implements Runnable, Stoppable {
     {{#variables}}
     {{> VariableDefiniton.java.mustache}}
     {{/variables}}
+    input.reset();
     {{{implementation}}}
     outputCounter++;
     freeableOffsets[freeableIndex] = nextPosition - {{inputEventLength}};

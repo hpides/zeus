@@ -126,9 +126,7 @@ public abstract class Pipeline {
 
     public String getWriteout(String bufferName) {
         // TODO Optimize Timestamp and watermark copy
-        String implementation = "input.reset();\n";
-        implementation = implementation.concat(bufferName)
-                .concat(".getBuffer().get(output, initialOutputOffset, 8);\n");
+        String implementation = bufferName.concat(".getBuffer().get(output, initialOutputOffset, 8);\n");
         implementation = implementation.concat("outputBuffer.position(initialOutputOffset+8);\n");
         int copyLength = 0;
         int arrayOffset = 8;
@@ -157,9 +155,8 @@ public abstract class Pipeline {
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }
-        // implementation =
-        // implementation.concat(bufferName.concat(".getBuffer().get(output, ")
-        // .concat(Integer.toString(8 + getInputTupleLength())).concat(", 8);\n"));
+        implementation = implementation.concat(bufferName.concat(".getBuffer().get(output, ")
+                .concat(Integer.toString(8 + getInputTupleLength())).concat(", 1);\n"));
         return implementation;
     }
 

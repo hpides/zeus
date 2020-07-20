@@ -2,4 +2,4 @@
   input.reset();
   input.getBuffer().position(input.getBuffer().position() + {{{index}}});
 {{/fromBuffer}}
-{{{type.lowercaseName}}} {{{varName}}}{{#fromBuffer}} = input.getBuffer().get{{{uppercaseName}}}(){{/fromBuffer}};
+{{{type.lowercaseName}}} {{{varName}}}{{#fromBuffer}} = input.getBuffer().get{{{type.uppercaseName}}}(){{/fromBuffer}};

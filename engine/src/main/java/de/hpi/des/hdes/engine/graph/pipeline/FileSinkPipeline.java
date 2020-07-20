@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
+import java.util.UUID;
+
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.node.FileSinkNode;
@@ -21,8 +23,7 @@ public class FileSinkPipeline extends SinkPipeline {
 
     @Override
     public String getPipelineId() {
-        // TODO Auto-generated method stub
-        return null;
+        return UUID.randomUUID().toString();
     }
 
 }

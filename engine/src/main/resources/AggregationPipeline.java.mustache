@@ -71,11 +71,9 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         final {{aggregationValueType.lowercaseName}} state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
 
-        {{{#shouldCountPerWindow}}}
+        {{#shouldCountPerWindow}}
         final int count = this.windowToCount.computeIfAbsent(windowStart, w -> 0);
-        {{{/shouldCountPerWindow}}}
-
-        input.getBuffer().position(input.getBuffer().position()+{{aggregationValueOffset}});
+        {{/shouldCountPerWindow}}
 
         final {{aggregationValueType.lowercaseName}} current = {{{aggregationVariable}}};
         final {{aggregationValueType.lowercaseName}} newState = {{{aggregateImplementation}}};
