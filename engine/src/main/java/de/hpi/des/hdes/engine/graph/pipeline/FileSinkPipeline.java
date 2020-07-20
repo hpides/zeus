@@ -10,20 +10,17 @@ import lombok.Getter;
 @Getter
 public class FileSinkPipeline extends SinkPipeline {
     final private int writeEveryX;
+    final private String pipelineId;
 
     public FileSinkPipeline(PrimitiveType[] inputTypes, int writeEveryX) {
         super(inputTypes);
         this.writeEveryX = writeEveryX;
+        pipelineId = "c".concat(UUID.randomUUID().toString().replace("-", ""));
     }
 
     @Override
     public void accept(PipelineVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    public String getPipelineId() {
-        return "c".concat(UUID.randomUUID().toString().replace("-", ""));
     }
 
 }

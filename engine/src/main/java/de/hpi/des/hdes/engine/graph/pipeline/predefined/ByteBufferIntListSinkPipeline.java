@@ -17,10 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ByteBufferIntListSinkPipeline extends SinkPipeline {
     private final List<Tuple4<Long, Integer, Integer, Boolean>> resultList;
+    private final String pipelineId;
 
     public ByteBufferIntListSinkPipeline(List<Tuple4<Long, Integer, Integer, Boolean>> resultList) {
         super(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT });
         this.resultList = resultList;
+        pipelineId = "c".concat(UUID.randomUUID().toString().replace("-", ""));
     }
 
     @Override
@@ -35,7 +37,7 @@ public class ByteBufferIntListSinkPipeline extends SinkPipeline {
 
     @Override
     public String getPipelineId() {
-        return "c".concat(UUID.randomUUID().toString().replace("-", ""));
+        return pipelineId;
     }
 
 }

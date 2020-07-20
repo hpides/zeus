@@ -113,15 +113,15 @@ public abstract class Pipeline {
         currentTypes.remove(index);
     }
 
-    public MaterializationData[] getVariables() {
-        return this.variables.values().toArray(new MaterializationData[variables.size()]);
-    }
-
     public MaterializationData addVariable(PrimitiveType type) {
         MaterializationData var = new MaterializationData(variables.size(), type);
         currentTypes.add(var.getVarName());
         variables.put(var.getVarName(), var);
         return var;
+    }
+
+    public MaterializationData[] getVariables() {
+        return this.variables.values().toArray(new MaterializationData[variables.size()]);
     }
 
     public String getWriteout(String bufferName) {

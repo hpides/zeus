@@ -14,12 +14,13 @@ import de.hpi.des.hdes.engine.generators.templatedata.MapData;
 import de.hpi.des.hdes.engine.generators.templatedata.MapDataList;
 import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
+import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.udf.LambdaString;
 import de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MapGenerator implements Generatable {
+public class MapGenerator implements UnaryGeneratable {
     private final Tuple mapper;
     private final StringWriter writer = new StringWriter();
 
@@ -29,6 +30,10 @@ public class MapGenerator implements Generatable {
 
     @Override
     public String generate(Pipeline pipeline) {
+        return generate(pipeline, false);
+    }
+
+    public String generate(Pipeline pipeline, boolean isRight) {
         try {
             List<MapData> data = new ArrayList<>();
             Tuple t = this.mapper.getFirst();
@@ -40,34 +45,49 @@ public class MapGenerator implements Generatable {
                     case GET: {
                         for (int i = 0; i < t.getTypes().length - 1; i++) {
                             if (i != t.getIndex()) {
-                                pipeline.removeVariableAtIndex(i);
+                                if (isRight) {
+                                    ((BinaryPipeline) pipeline).removeVariableAtIndex(i, isRight);
+                                } else {
+                                    pipeline.removeVariableAtIndex(i);
+                                }
                             }
                         }
                         break;
                     }
                     case REMOVE: {
-                        pipeline.removeVariableAtIndex(t.getIndex());
+                        if (isRight) {
+                            ((BinaryPipeline) pipeline).removeVariableAtIndex(t.getIndex(), isRight);
+                        } else {
+                            pipeline.removeVariableAtIndex(t.getIndex());
+                        }
                         break;
                     }
                     case ADD: {
-                        MaterializationData d = pipeline.addVariable(t.getType());
+                        MaterializationData d = isRight ? ((BinaryPipeline) pipeline).addVariable(t.getType(), isRight)
+                                : pipeline.addVariable(t.getType());
                         LambdaString l = LambdaString.analyze(t.getTypes(), t.getTransformation());
                         InterfaceData interfaceName = pipeline.registerInterface(t.getType().getLowercaseName(),
                                 l.getInterfaceDef());
                         String application = Arrays.stream(l.getMaterializationData())
-                                .mapToObj(i -> pipeline.getVariableAtIndex(i).getVarName())
+                                .mapToObj(i -> isRight
+                                        ? ((BinaryPipeline) pipeline).getVariableAtIndex(i, isRight).getVarName()
+                                        : pipeline.getVariableAtIndex(i).getVarName())
                                 .collect(Collectors.joining(", "));
                         data.add(new MapData(d.getVarName(), l.getSignature(), l.getExecution(), application,
                                 interfaceName.getInterfaceName()));
                         break;
                     }
                     case MUTATE: {
-                        MaterializationData d = pipeline.getVariableAtIndex(t.getIndex());
+                        MaterializationData d = isRight
+                                ? ((BinaryPipeline) pipeline).getVariableAtIndex(t.getIndex(), isRight)
+                                : pipeline.getVariableAtIndex(t.getIndex());
                         LambdaString l = LambdaString.analyze(t.getTypes(), t.getTransformation());
                         InterfaceData interfaceName = pipeline.registerInterface(t.getType().getLowercaseName(),
                                 l.getInterfaceDef());
                         String application = Arrays.stream(l.getMaterializationData())
-                                .mapToObj(i -> pipeline.getVariableAtIndex(i).getVarName())
+                                .mapToObj(i -> isRight
+                                        ? ((BinaryPipeline) pipeline).getVariableAtIndex(i, isRight).getVarName()
+                                        : pipeline.getVariableAtIndex(i).getVarName())
                                 .collect(Collectors.joining(", "));
                         data.add(new MapData(d.getVarName(), l.getSignature(), l.getExecution(), application,
                                 interfaceName.getInterfaceName()));

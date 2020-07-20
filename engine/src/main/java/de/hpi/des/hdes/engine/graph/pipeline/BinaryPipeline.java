@@ -1,12 +1,14 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
+import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
 import de.hpi.des.hdes.engine.operation.Operator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,8 @@ public abstract class BinaryPipeline extends Pipeline {
     protected Pipeline leftParent;
     protected Pipeline rightParent;
     final protected PrimitiveType[] joinInputTypes;
+    private final HashMap<String, MaterializationData> joinVariables = new HashMap<>();
+    private final ArrayList<String> joinCurrentTypes = new ArrayList<>();
 
     protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
             GenerationNode binaryNode) {
@@ -28,6 +32,8 @@ public abstract class BinaryPipeline extends Pipeline {
         this.binaryNode = binaryNode;
         this.leftNodes = leftNodes;
         this.rightNodes = rightNodes;
+        for (int i = 0; i < joinInputTypes.length; i++)
+            joinCurrentTypes.add(null);
     }
 
     protected BinaryPipeline(GenerationNode binaryNode) {
@@ -90,5 +96,48 @@ public abstract class BinaryPipeline extends Pipeline {
             length += pt.getLength();
         }
         return length;
+    }
+
+    public MaterializationData getVariableAtIndex(int index, boolean isRight) {
+        if (!isRight) {
+            return getVariableAtIndex(index);
+        }
+        String varName = joinCurrentTypes.get(index);
+        if (varName != null) {
+            return joinVariables.get(varName);
+        }
+        int offset = 0;
+        for (int i = 0; i < index; i++) {
+            offset += joinInputTypes[i].getLength();
+        }
+        MaterializationData var = new MaterializationData(joinVariables.size(), offset, joinInputTypes[index]);
+        joinCurrentTypes.set(index, var.getVarName());
+        joinVariables.put(var.getVarName(), var);
+        return var;
+    }
+
+    public void removeVariableAtIndex(int index, boolean isRight) {
+        if (!isRight) {
+            removeVariableAtIndex(index);
+            return;
+        }
+        for (int i = index + 1; i < joinCurrentTypes.size(); i++) {
+            getVariableAtIndex(i, isRight);
+        }
+        joinCurrentTypes.remove(index);
+    }
+
+    public MaterializationData addVariable(PrimitiveType type, boolean isRight) {
+        if (!isRight) {
+            return addVariable(type, false);
+        }
+        MaterializationData var = new MaterializationData(joinVariables.size(), type);
+        joinCurrentTypes.add(var.getVarName());
+        joinVariables.put(var.getVarName(), var);
+        return var;
+    }
+
+    public MaterializationData[] getJoinVariables() {
+        return this.joinVariables.values().toArray(new MaterializationData[joinVariables.size()]);
     }
 }

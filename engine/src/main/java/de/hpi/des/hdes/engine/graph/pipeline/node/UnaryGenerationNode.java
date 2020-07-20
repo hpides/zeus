@@ -5,6 +5,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.predefined.ByteBufferIntListSinkNod
 import de.hpi.des.hdes.engine.generators.AggregateGenerator;
 import de.hpi.des.hdes.engine.generators.Generatable;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
+import de.hpi.des.hdes.engine.generators.UnaryGeneratable;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 
@@ -16,16 +17,16 @@ import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
  */
 public class UnaryGenerationNode extends GenerationNode {
 
-    private final Generatable operator;
+    private final UnaryGeneratable operator;
 
     public UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes,
-            final Generatable operator) {
+            final UnaryGeneratable operator) {
         super(inputTypes, outputTypes, operator);
         this.operator = operator;
     }
 
     protected UnaryGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] outputTypes,
-            final String identifier, final Generatable operator) {
+            final String identifier, final UnaryGeneratable operator) {
         super(inputTypes, outputTypes, operator, identifier);
         this.operator = operator;
     }
