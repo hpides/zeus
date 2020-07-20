@@ -23,7 +23,7 @@ public class FileSinkPipeline extends SinkPipeline {
 
     @Override
     public String getPipelineId() {
-        return UUID.randomUUID().toString();
+        return "c".concat(UUID.randomUUID().toString().replace("-", ""));
     }
 
 }

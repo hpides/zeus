@@ -45,10 +45,10 @@ public abstract class BinaryPipeline extends Pipeline {
 
     public String getPipelineId() {
         return "c"
-                .concat(Integer
-                        .toString(leftNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode()))
                 .concat(Integer.toString(
-                        rightNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode()));
+                        Math.abs(leftNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())))
+                .concat(Integer.toString(Math
+                        .abs(rightNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())));
     }
 
     @Override

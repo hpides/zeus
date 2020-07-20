@@ -61,7 +61,7 @@ public class UnaryPipeline extends Pipeline {
 
     @Override
     public String getPipelineId() {
-        return "c".concat(
-                Integer.toString(nodes.stream().map(n -> n.getNodeId()).collect(Collectors.joining()).hashCode()));
+        return "c".concat(Integer
+                .toString(Math.abs(nodes.stream().map(n -> n.getNodeId()).collect(Collectors.joining()).hashCode())));
     }
 }
