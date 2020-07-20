@@ -19,4 +19,10 @@ public class FileSinkPipeline extends SinkPipeline {
         visitor.visit(this);
     }
 
+    @Override
+    public String getPipelineId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

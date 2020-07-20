@@ -32,4 +32,10 @@ public class ByteBufferIntListSinkPipeline extends SinkPipeline {
     public void accept(PipelineVisitor visitor) {
     }
 
+    @Override
+    public String getPipelineId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

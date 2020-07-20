@@ -48,4 +48,10 @@ public class ByteBufferIntSourcePipeline extends Pipeline {
                 this.getPipelineId(), newParentPipeline, newParentPipeline.getPipelineId());
     }
 
+    @Override
+    public String getPipelineId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }
