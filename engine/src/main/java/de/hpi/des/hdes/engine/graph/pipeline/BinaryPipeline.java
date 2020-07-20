@@ -9,7 +9,6 @@ import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
-import de.hpi.des.hdes.engine.operation.Operator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +26,7 @@ public abstract class BinaryPipeline extends Pipeline {
 
     protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
             GenerationNode binaryNode) {
+        // TODO ACCOunt for empty left and right nodes
         super(leftNodes.get(leftNodes.size() - 1).getInputTypes());
         this.joinInputTypes = rightNodes.get(rightNodes.size() - 1).getInputTypes();
         this.binaryNode = binaryNode;
