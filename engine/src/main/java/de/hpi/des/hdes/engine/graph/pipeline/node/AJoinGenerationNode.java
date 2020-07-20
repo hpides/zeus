@@ -5,6 +5,7 @@ import de.hpi.des.hdes.engine.graph.NodeVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.AJoinPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
+
 import java.util.stream.Stream;
 import java.util.Arrays;
 import lombok.Getter;

@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.graph.pipeline.node;
 
+import java.util.stream.Collectors;
+
 import de.hpi.des.hdes.engine.generators.Generatable;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.Node;
@@ -29,5 +31,16 @@ public abstract class GenerationNode extends Node {
     }
 
     public abstract void accept(PipelineTopology pipelineTopology);
+
+    @Override
+    public String getNodeId() {
+        String prefix = this.getParents().stream().map(n -> n.getNodeId()).collect(Collectors.joining());
+        return operator == null ? prefix : operator.getOperatorId().concat(prefix);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getNodeId().hashCode();
+    }
 
 }

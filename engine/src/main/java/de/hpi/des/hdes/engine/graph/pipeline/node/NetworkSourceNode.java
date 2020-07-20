@@ -19,8 +19,8 @@ public class NetworkSourceNode extends GenerationNode {
     }
 
     @Override
-    public int hashCode() {
-        return super.hashCode();
+    public String getNodeId() {
+        return this.host.concat(Integer.toString(port));
     }
 
     @Override

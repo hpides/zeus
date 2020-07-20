@@ -2,6 +2,7 @@ package de.hpi.des.hdes.engine.graph.pipeline;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
@@ -42,10 +43,9 @@ public abstract class BinaryPipeline extends Pipeline {
         return leftNodes.contains(operatorNode);
     }
 
-    @Override
-    public int hashCode() {
-        return leftNodes.stream().mapToInt(t -> t.hashCode()).sum()
-                + rightNodes.stream().mapToInt(t -> t.hashCode()).sum();
+    public String getPipelineId() {
+        return "c".concat(leftNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()))
+                .concat(rightNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()));
     }
 
     @Override

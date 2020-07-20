@@ -37,9 +37,9 @@ public class NetworkSourcePipeline extends Pipeline {
         this.setLoaded(true);
         try {
             pipelineObject = (Runnable) pipelineKlass.getDeclaredConstructor(Dispatcher.class).newInstance(dispatcher);// dispatcher.getReadByteBufferForPipeline(this),
-                                                                                                                     // dispatcher,
-                                                                                                                     // sourceNode.getHost(),
-                                                                                                                     // sourceNode.getPort());
+                                                                                                                       // dispatcher,
+                                                                                                                       // sourceNode.getHost(),
+                                                                                                                       // sourceNode.getPort());
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
         }
@@ -61,6 +61,11 @@ public class NetworkSourcePipeline extends Pipeline {
         log.error("Tried to replace parent of source pipeline {} ({}) with pipeline {} ({})", this,
                 this.getPipelineId(), newParentPipeline, newParentPipeline.getPipelineId());
 
+    }
+
+    @Override
+    public String getPipelineId() {
+        return "source".concat(sourceNode.getNodeId());
     }
 
 }

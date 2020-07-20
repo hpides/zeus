@@ -3,6 +3,7 @@ package de.hpi.des.hdes.engine.graph.pipeline;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -19,7 +20,8 @@ public class UnaryPipeline extends Pipeline {
 
     public UnaryPipeline(GenerationNode node) {
         super(node.getInputTypes());
-        this.nodes = Arrays.asList(node);
+        this.nodes = new ArrayList<>();
+        this.nodes.add(node);
     }
 
     protected UnaryPipeline(List<GenerationNode> nodes) {
@@ -29,11 +31,6 @@ public class UnaryPipeline extends Pipeline {
 
     public static UnaryPipeline of(final List<GenerationNode> nodes) {
         return new UnaryPipeline(nodes);
-    }
-
-    @Override
-    public int hashCode() {
-        return nodes.stream().mapToInt(t -> t.hashCode()).sum();
     }
 
     @Override
@@ -60,5 +57,10 @@ public class UnaryPipeline extends Pipeline {
     public void replaceParent(Pipeline newParentPipeline) {
         this.parent = newParentPipeline;
         newParentPipeline.setChild(this);
+    }
+
+    @Override
+    public String getPipelineId() {
+        return "c".concat(nodes.stream().map(n -> n.getNodeId()).collect(Collectors.joining()));
     }
 }

@@ -70,9 +70,7 @@ public abstract class Pipeline {
             currentTypes.add(null);
     }
 
-    public String getPipelineId() {
-        return "c".concat(Integer.toString(Math.abs(hashCode())));
-    }
+    abstract public String getPipelineId();
 
     @Override
     public boolean equals(final Object p) {
