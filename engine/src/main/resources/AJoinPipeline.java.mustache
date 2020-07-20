@@ -28,14 +28,14 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private long earliestOpenWindowJoin = Long.MAX_VALUE;
     private long latestTimestampLeft = 0;
     private long latestTimestampRight = 0;
-    final private int[] leftFreeableOffsets = new int[{{{batchSize}}}];
+    final private int[] leftFreeableOffsets = new int[{{{vectorSize}}}];
     private int leftFreeableIndex = 0;
-    final private int[] rightFreeableOffsets = new int[{{{batchSize}}}];
+    final private int[] rightFreeableOffsets = new int[{{{vectorSize}}}];
     private int rightFreeableIndex = 0;
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
-    final byte[] out = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{batchSize}}}];
+    final byte[] out = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{vectorSize}}}];
     final private ByteBuffer outputBuffer = ByteBuffer.wrap(out);
     private int outputCounter = 0;
 
@@ -186,7 +186,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         rightInput.getBuffer().get(out, initialOutputOffset + 8 + {{leftTupleLength}}, {{rightTupleLength}});
         outputBuffer.put(initialOutputOffset + 8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
         this.outputCounter++;
-        if(this.outputCounter == {{{batchSize}}}) {
+        if(this.outputCounter == {{{vectorSize}}}) {
             while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
             this.outputCounter = 0;
         }
@@ -195,7 +195,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private void freeLeft(int offset) {
         leftFreeableOffsets[leftFreeableIndex] = offset;
         leftFreeableIndex++;
-        if(leftFreeableIndex == {{{batchSize}}}) {
+        if(leftFreeableIndex == {{{vectorSize}}}) {
             dispatcher.free(leftInput, leftFreeableOffsets);
             leftFreeableIndex = 0;
         }
@@ -204,7 +204,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private void freeRight(int offset) {
         rightFreeableOffsets[rightFreeableIndex] = offset;
         rightFreeableIndex++;
-        if(rightFreeableIndex == {{{batchSize}}}) {
+        if(rightFreeableIndex == {{{vectorSize}}}) {
             dispatcher.free(rightInput, rightFreeableOffsets);
             rightFreeableIndex = 0;
         }
@@ -219,10 +219,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             if (rightInput.getBuffer().position() == rightInput.getBuffer().capacity()) {
                 dispatcher.resetReadLimit(rightInput);
             }
-            for (int remainingBytes=Math.min(leftInput.remainingBytes(), 100*(8 + {{{leftTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{leftTupleLength}}} + 1)) {
+            for (int remainingBytes=Math.min(leftInput.remainingBytes(), {{{readVectorSize}}}*(8 + {{{leftTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{leftTupleLength}}} + 1)) {
                 readEventLeft();
             }
-            for (int remainingBytes=Math.min(rightInput.remainingBytes(), 100*(8 + {{{rightTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{rightTupleLength}}} + 1)) {
+            for (int remainingBytes=Math.min(rightInput.remainingBytes(), {{{readVectorSize}}}*(8 + {{{rightTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{rightTupleLength}}} + 1)) {
                 readEventRight();
             }
         }

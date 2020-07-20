@@ -10,10 +10,10 @@ public class {{{className}}} implements Runnable, Stoppable {
   private final ReadBuffer input;
   private boolean shutdownFlag = false;
   private final Dispatcher dispatcher;
-  private final byte[] output = new byte[{{{outputEventLength}}}*{{{batchSize}}}];
+  private final byte[] output = new byte[{{{outputEventLength}}}*{{{vectorSize}}}];
   private final ByteBuffer outputBuffer = ByteBuffer.wrap(output);
   private int outputCounter = 0;
-  private final int[] freeableOffsets = new int[{{{batchSize}}}];
+  private final int[] freeableOffsets = new int[{{{vectorSize}}}];
   private int freeableIndex = 0;
 
   {{#interfaces}}
@@ -36,11 +36,11 @@ public class {{{className}}} implements Runnable, Stoppable {
     outputCounter++;
     freeableOffsets[freeableIndex] = nextPosition - {{inputEventLength}};
     freeableIndex++;
-    if(freeableIndex == {{{batchSize}}}) {
+    if(freeableIndex == {{{vectorSize}}}) {
         dispatcher.free(input, freeableOffsets);
         freeableIndex = 0;
     }
-    if(outputCounter == {{{batchSize}}}) {
+    if(outputCounter == {{{vectorSize}}}) {
         while (!dispatcher.write("{{className}}", output) && !shutdownFlag); 
         outputCounter = 0;
     }
@@ -53,7 +53,7 @@ public class {{{className}}} implements Runnable, Stoppable {
             if (input.getBuffer().position() == input.getBuffer().capacity()) {
                 dispatcher.resetReadLimit(input);
             }
-            if (input.hasRemaining()) {
+            for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputEventLength}}})); remainingBytes > 0; remainingBytes -= ({{{inputEventLength}}})) {
                 readEvent();
             }
         }

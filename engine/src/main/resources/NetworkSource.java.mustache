@@ -39,11 +39,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             System.out.println("Client connected on {{{host}}} at {{{port}}}");
             BufferedInputStream in = new BufferedInputStream(objectSocket.getInputStream(), {{{eventLength}}} * 1_000);
 
-            byte[] objectInput = new byte[{{{batchSize}}}*{{{eventLength}}}];
+            byte[] objectInput = new byte[{{{vectorSize}}}*{{{eventLength}}}];
             int lastPosition = 0;
             while (!exit) {
-                int bytesRead = in.read(objectInput, lastPosition, {{{batchSize}}}*{{{eventLength}}} - lastPosition);
-                if (bytesRead+lastPosition < {{{batchSize}}}*{{{eventLength}}}) {
+                int bytesRead = in.read(objectInput, lastPosition, {{{vectorSize}}}*{{{eventLength}}} - lastPosition);
+                if (bytesRead+lastPosition < {{{vectorSize}}}*{{{eventLength}}}) {
                     lastPosition = bytesRead;
                     continue;
                 } else {

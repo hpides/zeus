@@ -21,7 +21,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private BufferedWriter out;
     private int writtenTuples = 0;
     private boolean shutdownFlag = false;
-    private final int[] freeableOffsets = new int[{{{batchSize}}}];
+    private final int[] freeableOffsets = new int[{{{vectorSize}}}];
     private int freeableIndex = 0;
 
     public {{{pipelineId}}}(final ReadBuffer input, final Dispatcher dispatcher) {
@@ -50,31 +50,32 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         ByteBuffer buffer = input.getBuffer();
         int initialPosition;
         while (!Thread.interrupted() && !shutdownFlag) {
-            if (!input.hasRemaining()) {
-
-                continue;
+            if (input.getBuffer().position() == input.getBuffer().capacity()) {
+                dispatcher.resetReadLimit(input);
             }
-            try {
-                initialPosition = buffer.position();
-                if (this.writtenTuples % {{{writeEveryX}}} == 0) {
-                    out.write(buffer.getLong(initialPosition) + "," + buffer.getLong(initialPosition + {{{inputTupleLength}}} - 8 - 1) + "\n");
-                    buffer.get();
-                    this.writtenTuples = 0;
+            for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputTupleLength}}})); remainingBytes > 0; remainingBytes -= ({{{inputTupleLength}}})) {
+                try {
+                    initialPosition = buffer.position();
+                    if (this.writtenTuples % {{{writeEveryX}}} == 0) {
+                        out.write(buffer.getLong(initialPosition) + "," + buffer.getLong(initialPosition + {{{inputTupleLength}}} - 8 - 1) + "\n");
+                        buffer.get();
+                        this.writtenTuples = 0;
+                    }
+                    buffer.position(initialPosition + {{{inputTupleLength}}});
+                    freeableOffsets[freeableIndex] = initialPosition;
+                    freeableIndex++;
+                    if(freeableIndex == {{{vectorSize}}}) {
+                        dispatcher.free(input, freeableOffsets);
+                        freeableIndex = 0;
+                    }
+                    if (buffer.position() == buffer.capacity()) {
+                        dispatcher.resetReadLimit(input);
+                    }
+                    this.writtenTuples += 1;
+                } catch (IOException e) {
+                    this.flush();
+                    e.printStackTrace();
                 }
-                buffer.position(initialPosition + {{{inputTupleLength}}});
-                freeableOffsets[freeableIndex] = initialPosition;
-                freeableIndex++;
-                if(freeableIndex == {{{batchSize}}}) {
-                    dispatcher.free(input, freeableOffsets);
-                    freeableIndex = 0;
-                }
-                if (buffer.position() == buffer.capacity()) {
-                    dispatcher.resetReadLimit(input);
-                }
-                this.writtenTuples += 1;
-            } catch (IOException e) {
-                this.flush();
-                e.printStackTrace();
             }
         }
         this.flush();

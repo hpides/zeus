@@ -16,7 +16,8 @@ public class EmptyPipelineData {
     private final MaterializationData[] variables;
     private final int outputEventLength;
     private final int inputEventLength;
-    private final int batchSize = Dispatcher.TUPLES_PER_BATCH();
+    private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
+    private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
 
     public EmptyPipelineData(final String className, final String implementation, final Pipeline nextPipeline,
             final InterfaceData[] interfaces, final MaterializationData[] variables, PrimitiveType[] inputTypes,

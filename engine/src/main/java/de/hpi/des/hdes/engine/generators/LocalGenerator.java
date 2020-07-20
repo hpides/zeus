@@ -111,7 +111,7 @@ public class LocalGenerator extends PipelineVisitor {
             template.execute(writer,
                     new NetworkSourceData(sourcePipeline.getPipelineId(),
                             (sourcePipeline.getInputTupleLength() + 9) + "", sourcePipeline.getSourceNode().getHost(),
-                            sourcePipeline.getSourceNode().getPort() + "", Dispatcher.TUPLES_PER_BATCH() + ""))
+                            sourcePipeline.getSourceNode().getPort() + "", Dispatcher.TUPLES_PER_VECTOR() + ""))
                     .flush();
             String implementation = writer.toString();
             Files.writeString(
@@ -160,7 +160,7 @@ public class LocalGenerator extends PipelineVisitor {
             template.execute(writer,
                     new FileSinkData(fileSinkPipeline.getPipelineId(),
                             (fileSinkPipeline.getInputTupleLength() + 9) + "", fileSinkPipeline.getWriteEveryX() + "",
-                            Dispatcher.TUPLES_PER_BATCH() + ""))
+                            Dispatcher.TUPLES_PER_VECTOR() + "", Dispatcher.TUPLES_PER_READ_VECTOR() + ""))
                     .flush();
             String implementation = writer.toString();
             Files.writeString(

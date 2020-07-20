@@ -18,10 +18,13 @@ import lombok.experimental.Accessors;
 public class Dispatcher {
 
     // TODO Should be saved per buffer during initialization
-    private static int BATCH_AMOUNT = 50000;
+    private static int NUMBER_OF_VECTORS = 50000;
     @Accessors(fluent = true)
     @Getter
-    private static int TUPLES_PER_BATCH = 900;
+    private static int TUPLES_PER_VECTOR = 900;
+    @Accessors(fluent = true)
+    @Getter
+    private static int TUPLES_PER_READ_VECTOR = 100;
 
     private final PipelineTopology pipelineTopology;
     private final Map<String, BufferWrapper> writeBuffers = new HashMap<>();
@@ -38,11 +41,12 @@ public class Dispatcher {
     private void prepare() {
         for (final Pipeline pipeline : pipelineTopology.getPipelines()) {
             int outputTupleSize = pipeline.getOutputTupleLength() + 9;
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(outputTupleSize * BATCH_AMOUNT * TUPLES_PER_BATCH);
+            final ByteBuffer buffer = ByteBuffer
+                    .allocateDirect(outputTupleSize * NUMBER_OF_VECTORS * TUPLES_PER_VECTOR);
             final ByteBuffer readBuffer = buffer.asReadOnlyBuffer();
             final BufferWrapper bufferWrapper = new BufferWrapper(buffer,
                     new ReadBuffer(readBuffer, pipeline.getPipelineId(), counter++), buffer.limit() / outputTupleSize,
-                    new boolean[BATCH_AMOUNT * TUPLES_PER_BATCH], outputTupleSize);
+                    new boolean[NUMBER_OF_VECTORS * TUPLES_PER_VECTOR], outputTupleSize);
             writeBuffers.put(pipeline.getPipelineId(), bufferWrapper);
             readBufferToBufferWrapper.put(bufferWrapper.getReadBuffer(), bufferWrapper);
         }

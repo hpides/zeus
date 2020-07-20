@@ -29,9 +29,9 @@ public class BufferWrapper {
 
     public boolean hasRemaining(final int bytes) {
         if (getLimitInBytes() > writeBuffer.position()) {
-            return writeBuffer.limit() - writeBuffer.position() > bytes;
+            return writeBuffer.limit() - writeBuffer.position() >= bytes;
         }
-        return writeBuffer.limit() - writeBuffer.position() + getLimitInBytes() > bytes;
+        return writeBuffer.limit() - writeBuffer.position() + getLimitInBytes() >= bytes;
     }
 
     public void free(final int[] offsets) {
@@ -78,7 +78,7 @@ public class BufferWrapper {
         if (limit != bitmask.length) {
             writeBuffer.limit(getLimitInBytes());
         } else {
-            writeBuffer.limit(0);
+            writeBuffer.limit(writeBuffer.capacity());
         }
     }
 
