@@ -18,7 +18,7 @@ import lombok.experimental.Accessors;
 public class Dispatcher {
 
     // TODO Should be saved per buffer during initialization
-    private static int NUMBER_OF_VECTORS = 50000;
+    private static int NUMBER_OF_VECTORS = 10000;
     @Accessors(fluent = true)
     @Getter
     private static int TUPLES_PER_VECTOR = 900;
