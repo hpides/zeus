@@ -23,18 +23,25 @@ import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.ints.*;
 
 public class {{{pipelineId}}} implements Runnable, Stoppable {
+
     final private long windowSlide = {{{windowLength}}};
     final private long windowLength = {{{windowLength}}};
     private long earliestOpenWindowJoin = Long.MAX_VALUE;
     private long latestTimestampLeft = 0;
     private long latestTimestampRight = 0;
+    final private int[] leftFreeableOffsets = new int[{{{vectorSize}}}];
+    private int leftFreeableIndex = 0;
+    final private int[] rightFreeableOffsets = new int[{{{vectorSize}}}];
+    private int rightFreeableIndex = 0;
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
-    final byte[] out = new byte[8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1];
+    final byte[] out = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{vectorSize}}}];
+    final private ByteBuffer outputBuffer = ByteBuffer.wrap(out);
+    private int outputCounter = 0;
     
-    final private Long2ObjectOpenHashMap<{{keyType}}2ObjectOpenHashMap<IntSet>> leftWindows = new Long2ObjectOpenHashMap<>();
-    final private Long2ObjectOpenHashMap<{{keyType}}2ObjectOpenHashMap<IntSet>> rightWindows = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectOpenHashMap<{{keyType}}2ObjectOpenHashMap<IntList>> leftWindows = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectOpenHashMap<{{keyType}}2ObjectOpenHashMap<IntList>> rightWindows = new Long2ObjectOpenHashMap<>();
 
     private boolean shutdownFlag = false;
 
@@ -42,17 +49,15 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         leftInput = left;
         rightInput = right;
         this.dispatcher = dispatcher;
-        this.windowLength = windowLength;
-        this.windowSlide = windowSlide;
     }
 
     public void readEventLeft() {
         leftInput.mark();
+        final int startingPosition = leftInput.getBuffer().position();
         final long eventTimestamp = leftInput.getBuffer().getLong();
         if (eventTimestamp < latestTimestampLeft) {
-            leftInput.reset();
-            dispatcher.free(leftInput, leftInput.getBuffer().position());
-            leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
+            freeLeft(startingPosition);
+            leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}}+1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
@@ -62,22 +67,23 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{{leftImplementation}}}
 
-        {{keyType}}2ObjectOpenHashMap<IntSet> leftWindow = leftWindows.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
-        leftInput.getBuffer().position(leftInput.getBuffer().position()+{{leftKeyOffset}});
+        {{keyType}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.computeIfAbsent(windowStart,
+                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
+        leftInput.getBuffer().position(startingPosition + 8 + {{leftKeyOffset}});
         {{nativeKeyType}} key = leftInput.getBuffer().get{{keyType}}();
-        IntSet offsets = leftWindow.computeIfAbsent(key, w -> new {{keyType}}ArraySet());
-        leftInput.reset();
-        offsets.add(leftInput.getBuffer().position());
+        IntList offsets = leftWindow.computeIfAbsent(key, w -> new {{keyType}}ArrayList());
+        offsets.add(startingPosition);
         
-        {{keyType}}2ObjectOpenHashMap<IntSet> rightWindow = rightWindows.getOrDefault(windowStart, null);
+        {{keyType}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.getOrDefault(windowStart, null);
         if(rightWindow != null && rightWindow.containsKey(key)){
-            for ({{nativeKeyType}} rightOffset : rightWindow.get(key)) {
-                writeOutput(leftInput.getBuffer().position(), rightOffset);
+            IntList rightOffsets = rightWindow.get(key);
+            for (int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
+                writeOutput(startingPosition, rightOffsets.getInt(rightIndex));
             }
         }
-
-        leftInput.getBuffer().position(leftInput.getBuffer().position() + 8 + {{leftTupleLength}});
+        leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}});
+        rightInput.reset();
+        rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
 
         if (leftInput.getBuffer().get() == (byte) 1) {
             latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
@@ -90,11 +96,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     public void readEventRight() {
         rightInput.mark();
+        final int startingPosition = rightInput.getBuffer().position();
         final long eventTimestamp = rightInput.getBuffer().getLong();
         if (eventTimestamp < latestTimestampRight) {
-            rightInput.reset();
-            dispatcher.free(rightInput, rightInput.getBuffer().position());
-            rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
+            freeRight(startingPosition);
+            rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}}+1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
@@ -104,24 +110,27 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{{rightImplementation}}}
 
-        {{keyType}}2ObjectOpenHashMap<IntSet> rightWindow = rightWindows.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntSet>());
-        rightInput.getBuffer().position(rightInput.getBuffer().position()+{{rightKeyOffset}});
+        {{keyType}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.computeIfAbsent(windowStart,
+                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
+        rightInput.getBuffer().position(startingPosition + 8 +{{rightKeyOffset}});
         {{nativeKeyType}} key = rightInput.getBuffer().get{{keyType}}();
-        IntSet offsets = rightWindow.computeIfAbsent(key, w -> new {{keyType}}ArraySet());
-        rightInput.reset();
-        offsets.add(rightInput.getBuffer().position());
+        IntList offsets = rightWindow.computeIfAbsent(key, w -> new {{keyType}}ArrayList());
+        offsets.add(startingPosition);
         
-        {{keyType}}2ObjectOpenHashMap<IntSet> leftWindow = leftWindows.getOrDefault(windowStart, null);
+        {{keyType}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.getOrDefault(windowStart, null);
         if(leftWindow != null && leftWindow.containsKey(key)){
-            for ({{nativeKeyType}} leftOffset : leftWindow.get(key)) {
-                writeOutput(leftOffset, rightInput.getBuffer().position());
-            }   
+            IntList leftOffsets = leftWindow.get(key);
+            for (int leftIndex = 0; leftIndex < leftOffsets.size(); leftIndex++) {
+                writeOutput(leftOffsets.getInt(leftIndex), startingPosition);
+            }
         }
-
-        rightInput.getBuffer().position(rightInput.getBuffer().position() + 8 + {{rightTupleLength}});        
+        
+        leftInput.reset();
+        leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
+        rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}});
 
         if (rightInput.getBuffer().get() == (byte) 1) {
+            
             latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
             for (; earliestOpenWindowJoin + windowLength <= latestTimestampLeft && earliestOpenWindowJoin
                     + windowLength <= latestTimestampRight; earliestOpenWindowJoin += windowSlide) {
@@ -131,33 +140,59 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(final long timestamp) {
-        {{keyType}}2ObjectOpenHashMap<IntSet> leftWindow = rightWindows.remove(timestamp);
-        {{keyType}}2ObjectOpenHashMap<IntSet> rightWindow = leftWindows.remove(timestamp);
+        {{keyType}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.remove(timestamp);
+        {{keyType}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.remove(timestamp);
         if (leftWindow != null) {
-            for ({{nativeKeyType}} key : leftWindow.keySet()) {
-                for (int leftOffset : leftWindow.get(key)) {
-                    dispatcher.free(leftInput, leftOffset);
+            for ({{nativeKeyType}} key : leftWindow.keySet().to{{{keyType}}}Array()) {
+                IntList leftOffsets = leftWindow.get(key);
+                for (int leftIndex = 0; leftIndex < leftOffsets.size(); leftIndex++) {
+                    freeLeft(leftOffsets.getInt(leftIndex));
                 }
             }
         }
         if (rightWindow != null) {
-            for ({{nativeKeyType}} key : rightWindow.keySet()) {
-                for (int rightOffset : rightWindow.get(key)) {
-                    dispatcher.free(rightInput, rightOffset);
+            for ({{nativeKeyType}} key : rightWindow.keySet().to{{{keyType}}}Array()) {
+                IntList rightOffsets = rightWindow.get(key);
+                for (int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
+                    freeRight(rightOffsets.getInt(rightIndex));
                 }
             }
         }
     }
 
     public void writeOutput(int leftOffset, int rightOffset) {
-        leftInput.getBuffer().position(leftOffset);
-        rightInput.getBuffer().position(rightOffset);
-        ByteBuffer b = ByteBuffer.wrap(out).putLong(0,((long)(leftInput.getBuffer().getLong(leftOffset)+rightInput.getBuffer().getLong(rightOffset))/2));
-        leftInput.getBuffer().get(out, 8, {{leftTupleLength}});
-        rightInput.getBuffer().get(out, 8 + {{leftTupleLength}}, {{rightTupleLength}});
-        b.put(8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
-        while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag); 
+        int initialOutputOffset = this.outputCounter * (8 + {{leftTupleLength}} + {{rightTupleLength}} + 1);
+        outputBuffer.putLong(initialOutputOffset,Math.max(leftInput.getBuffer().getLong(leftOffset),rightInput.getBuffer().getLong(rightOffset)));
+        leftInput.getBuffer().position(leftOffset+8);
+        rightInput.getBuffer().position(rightOffset+8);
+        leftInput.getBuffer().get(out, initialOutputOffset + 8, {{leftTupleLength}});
+        rightInput.getBuffer().get(out, initialOutputOffset + 8 + {{leftTupleLength}}, {{rightTupleLength}});
+        outputBuffer.put(initialOutputOffset + 8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
+        this.outputCounter++;
+        if(this.outputCounter == {{{vectorSize}}}) {
+            while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
+            this.outputCounter = 0;
+        } 
     }
+
+    private void freeLeft(int offset) {
+        leftFreeableOffsets[leftFreeableIndex] = offset;
+        leftFreeableIndex++;
+        if(leftFreeableIndex == {{{vectorSize}}}) {
+            dispatcher.free(leftInput, leftFreeableOffsets);
+            leftFreeableIndex = 0;
+        }
+    }
+
+    private void freeRight(int offset) {
+        rightFreeableOffsets[rightFreeableIndex] = offset;
+        rightFreeableIndex++;
+        if(rightFreeableIndex == {{{vectorSize}}}) {
+            dispatcher.free(rightInput, rightFreeableOffsets);
+            rightFreeableIndex = 0;
+        }
+    }
+
 
     @Override
     public void run() {
@@ -168,11 +203,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             if (rightInput.getBuffer().position() == rightInput.getBuffer().capacity()) {
                 dispatcher.resetReadLimit(rightInput);
             }
-            if (leftInput.hasRemaining()) {
-                readEventLeft();
-            }
-            if (rightInput.hasRemaining()) {
+            for (int remainingBytes=Math.min(rightInput.remainingBytes(), {{{readVectorSize}}}*(8 + {{{rightTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{rightTupleLength}}} + 1)) {
                 readEventRight();
+            }
+            for (int remainingBytes=Math.min(leftInput.remainingBytes(), {{{readVectorSize}}}*(8 + {{{leftTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{leftTupleLength}}} + 1)) {
+                readEventLeft();
             }
         }
     }

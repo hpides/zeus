@@ -34,8 +34,7 @@ public class JoinPipeline extends BinaryPipeline {
         this.compileClass();
         this.setLoaded(true);
         try {
-            pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class,
-                    long.class, long.class).newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),
+            pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, ReadBuffer.class, Dispatcher.class).newInstance(dispatcher.getLeftByteBufferForPipeline((BinaryPipeline) this),
                             dispatcher.getRightByteBufferForPipeline((BinaryPipeline) this), dispatcher);
         } catch (ReflectiveOperationException | RuntimeException e) {
             log.error("Slot had an exception during class load: ", e);
