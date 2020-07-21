@@ -106,7 +106,8 @@ public class LocalGenerator extends PipelineVisitor {
                     new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
                             operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
                             joinPipeline.getInterfaces(), joinPipeline.getVariables(), joinPipeline.getJoinVariables(),
-                            leftImplementation, rightImplementation, leftVariableName, rightVariableName))
+                            leftImplementation, rightImplementation, leftVariableName, rightVariableName,
+                            joinPipeline.getWriteout("leftInput", false), joinPipeline.getWriteout("rightInput", true)))
                     .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
@@ -152,7 +153,8 @@ public class LocalGenerator extends PipelineVisitor {
                             operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
                             ajoinPipeline.getInterfaces(), ajoinPipeline.getVariables(),
                             ajoinPipeline.getJoinVariables(), leftImplementation, rightImplementation, leftVariableName,
-                            rightVariableName))
+                            rightVariableName, ajoinPipeline.getWriteout("leftInput", false),
+                            ajoinPipeline.getWriteout("rightInput", true)))
                     .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);

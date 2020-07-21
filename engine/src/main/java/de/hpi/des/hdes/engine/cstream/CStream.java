@@ -136,7 +136,7 @@ public class CStream extends AbstractCStream {
      */
     public CStream join(final CStream rightStream, final PrimitiveType[] leftInputTypes,
             final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex,
-            final String joinMapper, final int windowLength) {
+            final int windowLength) {
         final JoinGenerationNode child = new JoinGenerationNode(leftInputTypes, rightInputTypes,
                 new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, windowLength));
         this.builder.addGraphNode(this.node, child);

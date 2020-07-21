@@ -83,7 +83,7 @@ public class MapGeneratorTest {
         .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
             new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
                 .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()"))
-        .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+        .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
             new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, 1000)
         .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
             PrimitiveType.LONG }, 1000);
