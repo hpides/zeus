@@ -55,11 +55,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     public void readEventLeft() {
         leftInput.mark();
+        final int startingPosition = leftInput.getBuffer().position();
         final long eventTimestamp = leftInput.getBuffer().getLong();
         if (eventTimestamp < latestTimestampLeft) {
-            leftInput.reset();
-            freeLeft(leftInput.getBuffer().position());
-            leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
+            freeLeft(startingPosition);
+            leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}}+1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
@@ -76,9 +76,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
         IntList set = bucket.computeIfAbsent({{{leftKey}}}, w -> new {{type.uppercaseName}}ArrayList());
-        leftInput.reset();
-        set.add(leftInput.getBuffer().position());
-        leftInput.getBuffer().position(leftInput.getBuffer().position() + 8 + {{leftTupleLength}});
+        set.add(startingPosition);
+        leftInput.getBuffer().position(startingPosition + 8 + {{leftTupleLength}});
 
         if (leftInput.getBuffer().get() == (byte) 1) {
             latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
@@ -91,12 +90,12 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     public void readEventRight() {
         rightInput.mark();
+        final int startingPosition = rightInput.getBuffer().position();
         final long eventTimestamp = rightInput.getBuffer().getLong();
         
         if (eventTimestamp < latestTimestampRight) {
-            rightInput.reset();
-            freeRight(rightInput.getBuffer().position());
-            rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
+            freeRight(startingPosition);
+            rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}}+1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
@@ -113,9 +112,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
         IntList set = bucket.computeIfAbsent({{{rightKey}}}, w -> new IntArrayList());
-        rightInput.reset();
-        set.add(rightInput.getBuffer().position());
-        rightInput.getBuffer().position(rightInput.getBuffer().position() + 8 + {{rightTupleLength}});
+        set.add(startingPosition);
+        rightInput.getBuffer().position(startingPosition + 8 + {{rightTupleLength}});
 
         if (rightInput.getBuffer().get() == (byte) 1) {
             latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
