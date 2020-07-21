@@ -1,18 +1,13 @@
 package de.hpi.des.hdes.engine.generators;
 
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
-@AllArgsConstructor
-public class AJoinGenerator implements Generatable {
+public class AJoinGenerator extends BinaryGeneratable {
 
-    private final PrimitiveType[] leftTypes;
-    private final PrimitiveType[] rightTypes;
-    private final int keyPositionLeft;
-    private final int keyPositionRight;
-    private final int windowLength;
+    public AJoinGenerator(PrimitiveType[] leftTypes, PrimitiveType[] rightTypes, int keyPositionLeft,
+            int keyPositionRight, int windowLength) {
+        super(leftTypes, rightTypes, keyPositionLeft, keyPositionRight, windowLength);
+    }
 
     @Override
     public String generate(Pipeline pipeline) {

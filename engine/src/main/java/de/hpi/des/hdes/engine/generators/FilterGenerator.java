@@ -11,7 +11,7 @@ import de.hpi.des.hdes.engine.generators.templatedata.FilterData;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 
 @Slf4j
-public class FilterGenerator implements Generatable {
+public class FilterGenerator implements UnaryGeneratable {
 
     private final String filter;
     private final PrimitiveType[] types;
@@ -24,8 +24,12 @@ public class FilterGenerator implements Generatable {
 
     @Override
     public String generate(Pipeline pipeline) {
+        return generate(pipeline, false);
+    }
+
+    public String generate(Pipeline pipeline, boolean isRight) {
         try {
-            FilterData data = new FilterData(pipeline, types, filter);
+            FilterData data = new FilterData(pipeline, types, filter, isRight);
             Mustache template = MustacheFactorySingleton.getInstance().compile("Filter.java.mustache");
             template.execute(writer, data).flush();
             return writer.toString();

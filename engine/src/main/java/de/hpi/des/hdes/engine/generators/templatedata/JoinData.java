@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.generators.templatedata;
 
+import java.util.stream.Stream;
+
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,37 +11,31 @@ public class JoinData {
     private final String pipelineId;
     private final int leftTupleLength;
     private final int rightTupleLength;
-    private final String keyType;
-    private final String nativeKeyType;
-    private final int leftKeyOffset;
-    private final int rightKeyOffset;
+    private final PrimitiveType type;
     private final int windowLength;
+    private final InterfaceData[] interfaces;
+    private final MaterializationData[] leftVariables;
+    private final MaterializationData[] rightVariables;
+    private final String leftOperators;
+    private final String rightOperators;
+    private final String leftKey;
+    private final String rightKey;
 
     public JoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
-            final int leftKeyIndex, final int rightKeyIndex, final int windowLength) {
+            final int leftKeyIndex, final int rightKeyIndex, final int windowLength, final InterfaceData[] interfaces,
+            final MaterializationData[] leftVariables, final MaterializationData[] rightVariables,
+            final String leftOperators, final String rightOperators, final String leftKey, final String rightKey) {
         this.pipelineId = pipelineId;
-        this.keyType = rightTypes[rightKeyIndex].getUppercaseName();
-        this.nativeKeyType = rightTypes[rightKeyIndex].getLowercaseName();
-        int leftOffset = 0;
-        int leftSize = 0;
-        for (int i = 0; i < leftTypes.length; i++) {
-            int length = leftTypes[i].getLength();
-            leftSize += length;
-            if (i < leftKeyIndex)
-                leftOffset += length;
-        }
-        this.leftKeyOffset = leftOffset;
-        this.leftTupleLength = leftSize;
-        int rightOffset = 0;
-        int rightSize = 0;
-        for (int i = 0; i < rightTypes.length; i++) {
-            int length = rightTypes[i].getLength();
-            rightSize += length;
-            if (i < rightKeyIndex)
-                rightOffset += length;
-        }
-        this.rightKeyOffset = rightOffset;
-        this.rightTupleLength = rightSize;
+        this.type = rightTypes[rightKeyIndex];
+        this.leftTupleLength = Stream.of(leftTypes).mapToInt(t -> t.getLength()).sum();
+        this.rightTupleLength = Stream.of(rightTypes).mapToInt(t -> t.getLength()).sum();
         this.windowLength = windowLength;
+        this.interfaces = interfaces;
+        this.leftVariables = leftVariables;
+        this.rightVariables = rightVariables;
+        this.leftOperators = leftOperators;
+        this.rightOperators = rightOperators;
+        this.leftKey = leftKey;
+        this.rightKey = rightKey;
     }
 }

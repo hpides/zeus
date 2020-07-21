@@ -74,6 +74,29 @@ public class LocalGenerator extends PipelineVisitor {
 
     @Override
     public void visit(JoinPipeline joinPipeline) {
+        String leftImplementation = "";
+        String rightImplementation = "";
+
+        for (Node node : Lists.reverse(joinPipeline.getLeftNodes())) {
+            if (node instanceof UnaryGenerationNode) {
+                leftImplementation = ((UnaryGenerationNode) node).getOperator().generate(joinPipeline);
+            } else {
+                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+            }
+        }
+
+        for (Node node : Lists.reverse(joinPipeline.getRightNodes())) {
+            if (node instanceof UnaryGenerationNode) {
+                leftImplementation = ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator())
+                        .generate(joinPipeline, true);
+            } else {
+                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+            }
+        }
+        String leftVariableName = joinPipeline.getVariableAtIndex(
+                ((JoinGenerator) joinPipeline.getBinaryNode().getOperator()).getKeyPositionLeft(), false).getVarName();
+        String rightVariableName = joinPipeline.getVariableAtIndex(
+                ((JoinGenerator) joinPipeline.getBinaryNode().getOperator()).getKeyPositionRight(), true).getVarName();
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("JoinPipeline.java.mustache");
             FileWriter out = new FileWriter(Paths
@@ -81,7 +104,9 @@ public class LocalGenerator extends PipelineVisitor {
             JoinGenerator operator = (JoinGenerator) joinPipeline.getBinaryNode().getOperator();
             template.execute(out,
                     new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
-                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength()))
+                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
+                            joinPipeline.getInterfaces(), joinPipeline.getVariables(), joinPipeline.getJoinVariables(),
+                            leftImplementation, rightImplementation, leftVariableName, rightVariableName))
                     .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
@@ -89,15 +114,45 @@ public class LocalGenerator extends PipelineVisitor {
     }
 
     @Override
-    public void visit(AJoinPipeline aJoinPipeline) {
+    public void visit(AJoinPipeline ajoinPipeline) {
+        String leftImplementation = "";
+        String rightImplementation = "";
+
+        for (Node node : Lists.reverse(ajoinPipeline.getLeftNodes())) {
+            if (node instanceof UnaryGenerationNode) {
+                leftImplementation = ((UnaryGenerationNode) node).getOperator().generate(ajoinPipeline);
+            } else {
+                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+            }
+        }
+
+        for (Node node : Lists.reverse(ajoinPipeline.getRightNodes())) {
+            if (node instanceof UnaryGenerationNode) {
+                leftImplementation = ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator())
+                        .generate(ajoinPipeline, true);
+            } else {
+                System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
+            }
+        }
+        String leftVariableName = ajoinPipeline
+                .getVariableAtIndex(((AJoinGenerator) ajoinPipeline.getBinaryNode().getOperator()).getKeyPositionLeft(),
+                        false)
+                .getVarName();
+        String rightVariableName = ajoinPipeline
+                .getVariableAtIndex(
+                        ((AJoinGenerator) ajoinPipeline.getBinaryNode().getOperator()).getKeyPositionRight(), true)
+                .getVarName();
         try {
             Mustache template = MustacheFactorySingleton.getInstance().compile("AJoinPipeline.java.mustache");
             FileWriter out = new FileWriter(Paths
-                    .get(DirectoryHelper.getTempDirectoryPath() + aJoinPipeline.getPipelineId() + ".java").toFile());
-            AJoinGenerator operator = (AJoinGenerator) aJoinPipeline.getBinaryNode().getOperator();
+                    .get(DirectoryHelper.getTempDirectoryPath() + ajoinPipeline.getPipelineId() + ".java").toFile());
+            AJoinGenerator operator = (AJoinGenerator) ajoinPipeline.getBinaryNode().getOperator();
             template.execute(out,
-                    new AJoinData(aJoinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
-                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength()))
+                    new AJoinData(ajoinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
+                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
+                            ajoinPipeline.getInterfaces(), ajoinPipeline.getVariables(),
+                            ajoinPipeline.getJoinVariables(), leftImplementation, rightImplementation, leftVariableName,
+                            rightVariableName))
                     .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);

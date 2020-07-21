@@ -1,15 +1,12 @@
 package de.hpi.des.hdes.engine.graph.pipeline;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
-import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import de.hpi.des.hdes.engine.graph.pipeline.node.JoinGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BinaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,16 +15,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JoinPipeline extends BinaryPipeline {
 
-    protected JoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes, GenerationNode binaryNode) {
+    protected JoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
+            BinaryGenerationNode binaryNode) {
         super(leftNodes, rightNodes, binaryNode);
     }
 
-    public JoinPipeline(GenerationNode binaryNode) {
+    public JoinPipeline(BinaryGenerationNode binaryNode) {
         super(binaryNode);
     }
 
     public static JoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
-            GenerationNode binaryNode) {
+            BinaryGenerationNode binaryNode) {
         return new JoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 

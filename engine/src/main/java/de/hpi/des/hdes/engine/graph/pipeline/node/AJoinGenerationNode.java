@@ -6,21 +6,10 @@ import de.hpi.des.hdes.engine.graph.pipeline.AJoinPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 
-import java.util.stream.Stream;
-import java.util.Arrays;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+public class AJoinGenerationNode extends BinaryGenerationNode {
 
-@Slf4j
-public class AJoinGenerationNode extends GenerationNode {
-    final private PrimitiveType[] joinInputTypes;
-
-    public AJoinGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] joinTypes,
-            final AJoinGenerator operator) {
-        super(inputTypes,
-                Stream.concat(Arrays.stream(inputTypes), Arrays.stream(joinTypes)).toArray(PrimitiveType[]::new),
-                operator);
-        this.joinInputTypes = joinTypes;
+    public AJoinGenerationNode(PrimitiveType[] inputTypes, PrimitiveType[] joinTypes, AJoinGenerator operator) {
+        super(inputTypes, joinTypes, operator);
     }
 
     @Override

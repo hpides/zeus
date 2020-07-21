@@ -3,8 +3,8 @@
     pipelineId: string,
     leftTupleLength: int,
     rightTupleLength: int,
-    keyType: string, // How do we support multiple keys? Object could do the trick with a custom key exctractor
-    nativeKeyType: string, same as keyType except lowercased, except for Object2Object
+    type.uppercaseName: string, // How do we support multiple keys? Object could do the trick with a custom key exctractor
+    type.lowercaseName: string, same as type.uppercaseName except lowercased, except for Object2Object
     leftKeyOffset: int
     rightKeyOffset: int,
     leftImplementation: String,
@@ -39,10 +39,13 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final private ByteBuffer outputBuffer = ByteBuffer.wrap(out);
     private int outputCounter = 0;
 
-
-    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntList>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
-    final private Long2ObjectMap<{{keyType}}2ObjectOpenHashMap<IntList>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectMap<{{type.uppercaseName}}2ObjectOpenHashMap<IntList>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectMap<{{type.uppercaseName}}2ObjectOpenHashMap<IntList>> rightWindowsToBuckets = new Long2ObjectOpenHashMap<>();
     private boolean shutdownFlag = false;
+
+    {{#interfaces}}
+    {{> InterfaceDefinition.java.mustache}}
+    {{/interfaces}}
 
     public {{{pipelineId}}} (final ReadBuffer left, final ReadBuffer right, final Dispatcher dispatcher) {
         leftInput = left;
@@ -52,11 +55,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     public void readEventLeft() {
         leftInput.mark();
+        final int startingPosition = leftInput.getBuffer().position();
         final long eventTimestamp = leftInput.getBuffer().getLong();
         if (eventTimestamp < latestTimestampLeft) {
-            leftInput.reset();
-            freeLeft(leftInput.getBuffer().position());
-            leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
+            freeLeft(startingPosition);
+            leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}}+1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
@@ -64,13 +67,17 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = windowStart;
         }
 
-        {{keyType}}2ObjectOpenHashMap<IntList> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
-        leftInput.getBuffer().position(leftInput.getBuffer().position()+{{leftKeyOffset}});
-        IntList set = bucket.computeIfAbsent(leftInput.getBuffer().get{{keyType}}(), w -> new {{keyType}}ArrayList());
-        leftInput.reset();
-        set.add(leftInput.getBuffer().position());
-        leftInput.getBuffer().position(leftInput.getBuffer().position() + 8 + {{leftTupleLength}});
+        {{#leftVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/leftVariables}}
+
+        {{{leftOperators}}}
+
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
+                w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
+        IntList set = bucket.computeIfAbsent({{{leftKey}}}, w -> new {{type.uppercaseName}}ArrayList());
+        set.add(startingPosition);
+        leftInput.getBuffer().position(startingPosition + 8 + {{leftTupleLength}});
 
         if (leftInput.getBuffer().get() == (byte) 1) {
             latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
@@ -83,12 +90,12 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     public void readEventRight() {
         rightInput.mark();
+        final int startingPosition = rightInput.getBuffer().position();
         final long eventTimestamp = rightInput.getBuffer().getLong();
         
         if (eventTimestamp < latestTimestampRight) {
-            rightInput.reset();
-            freeRight(rightInput.getBuffer().position());
-            rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
+            freeRight(startingPosition);
+            rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}}+1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
@@ -96,16 +103,17 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = windowStart;
         }
 
+        {{#rightVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/rightVariables}}
 
-        {{{operatorImplementationRight}}}
+        {{{rightOperators}}}
 
-        {{keyType}}2ObjectOpenHashMap<IntList> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
-        rightInput.getBuffer().position(rightInput.getBuffer().position() + {{rightKeyOffset}});
-        IntList set = bucket.computeIfAbsent(rightInput.getBuffer().get{{keyType}}(), w -> new IntArrayList());
-        rightInput.reset();
-        set.add(rightInput.getBuffer().position());
-        rightInput.getBuffer().position(rightInput.getBuffer().position() + 8 + {{rightTupleLength}});
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> bucket = rightWindowsToBuckets.computeIfAbsent(windowStart,
+                w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
+        IntList set = bucket.computeIfAbsent({{{rightKey}}}, w -> new IntArrayList());
+        set.add(startingPosition);
+        rightInput.getBuffer().position(startingPosition + 8 + {{rightTupleLength}});
 
         if (rightInput.getBuffer().get() == (byte) 1) {
             latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
@@ -117,10 +125,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(final long timestamp) {
-        {{keyType}}2ObjectOpenHashMap<IntList> leftBucket = leftWindowsToBuckets.get(timestamp);
-        {{keyType}}2ObjectOpenHashMap<IntList> rightBucket = rightWindowsToBuckets.get(timestamp);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftBucket = leftWindowsToBuckets.get(timestamp);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightBucket = rightWindowsToBuckets.get(timestamp);
         if(leftBucket == null && rightBucket != null) {
-            for ({{nativeKeyType}} key : rightBucket.keySet()) {
+            for ({{type.lowercaseName}} key : rightBucket.keySet()) {
                 IntList rightOffsets = rightBucket.get(key);
                 for(int i = 0; i < rightOffsets.size(); i++) {
                     freeRight(rightOffsets.getInt(i));
@@ -129,7 +137,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             rightWindowsToBuckets.remove(timestamp);
             return;
         } else if(rightBucket == null && leftBucket != null) {
-            for ({{nativeKeyType}} key : leftBucket.keySet().to{{{keyType}}}Array()) {
+            for ({{type.lowercaseName}} key : leftBucket.keySet().to{{{type.uppercaseName}}}Array()) {
                 IntList leftOffsets = leftBucket.get(key);
                 for(int i = 0; i < leftOffsets.size(); i++) {
                     freeLeft(leftOffsets.getInt(i));
@@ -140,7 +148,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         } else if(leftBucket == null && rightBucket == null) {
             return;
         }
-        for ({{nativeKeyType}} key : leftBucket.keySet().to{{{keyType}}}Array()) {
+        for ({{type.lowercaseName}} key : leftBucket.keySet().to{{{type.uppercaseName}}}Array()) {
             if (rightBucket.containsKey(key)) {
                 IntList leftOffsets = leftBucket.get(key);
                 IntList rightOffsets = rightBucket.get(key);
@@ -161,7 +169,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                 }
             }
         }
-        for ({{nativeKeyType}} key : rightBucket.keySet().to{{{keyType}}}Array()) {
+        for ({{type.lowercaseName}} key : rightBucket.keySet().to{{{type.uppercaseName}}}Array()) {
             IntList rightOffsets = rightBucket.get(key);
             for(int i = 0; i < rightOffsets.size(); i++) {
                 freeRight(rightOffsets.getInt(i));

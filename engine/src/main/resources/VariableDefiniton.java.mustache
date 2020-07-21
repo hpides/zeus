@@ -1,5 +1,5 @@
 {{#fromBuffer}}
-  input.reset();
-  input.getBuffer().position(input.getBuffer().position() + {{{index}}});
+  {{{inputName}}}.reset();
+  {{{inputName}}}.getBuffer().position({{{inputName}}}.getBuffer().position() + {{{index}}});
 {{/fromBuffer}}
-{{{type.lowercaseName}}} {{{varName}}}{{#fromBuffer}} = input.getBuffer().get{{{type.uppercaseName}}}(){{/fromBuffer}};
+{{{type.lowercaseName}}} {{{varName}}}{{#fromBuffer}} = {{{inputName}}}.getBuffer().get{{{type.uppercaseName}}}(){{/fromBuffer}};

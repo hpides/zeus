@@ -80,13 +80,11 @@ public class MapGeneratorTest {
     CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, "generatorHost",
         1);
     builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, "generatorHost", 2)
-        .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, 1000)
         .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
             new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
                 .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()"))
-        .average(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-            PrimitiveType.LONG }, 2)
+        .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, 1000)
         .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
             PrimitiveType.LONG }, 1000);
 
