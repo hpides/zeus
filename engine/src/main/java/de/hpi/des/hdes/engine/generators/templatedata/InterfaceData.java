@@ -11,6 +11,7 @@ public class InterfaceData {
   private class ArgumentData {
     private final String name;
     private final PrimitiveType type;
+    private final boolean last;
   }
 
   private final String interfaceName;
@@ -22,7 +23,7 @@ public class InterfaceData {
     this.returnType = returnType;
     this.arguments = new ArgumentData[arguments.length];
     for (int i = 0; i < arguments.length; i++) {
-      this.arguments[i] = new ArgumentData("ifd".concat(Integer.toString(i)), arguments[i]);
+      this.arguments[i] = new ArgumentData("ifd".concat(Integer.toString(i)), arguments[i], i == arguments.length - 1);
     }
   }
 }
