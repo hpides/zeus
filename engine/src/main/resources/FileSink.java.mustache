@@ -51,7 +51,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         int initialPosition;
         while (!Thread.interrupted() && !shutdownFlag) {
             if (input.getBuffer().position() == input.getBuffer().capacity()) {
-                dispatcher.resetReadLimit(input);
+                dispatcher.resetReadLimit("{{{pipelineId}}}", input);
             }
             for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputTupleLength}}})); remainingBytes > 0; remainingBytes -= ({{{inputTupleLength}}})) {
                 try {
@@ -69,7 +69,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                         freeableIndex = 0;
                     }
                     if (buffer.position() == buffer.capacity()) {
-                        dispatcher.resetReadLimit(input);
+                        dispatcher.resetReadLimit("{{{pipelineId}}}", input);
                     }
                     this.writtenTuples += 1;
                 } catch (IOException e) {

@@ -1,29 +1,38 @@
 package de.hpi.des.hdes.engine.execution.buffer;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 public class BufferWrapper {
 
     @Getter
+    private final String pipelineID;
+    @Getter
     private final ByteBuffer writeBuffer;
     @Getter
-    private final ReadBuffer readBuffer;
+    private final Map<String, ReadBuffer> childPipelineToReadBuffer = new HashMap<>();
+    @Getter
+    private byte numberActiveReader;
     private int limit;
     @Getter
-    private boolean[] bitmask;
+    private byte[] bitmask;
     @Getter
     private final int tupleSize;
+    private final AtomicBoolean atomic = new AtomicBoolean(false);
 
-    public BufferWrapper(final ByteBuffer writeBuffer, final ReadBuffer readBuffer, final int limit,
-            final boolean[] bitmask, final int tupleSize) {
+    public BufferWrapper(final String pipelineID, final ByteBuffer writeBuffer, final String childPipelineID,
+            final ReadBuffer readBuffer, final int limit, final int size, final int tupleSize) {
         this.writeBuffer = writeBuffer;
-        this.readBuffer = readBuffer;
+        childPipelineToReadBuffer.put(childPipelineID, readBuffer);
         this.limit = limit;
-        this.bitmask = bitmask;
+        this.bitmask = new byte[size];
         this.tupleSize = tupleSize;
+        this.pipelineID = pipelineID;
+        this.numberActiveReader = 1;
     }
 
     public boolean hasRemaining(final int bytes) {
@@ -33,12 +42,21 @@ public class BufferWrapper {
         return writeBuffer.limit() - writeBuffer.position() + getLimitInBytes() >= bytes;
     }
 
+    public ReadBuffer getReadBuffer(String pipelineID) {
+        return childPipelineToReadBuffer.get(pipelineID);
+    }
+
     public void free(final int[] offsets) {
+        while (!atomic.compareAndSet(false, true))
+            ;
         for (int offset : offsets) {
             int index = offset / tupleSize;
-            bitmask[index] = false;
-            int modLimit = limit % bitmask.length;
-            if (modLimit == index) {
+            bitmask[index] -= 1;
+            int modLimit = limit;
+            if (modLimit == bitmask.length) {
+                modLimit = 0;
+            }
+            if (modLimit == index && bitmask[index] == 0) {
                 boolean allFalse = false;
                 do {
                     index++;
@@ -49,7 +67,7 @@ public class BufferWrapper {
                         allFalse = true;
                         break;
                     }
-                } while (!bitmask[index]);
+                } while (bitmask[index] == 0);
                 if (allFalse) {
                     limit = bitmask.length;
                 } else {
@@ -63,9 +81,11 @@ public class BufferWrapper {
                 }
             }
         }
+        atomic.set(false);
     }
 
-    public void resetReadLimit() {
+    public void resetReadLimit(String pipelineID) {
+        ReadBuffer readBuffer = childPipelineToReadBuffer.get(pipelineID);
         readBuffer.getBuffer().position(0);
         readBuffer.limit(writeBuffer.position());
     }
@@ -81,5 +101,24 @@ public class BufferWrapper {
 
     private int getLimitInBytes() {
         return limit * tupleSize;
+    }
+
+    public ReadBuffer addReadBuffer(String pipelineID) {
+        while (!atomic.compareAndSet(false, true))
+            ;
+        final ReadBuffer readBuffer = new ReadBuffer(writeBuffer.asReadOnlyBuffer(), writeBuffer.position());
+        numberActiveReader++;
+        atomic.set(false);
+        childPipelineToReadBuffer.put(pipelineID, readBuffer);
+        return readBuffer;
+    }
+
+    public void acquireAtomic() {
+        while (!atomic.compareAndSet(false, true))
+            ;
+    }
+
+    public void releaseAtomic() {
+        atomic.set(false);
     }
 }

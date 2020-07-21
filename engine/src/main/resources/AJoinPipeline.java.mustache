@@ -125,8 +125,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(final long timestamp) {
-        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftBucket = leftWindowsToBuckets.get(timestamp);
-        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightBucket = rightWindowsToBuckets.get(timestamp);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftBucket = leftWindowsToBuckets.remove(timestamp);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightBucket = rightWindowsToBuckets.remove(timestamp);
         if(leftBucket == null && rightBucket != null) {
             for ({{type.lowercaseName}} key : rightBucket.keySet()) {
                 IntList rightOffsets = rightBucket.get(key);
@@ -134,7 +134,6 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                     freeRight(rightOffsets.getInt(i));
                 }
             }
-            rightWindowsToBuckets.remove(timestamp);
             return;
         } else if(rightBucket == null && leftBucket != null) {
             for ({{type.lowercaseName}} key : leftBucket.keySet().to{{{type.uppercaseName}}}Array()) {
@@ -143,7 +142,6 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                     freeLeft(leftOffsets.getInt(i));
                 }
             }
-            leftWindowsToBuckets.remove(timestamp);
             return;
         } else if(leftBucket == null && rightBucket == null) {
             return;
@@ -157,9 +155,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                     for(int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
                         int rightOffset = rightOffsets.getInt(rightIndex);
                         this.writeOutput(leftOffset, rightOffset);
-                        freeRight(rightOffset);
                     }
                     freeLeft(leftOffset);
+                }
+                for(int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
+                    freeRight(rightOffsets.getInt(rightIndex));
                 }
                 rightBucket.remove(key);
             } else {
@@ -175,8 +175,6 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                 freeRight(rightOffsets.getInt(i));
             }
         }
-        leftWindowsToBuckets.remove(timestamp);
-        rightWindowsToBuckets.remove(timestamp);
         
         leftInput.reset();
         leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
@@ -222,10 +220,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     public void run() {
         while (!Thread.interrupted() && !shutdownFlag) {
             if (leftInput.getBuffer().position() == leftInput.getBuffer().capacity()) {
-                dispatcher.resetReadLimit(leftInput);
+                dispatcher.resetReadLimit("{{{pipelineId}}}", leftInput);
             }
             if (rightInput.getBuffer().position() == rightInput.getBuffer().capacity()) {
-                dispatcher.resetReadLimit(rightInput);
+                dispatcher.resetReadLimit("{{{pipelineId}}}", rightInput);
             }
             for (int remainingBytes=Math.min(leftInput.remainingBytes(), {{{readVectorSize}}}*(8 + {{{leftTupleLength}}} + 1)); remainingBytes > 0; remainingBytes -= (8 + {{{leftTupleLength}}} + 1)) {
                 readEventLeft();

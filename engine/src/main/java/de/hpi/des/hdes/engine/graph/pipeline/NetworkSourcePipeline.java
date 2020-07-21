@@ -23,7 +23,7 @@ public class NetworkSourcePipeline extends Pipeline {
 
     @Override
     public int hashCode() {
-        return sourceNode.getHost().concat(Integer.toString(sourceNode.getPort())).hashCode();
+        return Math.abs(sourceNode.getHost().concat(Integer.toString(sourceNode.getPort())).hashCode());
     }
 
     @Override
@@ -65,7 +65,7 @@ public class NetworkSourcePipeline extends Pipeline {
 
     @Override
     public String getPipelineId() {
-        return "source".concat(Integer.toString(sourceNode.getNodeId().hashCode()));
+        return "source".concat(Integer.toString(hashCode()));
     }
 
 }

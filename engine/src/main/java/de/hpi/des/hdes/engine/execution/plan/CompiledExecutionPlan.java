@@ -74,7 +74,7 @@ public class CompiledExecutionPlan {
 
             LocalGenerator generator = new LocalGenerator();
             generator.extend(newPipelineTopology);
-            Dispatcher dispatcher = new Dispatcher(newPipelineTopology);
+            Dispatcher dispatcher = new Dispatcher(newPipelineTopology.getPipelines());
 
             newPipelineTopology.loadPipelines(dispatcher);
 

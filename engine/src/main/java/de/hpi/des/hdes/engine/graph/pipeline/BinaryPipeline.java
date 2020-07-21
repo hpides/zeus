@@ -112,7 +112,7 @@ public abstract class BinaryPipeline extends Pipeline {
         if (varName != null) {
             return joinVariables.get(varName);
         }
-        int offset = 0;
+        int offset = 8;
         for (int i = 0; i < index; i++) {
             offset += joinInputTypes[i].getLength();
         }

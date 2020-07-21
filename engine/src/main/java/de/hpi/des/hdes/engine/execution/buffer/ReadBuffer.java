@@ -8,15 +8,17 @@ import lombok.Getter;
 public class ReadBuffer {
 
     private ByteBuffer buffer;
-    private String pipelineID;
-    private int pipelineBufferIndex;
     private int mark;
     private int limit = 0;
 
-    public ReadBuffer(ByteBuffer buffer, String pipelineID, int pipelineBufferIndex) {
+    public ReadBuffer(final ByteBuffer buffer) {
         this.buffer = buffer;
-        this.pipelineID = pipelineID;
-        this.pipelineBufferIndex = pipelineBufferIndex;
+    }
+
+    public ReadBuffer(final ByteBuffer buffer, final int positioning) {
+        this.buffer = buffer;
+        this.limit = positioning;
+        buffer.position(positioning);
     }
 
     public void mark() {
