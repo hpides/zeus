@@ -265,7 +265,7 @@ public class MainNetworkEngine implements Runnable {
                         PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
                                 "(_,_,_,_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG }, 1000);
+                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
 
         manager.addQuery(builder.buildAsQuery());
         // Running engine
@@ -291,9 +291,9 @@ public class MainNetworkEngine implements Runnable {
                         new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, "", 1000)
                 .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
-                                "() -> System.currentTimeMillis()"))
+                                "(_,_,_,_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG }, 1000);
+                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
 
         manager.addQuery(builder.buildAsQuery());
         // Running engine

@@ -25,12 +25,17 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private long earliestOpenWindow = Long.MAX_VALUE;
     private long latestTimestamp = 0;
     final private ReadBuffer input;
-    final private ByteBuffer inputByteBuffer;
     final private Dispatcher dispatcher;
-    final byte[] out = new byte[8 + 1 + {{aggregationValueType.length}}];
+
+    private final byte[] output = new byte[{{{outputEventLength}}}*{{{vectorSize}}}];
+    private final ByteBuffer outputBuffer = ByteBuffer.wrap(output);
+    private int outputCounter = 0;
 
     final private Long2{{aggregationValueType.uppercaseName}}OpenHashMap windowToState = new Long2{{aggregationValueType.uppercaseName}}OpenHashMap();
     
+    private final int[] freeableOffsets = new int[{{{vectorSize}}}];
+    private int freeableIndex = 0;
+
     {{{#shouldCountPerWindow}}}
     final private Long2IntOpenHashMap windowToCount = new Long2IntOpenHashMap();
     {{{/shouldCountPerWindow}}}
@@ -54,7 +59,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         final long eventTimestamp = input.getBuffer().getLong();
         if (eventTimestamp < latestTimestamp) {
             input.reset();
-            dispatcher.free(input, input.getBuffer().position());
+            freeInput(input.getBuffer().position());
             input.getBuffer().position(input.getBuffer().position()+8+{{tupleLength}}+1);
             return;
         }
@@ -92,22 +97,36 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             }
         }
         input.reset();
-        dispatcher.free(input, input.getBuffer().position());
+        freeInput(input.getBuffer().position());
     }
 
     private void trigger(long eventTimestamp) {
+        this.outputCounter++;
         {{aggregationValueType.lowercaseName}} value = windowToState.remove(eventTimestamp);
-        ByteBuffer.wrap(out).putLong(0, eventTimestamp).put{{aggregationValueType.uppercaseName}}(8, value).put(8 + {{aggregationValueType.length}}, (byte) 0);
-        while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
+        outputBuffer.putLong(0, eventTimestamp).put{{aggregationValueType.uppercaseName}}(8, value).put(8 + {{aggregationValueType.length}}, (byte) 0);
+        if(this.outputCounter == {{{vectorSize}}}) {
+            while (!dispatcher.write("{{pipelineId}}", output) && !shutdownFlag);
+            this.outputCounter = 0;
+        }
+    }
+
+    private void freeInput(int offset) {
+        freeableOffsets[freeableIndex] = offset;
+        freeableIndex++;
+        if(freeableIndex == {{{vectorSize}}}) {
+            dispatcher.free(input, freeableOffsets);
+            freeableIndex = 0;
+        }
     }
 
     @Override
     public void run() {
         while (!Thread.interrupted() && !shutdownFlag) {
-            if (input.hasRemaining())
-                readEvent();
             if (input.getBuffer().position() == input.getBuffer().capacity()) {
                 dispatcher.resetReadLimit(input);
+            }
+            for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputEventLength}}})); remainingBytes > 0; remainingBytes -= ({{{inputEventLength}}})) {
+                readEvent();
             }
         }
     }

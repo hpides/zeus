@@ -44,7 +44,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             while (!exit) {
                 int bytesRead = in.read(objectInput, lastPosition, {{{vectorSize}}}*{{{eventLength}}} - lastPosition);
                 if (bytesRead+lastPosition < {{{vectorSize}}}*{{{eventLength}}}) {
-                    lastPosition = bytesRead;
+                    lastPosition += bytesRead;
                     continue;
                 } else {
                     lastPosition = 0;

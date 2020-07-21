@@ -1,9 +1,10 @@
 package de.hpi.des.hdes.engine.generators.templatedata;
 
+
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import java.util.stream.Stream;
 
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
@@ -20,6 +21,8 @@ public class JoinData {
     private final String rightOperators;
     private final String leftKey;
     private final String rightKey;
+    private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
+    private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
 
     public JoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
             final int leftKeyIndex, final int rightKeyIndex, final int windowLength, final InterfaceData[] interfaces,
