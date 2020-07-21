@@ -4,8 +4,8 @@ import java.util.List;
 
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
-import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.AJoinGenerationNode;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BinaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import lombok.Getter;
@@ -16,16 +16,16 @@ import lombok.extern.slf4j.Slf4j;
 public class AJoinPipeline extends BinaryPipeline {
 
     protected AJoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
-            GenerationNode binaryNode) {
+            BinaryGenerationNode binaryNode) {
         super(leftNodes, rightNodes, binaryNode);
     }
 
-    public AJoinPipeline(GenerationNode binaryNode) {
+    public AJoinPipeline(BinaryGenerationNode binaryNode) {
         super(binaryNode);
     }
 
     public static AJoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
-            GenerationNode binaryNode) {
+            BinaryGenerationNode binaryNode) {
         return new AJoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 

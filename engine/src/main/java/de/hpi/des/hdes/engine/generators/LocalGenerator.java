@@ -93,9 +93,8 @@ public class LocalGenerator extends PipelineVisitor {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
         }
-        String leftVariableName = joinPipeline
-                .getVariableAtIndex(((JoinGenerator) joinPipeline.getBinaryNode().getOperator()).getKeyPositionLeft())
-                .getVarName();
+        String leftVariableName = joinPipeline.getVariableAtIndex(
+                ((JoinGenerator) joinPipeline.getBinaryNode().getOperator()).getKeyPositionLeft(), false).getVarName();
         String rightVariableName = joinPipeline.getVariableAtIndex(
                 ((JoinGenerator) joinPipeline.getBinaryNode().getOperator()).getKeyPositionRight(), true).getVarName();
         try {
@@ -106,8 +105,8 @@ public class LocalGenerator extends PipelineVisitor {
             template.execute(out,
                     new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
                             operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
-                            joinPipeline.getVariables(), joinPipeline.getJoinVariables(), leftImplementation,
-                            rightImplementation, leftVariableName, rightVariableName))
+                            joinPipeline.getInterfaces(), joinPipeline.getVariables(), joinPipeline.getJoinVariables(),
+                            leftImplementation, rightImplementation, leftVariableName, rightVariableName))
                     .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);
@@ -136,7 +135,8 @@ public class LocalGenerator extends PipelineVisitor {
             }
         }
         String leftVariableName = ajoinPipeline
-                .getVariableAtIndex(((AJoinGenerator) ajoinPipeline.getBinaryNode().getOperator()).getKeyPositionLeft())
+                .getVariableAtIndex(((AJoinGenerator) ajoinPipeline.getBinaryNode().getOperator()).getKeyPositionLeft(),
+                        false)
                 .getVarName();
         String rightVariableName = ajoinPipeline
                 .getVariableAtIndex(
@@ -150,8 +150,9 @@ public class LocalGenerator extends PipelineVisitor {
             template.execute(out,
                     new AJoinData(ajoinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
                             operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
-                            ajoinPipeline.getVariables(), ajoinPipeline.getJoinVariables(), leftImplementation,
-                            rightImplementation, leftVariableName, rightVariableName))
+                            ajoinPipeline.getInterfaces(), ajoinPipeline.getVariables(),
+                            ajoinPipeline.getJoinVariables(), leftImplementation, rightImplementation, leftVariableName,
+                            rightVariableName))
                     .flush();
         } catch (IOException e) {
             log.error("Write out error: {}", e);

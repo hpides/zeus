@@ -46,7 +46,7 @@ public abstract class Pipeline {
     private static URLClassLoader tempClassLoader;
     private final HashMap<String, InterfaceData> interfaces = new HashMap<>();
     private final HashMap<String, MaterializationData> variables = new HashMap<>();
-    private final PrimitiveType[] inputTypes;
+    protected PrimitiveType[] inputTypes;
     private final ArrayList<String> currentTypes = new ArrayList<>();
     @Setter
     private Pipeline child;
@@ -91,33 +91,45 @@ public abstract class Pipeline {
         return interfaces.values().toArray(new InterfaceData[interfaces.size()]);
     }
 
-    public MaterializationData getVariableAtIndex(int index) {
+    protected MaterializationData getVariableAtIndex(int index, String inputName) {
         String varName = currentTypes.get(index);
         if (varName != null) {
             return variables.get(varName);
         }
-        int offset = 0;
+        int offset = 8;
         for (int i = 0; i < index; i++) {
             offset += inputTypes[i].getLength();
         }
-        MaterializationData var = new MaterializationData(variables.size(), offset, inputTypes[index]);
+        MaterializationData var = new MaterializationData(variables.size(), offset, inputTypes[index], inputName);
         currentTypes.set(index, var.getVarName());
         variables.put(var.getVarName(), var);
         return var;
     }
 
-    public void removeVariableAtIndex(int index) {
+    public MaterializationData getVariableAtIndex(int index) {
+        return getVariableAtIndex(index, "input");
+    }
+
+    protected void removeVariableAtIndex(int index, String inputName) {
         for (int i = index + 1; i < currentTypes.size(); i++) {
-            getVariableAtIndex(i);
+            getVariableAtIndex(i, inputName);
         }
         currentTypes.remove(index);
     }
 
-    public MaterializationData addVariable(PrimitiveType type) {
-        MaterializationData var = new MaterializationData(variables.size(), type);
+    public void removeVariableAtIndex(int index) {
+        removeVariableAtIndex(index, "input");
+    }
+
+    protected MaterializationData addVariable(PrimitiveType type, String inputName) {
+        MaterializationData var = new MaterializationData(variables.size(), type, inputName);
         currentTypes.add(var.getVarName());
         variables.put(var.getVarName(), var);
         return var;
+    }
+
+    public MaterializationData addVariable(PrimitiveType type) {
+        return addVariable(type, "input");
     }
 
     public MaterializationData[] getVariables() {

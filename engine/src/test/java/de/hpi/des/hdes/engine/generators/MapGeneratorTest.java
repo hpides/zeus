@@ -72,7 +72,7 @@ public class MapGeneratorTest {
     assertThat(l.getCurrentTypes()).containsExactly(null, "$0", "$1");
   }
 
-  // @Test
+  @Test
   void mapperTest() {
     JobManager manager = new JobManager(new CompiledEngine());
     VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();

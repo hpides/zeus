@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.hpi.des.hdes.engine.graph.Node;
+import de.hpi.des.hdes.engine.graph.pipeline.node.BinaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
@@ -20,15 +21,16 @@ public abstract class BinaryPipeline extends Pipeline {
     protected GenerationNode binaryNode;
     protected Pipeline leftParent;
     protected Pipeline rightParent;
-    final protected PrimitiveType[] joinInputTypes;
+    protected PrimitiveType[] joinInputTypes;
     private final HashMap<String, MaterializationData> joinVariables = new HashMap<>();
     private final ArrayList<String> joinCurrentTypes = new ArrayList<>();
 
     protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
-            GenerationNode binaryNode) {
-        // TODO ACCOunt for empty left and right nodes
-        super(leftNodes.get(leftNodes.size() - 1).getInputTypes());
-        this.joinInputTypes = rightNodes.get(rightNodes.size() - 1).getInputTypes();
+            BinaryGenerationNode binaryNode) {
+        super(leftNodes.size() == 0 ? binaryNode.getJoinInputTypes()
+                : leftNodes.get(leftNodes.size() - 1).getInputTypes());
+        this.joinInputTypes = rightNodes.size() == 0 ? binaryNode.getJoinInputTypes()
+                : rightNodes.get(rightNodes.size() - 1).getInputTypes();
         this.binaryNode = binaryNode;
         this.leftNodes = leftNodes;
         this.rightNodes = rightNodes;
@@ -36,12 +38,14 @@ public abstract class BinaryPipeline extends Pipeline {
             joinCurrentTypes.add(null);
     }
 
-    protected BinaryPipeline(GenerationNode binaryNode) {
-        super(new PrimitiveType[0]);
-        this.joinInputTypes = new PrimitiveType[0];
+    protected BinaryPipeline(BinaryGenerationNode binaryNode) {
+        super(binaryNode.getInputTypes());
+        this.joinInputTypes = binaryNode.getJoinInputTypes();
         this.binaryNode = binaryNode;
         this.leftNodes = new ArrayList<>();
         this.rightNodes = new ArrayList<>();
+        for (int i = 0; i < joinInputTypes.length; i++)
+            joinCurrentTypes.add(null);
     }
 
     protected boolean isLeft(Node operatorNode) {
@@ -71,8 +75,10 @@ public abstract class BinaryPipeline extends Pipeline {
     public void addOperator(GenerationNode operator, GenerationNode childNode) {
         if ((this.isLeft(childNode) && !childNode.equals(binaryNode)) || leftNodes.size() == 0) {
             this.leftNodes.add(operator);
+            this.inputTypes = childNode.getInputTypes();
         } else {
             this.rightNodes.add(operator);
+            this.joinInputTypes = childNode.getInputTypes();
         }
     }
 
@@ -100,7 +106,7 @@ public abstract class BinaryPipeline extends Pipeline {
 
     public MaterializationData getVariableAtIndex(int index, boolean isRight) {
         if (!isRight) {
-            return getVariableAtIndex(index);
+            return getVariableAtIndex(index, "leftInput");
         }
         String varName = joinCurrentTypes.get(index);
         if (varName != null) {
@@ -110,7 +116,8 @@ public abstract class BinaryPipeline extends Pipeline {
         for (int i = 0; i < index; i++) {
             offset += joinInputTypes[i].getLength();
         }
-        MaterializationData var = new MaterializationData(joinVariables.size(), offset, joinInputTypes[index]);
+        MaterializationData var = new MaterializationData(joinVariables.size(), offset, joinInputTypes[index],
+                "rightInput");
         joinCurrentTypes.set(index, var.getVarName());
         joinVariables.put(var.getVarName(), var);
         return var;
@@ -118,7 +125,7 @@ public abstract class BinaryPipeline extends Pipeline {
 
     public void removeVariableAtIndex(int index, boolean isRight) {
         if (!isRight) {
-            removeVariableAtIndex(index);
+            removeVariableAtIndex(index, "leftInput");
             return;
         }
         for (int i = index + 1; i < joinCurrentTypes.size(); i++) {
@@ -129,9 +136,9 @@ public abstract class BinaryPipeline extends Pipeline {
 
     public MaterializationData addVariable(PrimitiveType type, boolean isRight) {
         if (!isRight) {
-            return addVariable(type, false);
+            return addVariable(type, "leftInput");
         }
-        MaterializationData var = new MaterializationData(joinVariables.size(), type);
+        MaterializationData var = new MaterializationData(joinVariables.size(), type, "rightInput");
         joinCurrentTypes.add(var.getVarName());
         joinVariables.put(var.getVarName(), var);
         return var;

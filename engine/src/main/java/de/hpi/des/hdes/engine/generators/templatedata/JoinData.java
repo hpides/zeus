@@ -13,6 +13,7 @@ public class JoinData {
     private final int rightTupleLength;
     private final PrimitiveType type;
     private final int windowLength;
+    private final InterfaceData[] interfaces;
     private final MaterializationData[] leftVariables;
     private final MaterializationData[] rightVariables;
     private final String leftOperators;
@@ -21,7 +22,7 @@ public class JoinData {
     private final String rightKey;
 
     public JoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
-            final int leftKeyIndex, final int rightKeyIndex, final int windowLength,
+            final int leftKeyIndex, final int rightKeyIndex, final int windowLength, final InterfaceData[] interfaces,
             final MaterializationData[] leftVariables, final MaterializationData[] rightVariables,
             final String leftOperators, final String rightOperators, final String leftKey, final String rightKey) {
         this.pipelineId = pipelineId;
@@ -29,6 +30,7 @@ public class JoinData {
         this.leftTupleLength = Stream.of(leftTypes).mapToInt(t -> t.getLength()).sum();
         this.rightTupleLength = Stream.of(rightTypes).mapToInt(t -> t.getLength()).sum();
         this.windowLength = windowLength;
+        this.interfaces = interfaces;
         this.leftVariables = leftVariables;
         this.rightVariables = rightVariables;
         this.leftOperators = leftOperators;
