@@ -10,10 +10,13 @@ public class AggregateGenerator implements Generatable {
   private final AggregateFunction aggregateFunction;
   @Getter
   private final int aggregateValueIndex;
+  @Getter
+  private final int windowLength;
 
-  public AggregateGenerator(AggregateFunction aggregateFunction, final int aggregateValueIndex) {
+  public AggregateGenerator(AggregateFunction aggregateFunction, final int aggregateValueIndex, final int windowLength) {
     this.aggregateFunction = aggregateFunction;
     this.aggregateValueIndex = aggregateValueIndex;
+    this.windowLength = windowLength;
   }
 
   @Override

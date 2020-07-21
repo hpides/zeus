@@ -22,10 +22,11 @@ public class AggregationData {
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
     private final int outputEventLength;
     private final int inputEventLength;
-    
+    private final int windowLength;
+
     public AggregationData(final String pipelineId, final PrimitiveType[] types, final int aggregateValueIndex,
             final String aggregationVariable, final AggregateFunction aggregateFunction,
-            final InterfaceData[] interfaces, final MaterializationData[] variables, String operators) {
+            final InterfaceData[] interfaces, final MaterializationData[] variables, String operators, int windowLength) {
         this.pipelineId = pipelineId;
         this.tupleLength = Stream.of(types).mapToInt(t -> t.getLength()).sum();
         this.interfaces = interfaces;
@@ -35,7 +36,7 @@ public class AggregationData {
         this.shouldCountPerWindow = aggregateFunction.isShouldCountPerWindow();
         this.aggregationValueType = types[aggregateValueIndex];
         this.aggregationVariable = aggregationVariable;
-
+        this.windowLength = windowLength;
         this.outputEventLength = tupleLength + 8 + 1;
         this.inputEventLength = tupleLength + 8 + 1;
     }

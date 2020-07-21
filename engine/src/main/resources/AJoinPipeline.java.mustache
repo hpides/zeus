@@ -35,8 +35,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
-    final byte[] out = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{vectorSize}}}];
-    final private ByteBuffer outputBuffer = ByteBuffer.wrap(out);
+    final byte[] output = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{vectorSize}}}];
+    final private ByteBuffer outputBuffer = ByteBuffer.wrap(output);
     private int outputCounter = 0;
 
     final private Long2ObjectMap<{{type.uppercaseName}}2ObjectOpenHashMap<IntList>> leftWindowsToBuckets = new Long2ObjectOpenHashMap<>();
@@ -75,7 +75,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
-        IntList set = bucket.computeIfAbsent({{{leftKey}}}, w -> new {{type.uppercaseName}}ArrayList());
+        IntList set = bucket.computeIfAbsent({{{leftKey}}}, w -> new IntArrayList());
         set.add(startingPosition);
         leftInput.getBuffer().position(startingPosition + 8 + {{leftTupleLength}});
 
@@ -186,14 +186,23 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     public void writeOutput(int leftOffset, int rightOffset) {
         int initialOutputOffset = this.outputCounter * (8 + {{leftTupleLength}} + {{rightTupleLength}} + 1);
         outputBuffer.putLong(initialOutputOffset,Math.max(leftInput.getBuffer().getLong(leftOffset),rightInput.getBuffer().getLong(rightOffset)));
-        leftInput.getBuffer().position(leftOffset+8);
-        rightInput.getBuffer().position(rightOffset+8);
-        leftInput.getBuffer().get(out, initialOutputOffset + 8, {{leftTupleLength}});
-        rightInput.getBuffer().get(out, initialOutputOffset + 8 + {{leftTupleLength}}, {{rightTupleLength}});
+        leftInput.getBuffer().position(leftOffset);
+        leftInput.getBuffer().mark();
+        rightInput.getBuffer().position(rightOffset);
+        rightInput.getBuffer().mark();
+        {{#rightVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/rightVariables}}
+        {{{rightOperators}}}
+        {{#leftVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/leftVariables}}
+        {{{leftOperators}}}
+        {{{writeOut}}}
         outputBuffer.put(initialOutputOffset + 8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
         this.outputCounter++;
         if(this.outputCounter == {{{vectorSize}}}) {
-            while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
+            while (!dispatcher.write("{{pipelineId}}", output) && !shutdownFlag);
             this.outputCounter = 0;
         }
     }

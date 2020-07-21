@@ -45,7 +45,7 @@ public abstract class Pipeline {
     private String initialQueryId;
     private static URLClassLoader tempClassLoader;
     private final HashMap<String, InterfaceData> interfaces = new HashMap<>();
-    private final HashMap<String, MaterializationData> variables = new HashMap<>();
+    protected final HashMap<String, MaterializationData> variables = new HashMap<>();
     protected PrimitiveType[] inputTypes;
     private final ArrayList<String> currentTypes = new ArrayList<>();
     @Setter
@@ -138,8 +138,7 @@ public abstract class Pipeline {
 
     public String getWriteout(String bufferName) {
         // TODO Optimize Timestamp and watermark copy
-        String implementation = bufferName.concat(".getBuffer().get(output, initialOutputOffset, 8);\n");
-        implementation = implementation.concat("outputBuffer.position(initialOutputOffset+8);\n");
+        String implementation = "outputBuffer.position(initialOutputOffset+8);\n";
         int copyLength = 0;
         int arrayOffset = 8;
         for (int i = 0; i < currentTypes.size(); i++) {
@@ -167,8 +166,6 @@ public abstract class Pipeline {
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }
-        implementation = implementation.concat(bufferName.concat(".getBuffer().get(output, ")
-                .concat(Integer.toString(8 + getInputTupleLength())).concat(", 1);\n"));
         return implementation;
     }
 

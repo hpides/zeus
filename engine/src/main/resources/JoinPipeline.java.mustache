@@ -7,8 +7,8 @@
     nativeKeyType: string, // same as keyType except lowercased, except for Object2Object
     leftKeyOffset: int
     rightKeyOffset: int,
-    leftImplementation: String,
-    rightImplementation: String,
+    leftOperators: String,
+    rightOperators: String,
   }
 }}
 package de.hpi.des.hdes.engine.temp;
@@ -36,14 +36,18 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
-    final byte[] out = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{vectorSize}}}];
-    final private ByteBuffer outputBuffer = ByteBuffer.wrap(out);
+    final byte[] output = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{vectorSize}}}];
+    final private ByteBuffer outputBuffer = ByteBuffer.wrap(output);
     private int outputCounter = 0;
     
-    final private Long2ObjectOpenHashMap<{{keyType}}2ObjectOpenHashMap<IntList>> leftWindows = new Long2ObjectOpenHashMap<>();
-    final private Long2ObjectOpenHashMap<{{keyType}}2ObjectOpenHashMap<IntList>> rightWindows = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectOpenHashMap<{{type.uppercaseName}}2ObjectOpenHashMap<IntList>> leftWindows = new Long2ObjectOpenHashMap<>();
+    final private Long2ObjectOpenHashMap<{{type.uppercaseName}}2ObjectOpenHashMap<IntList>> rightWindows = new Long2ObjectOpenHashMap<>();
 
     private boolean shutdownFlag = false;
+    
+    {{#interfaces}}
+    {{> InterfaceDefinition.java.mustache}}
+    {{/interfaces}}
 
     public {{{pipelineId}}} (final ReadBuffer left, final ReadBuffer right, final Dispatcher dispatcher) {
         leftInput = left;
@@ -65,16 +69,19 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = windowStart;
         }
 
-        {{{leftImplementation}}}
+        {{#leftVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/leftVariables}}
 
-        {{keyType}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
-        leftInput.getBuffer().position(startingPosition + 8 + {{leftKeyOffset}});
-        {{nativeKeyType}} key = leftInput.getBuffer().get{{keyType}}();
-        IntList offsets = leftWindow.computeIfAbsent(key, w -> new {{keyType}}ArrayList());
+        {{{leftOperators}}}
+
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.computeIfAbsent(windowStart,
+                w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
+        {{type.lowercaseName}} key = leftInput.getBuffer().get{{type.uppercaseName}}();
+        IntList offsets = leftWindow.computeIfAbsent(key, w -> new {{type.uppercaseName}}ArrayList());
         offsets.add(startingPosition);
         
-        {{keyType}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.getOrDefault(windowStart, null);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.getOrDefault(windowStart, null);
         if(rightWindow != null && rightWindow.containsKey(key)){
             IntList rightOffsets = rightWindow.get(key);
             for (int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
@@ -108,16 +115,19 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = windowStart;
         }
 
-        {{{rightImplementation}}}
+        {{#rightVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/rightVariables}}
 
-        {{keyType}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.computeIfAbsent(windowStart,
-                w -> new {{keyType}}2ObjectOpenHashMap<IntList>());
-        rightInput.getBuffer().position(startingPosition + 8 +{{rightKeyOffset}});
-        {{nativeKeyType}} key = rightInput.getBuffer().get{{keyType}}();
-        IntList offsets = rightWindow.computeIfAbsent(key, w -> new {{keyType}}ArrayList());
+        {{{rightOperators}}}
+
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.computeIfAbsent(windowStart,
+                w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
+        {{type.lowercaseName}} key = rightInput.getBuffer().get{{type.uppercaseName}}();
+        IntList offsets = rightWindow.computeIfAbsent(key, w -> new {{type.uppercaseName}}ArrayList());
         offsets.add(startingPosition);
         
-        {{keyType}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.getOrDefault(windowStart, null);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.getOrDefault(windowStart, null);
         if(leftWindow != null && leftWindow.containsKey(key)){
             IntList leftOffsets = leftWindow.get(key);
             for (int leftIndex = 0; leftIndex < leftOffsets.size(); leftIndex++) {
@@ -140,10 +150,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(final long timestamp) {
-        {{keyType}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.remove(timestamp);
-        {{keyType}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.remove(timestamp);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.remove(timestamp);
+        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.remove(timestamp);
         if (leftWindow != null) {
-            for ({{nativeKeyType}} key : leftWindow.keySet().to{{{keyType}}}Array()) {
+            for ({{type.lowercaseName}} key : leftWindow.keySet().to{{{type.uppercaseName}}}Array()) {
                 IntList leftOffsets = leftWindow.get(key);
                 for (int leftIndex = 0; leftIndex < leftOffsets.size(); leftIndex++) {
                     freeLeft(leftOffsets.getInt(leftIndex));
@@ -151,7 +161,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             }
         }
         if (rightWindow != null) {
-            for ({{nativeKeyType}} key : rightWindow.keySet().to{{{keyType}}}Array()) {
+            for ({{type.lowercaseName}} key : rightWindow.keySet().to{{{type.uppercaseName}}}Array()) {
                 IntList rightOffsets = rightWindow.get(key);
                 for (int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
                     freeRight(rightOffsets.getInt(rightIndex));
@@ -163,14 +173,23 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     public void writeOutput(int leftOffset, int rightOffset) {
         int initialOutputOffset = this.outputCounter * (8 + {{leftTupleLength}} + {{rightTupleLength}} + 1);
         outputBuffer.putLong(initialOutputOffset,Math.max(leftInput.getBuffer().getLong(leftOffset),rightInput.getBuffer().getLong(rightOffset)));
-        leftInput.getBuffer().position(leftOffset+8);
-        rightInput.getBuffer().position(rightOffset+8);
-        leftInput.getBuffer().get(out, initialOutputOffset + 8, {{leftTupleLength}});
-        rightInput.getBuffer().get(out, initialOutputOffset + 8 + {{leftTupleLength}}, {{rightTupleLength}});
+        leftInput.getBuffer().position(leftOffset);
+        leftInput.getBuffer().mark();
+        rightInput.getBuffer().position(rightOffset);
+        rightInput.getBuffer().mark();
+        {{#rightVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/rightVariables}}
+        {{{rightOperators}}}
+        {{#leftVariables}}
+        {{> VariableDefiniton.java.mustache}}
+        {{/leftVariables}}
+        {{{leftOperators}}}
+        {{{writeOut}}}
         outputBuffer.put(initialOutputOffset + 8 + {{leftTupleLength}} + {{rightTupleLength}}, (byte) 0);
         this.outputCounter++;
         if(this.outputCounter == {{{vectorSize}}}) {
-            while (!dispatcher.write("{{pipelineId}}", out) && !shutdownFlag);
+            while (!dispatcher.write("{{pipelineId}}", output) && !shutdownFlag);
             this.outputCounter = 0;
         } 
     }

@@ -116,8 +116,8 @@ public abstract class BinaryPipeline extends Pipeline {
         for (int i = 0; i < index; i++) {
             offset += joinInputTypes[i].getLength();
         }
-        MaterializationData var = new MaterializationData(joinVariables.size(), offset, joinInputTypes[index],
-                "rightInput");
+        MaterializationData var = new MaterializationData(joinVariables.size() + variables.size(), offset,
+                joinInputTypes[index], "rightInput");
         joinCurrentTypes.set(index, var.getVarName());
         joinVariables.put(var.getVarName(), var);
         return var;
@@ -138,7 +138,7 @@ public abstract class BinaryPipeline extends Pipeline {
         if (!isRight) {
             return addVariable(type, "leftInput");
         }
-        MaterializationData var = new MaterializationData(joinVariables.size(), type, "rightInput");
+        MaterializationData var = new MaterializationData(joinVariables.size() + variables.size(), type, "rightInput");
         joinCurrentTypes.add(var.getVarName());
         joinVariables.put(var.getVarName(), var);
         return var;
@@ -146,5 +146,40 @@ public abstract class BinaryPipeline extends Pipeline {
 
     public MaterializationData[] getJoinVariables() {
         return this.joinVariables.values().toArray(new MaterializationData[joinVariables.size()]);
+    }
+
+    public String getWriteout(String bufferName, boolean isRight) {
+        if (!isRight) {
+            return getWriteout(bufferName);
+        } // TODO Optimize Timestamp and watermark copy
+        String implementation = "outputBuffer.position(initialOutputOffset+8);\n";
+        int copyLength = 0;
+        int arrayOffset = 8;
+        for (int i = 0; i < joinCurrentTypes.size(); i++) {
+            if (joinCurrentTypes.get(i) == null) {
+                copyLength += inputTypes[i].getLength();
+            } else {
+                MaterializationData var = joinVariables.get(joinCurrentTypes.get(i));
+                if (copyLength != 0) {
+                    implementation = implementation.concat(bufferName)
+                            .concat(".getBuffer().get(output, initialOutputOffset+")
+                            .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
+                            .concat(");\n");
+                    implementation = implementation.concat("outputBuffer.position(outputBuffer.position()+")
+                            .concat(Integer.toString(copyLength)).concat(");\n");
+                    copyLength = 0;
+                }
+                implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
+                        .concat("(").concat(var.getVarName()).concat(");\n");
+                arrayOffset += var.getType().getLength();
+            }
+        }
+        if (copyLength != 0) {
+            implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, initialOutputOffset+")
+                    .concat(Integer.toString(arrayOffset)).concat(", ")
+                    .concat(Integer.toString(copyLength).concat(");\n"));
+            copyLength = 0;
+        }
+        return implementation;
     }
 }

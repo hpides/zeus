@@ -23,11 +23,13 @@ public class AJoinData {
     private final String rightOperators;
     private final String leftKey;
     private final String rightKey;
+    private final String writeOut;
 
     public AJoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
             final int leftKeyIndex, final int rightKeyIndex, final int windowLength, final InterfaceData[] interfaces,
             final MaterializationData[] leftVariables, final MaterializationData[] rightVariables,
-            final String leftOperators, final String rightOperators, final String leftKey, final String rightKey) {
+            final String leftOperators, final String rightOperators, final String leftKey, final String rightKey,
+            final String leftWriteout, final String rightWriteout) {
         this.pipelineId = pipelineId;
         this.type = rightTypes[rightKeyIndex];
         this.leftTupleLength = Stream.of(leftTypes).mapToInt(t -> t.getLength()).sum();
@@ -40,5 +42,6 @@ public class AJoinData {
         this.rightOperators = rightOperators;
         this.leftKey = leftKey;
         this.rightKey = rightKey;
+        this.writeOut = leftWriteout.concat(rightWriteout);
     }
 }
