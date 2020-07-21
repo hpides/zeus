@@ -75,7 +75,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> bucket = leftWindowsToBuckets.computeIfAbsent(windowStart,
                 w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
-        IntList set = bucket.computeIfAbsent({{{leftKey}}}, w -> new {{type.uppercaseName}}ArrayList());
+        IntList set = bucket.computeIfAbsent({{{leftKey}}}, w -> new IntArrayList());
         set.add(startingPosition);
         leftInput.getBuffer().position(startingPosition + 8 + {{leftTupleLength}});
 

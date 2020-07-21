@@ -65,7 +65,7 @@ public class NetworkSourcePipeline extends Pipeline {
 
     @Override
     public String getPipelineId() {
-        return "source".concat(Integer.toString(sourceNode.getNodeId().hashCode()));
+        return "source".concat(Integer.toString(Math.abs(sourceNode.getNodeId().hashCode())));
     }
 
 }

@@ -23,6 +23,6 @@ public class AggregationGenerationNode extends GenerationNode {
     @Override
     public void accept(PipelineTopology pipelineTopology) {
         AggregationPipeline pipeline = new AggregationPipeline(this);
-        pipelineTopology.addPipelineAsLeaf(pipeline, this);
+        pipelineTopology.addPipelineAsParent(pipeline, this);
     }
 }

@@ -27,7 +27,7 @@ import java.util.function.Function;
 public class MainNetworkEngine implements Runnable {
 
     private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin", "hotcat",
-            "maxpric", "compiledajoin", "compiledjoin");
+            "maxpric", "compiledajoin", "compiledjoin", "compiledmaxpric");
 
     // CLI Options
     @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "120")
@@ -132,6 +132,10 @@ public class MainNetworkEngine implements Runnable {
             }
             case "maxpric": {
                 nexmarkLightHighestPricePerAuction();
+                break;
+            }
+            case "compiledmaxpric": {
+                compiledNexmarkMaxiumPriceForAuction();
                 break;
             }
             case "compiledajoin": {
@@ -288,7 +292,7 @@ public class MainNetworkEngine implements Runnable {
                 generatorHost, basicPort1);
         builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
                 .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, "", 1000)
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, 1000)
                 .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
                                 "(_,_,_,_) -> System.currentTimeMillis()"))
@@ -306,6 +310,36 @@ public class MainNetworkEngine implements Runnable {
         }
 
         manager.shutdown();
+    }
+
+    private void compiledNexmarkMaxiumPriceForAuction() {
+        JobManager manager = new JobManager(new CompiledEngine());
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+
+        CStream auctionSource = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2);
+        
+        CStream bidSource = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1);
+        
+        bidSource.ajoin(auctionSource, 
+            new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT },
+            new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT },
+            1, 0,
+            1000)
+            .filter(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, "(_,_,_,v1,_,_,_,v2) -> v1 > v2")
+            .maximum(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, 3, 1000) 
+            .toFile(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, 10000);
+
+        manager.addQuery(builder.buildAsQuery());
+        // Running engine
+        manager.runEngine();
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        manager.shutdown();  
     }
 
     private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,
