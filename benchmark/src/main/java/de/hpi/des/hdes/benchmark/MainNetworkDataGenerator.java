@@ -184,11 +184,13 @@ public class MainNetworkDataGenerator implements Runnable {
             auctionSocket.setByteFlag(true);
             bidSocket.setByteLength(29);
             auctionSocket.setByteLength(33);
+            bidSocket.setByteLength(33);
+            auctionSocket.setByteLength(29);
             bidSocket.waitForConnection();
             auctionSocket.waitForConnection();
             long startTime = System.nanoTime();
-            var bidDone = auctionGenerator.generate(bidSocket);
-            var auctionDone = bidGenerator.generate(auctionSocket);
+            var bidDone = bidGenerator.generate(bidSocket);
+            var auctionDone = auctionGenerator.generate(auctionSocket);
             CompletableFuture.allOf(auctionDone, bidDone).get();
             long endTime = System.nanoTime();
             bidSocket.writeFile();
