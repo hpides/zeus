@@ -27,7 +27,7 @@ public class NexmarkByteAuctionGenerator extends UniformGenerator<byte[]> {
       watermark = 1;
       time -= 500;
     }
-    buffer.reset();
+    buffer.clear();
     buffer.putLong(tuple.v5).putLong(tuple.v1).putInt(tuple.v2).putInt(tuple.v3).putInt(tuple.v4).put(watermark);
 
     return buffer.array();
