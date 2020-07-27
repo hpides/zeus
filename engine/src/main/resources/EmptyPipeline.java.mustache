@@ -40,17 +40,21 @@ public class {{{className}}} implements Runnable, Stoppable {
     input.getBuffer().get(output, 8+{{inputEventLength}}, 1);
     outputBuffer.position(initialOutputOffset+{{inputEventLength}}+1);
     outputCounter++;
-    freeableOffsets[freeableIndex] = nextPosition - {{inputEventLength}};
-    freeableIndex++;
-    if(freeableIndex == {{{vectorSize}}}) {
-        dispatcher.free(input, freeableOffsets);
-        freeableIndex = 0;
-    }
+    free();
     if(outputCounter == {{{vectorSize}}}) {
         while (!dispatcher.write("{{className}}", output) && !shutdownFlag); 
         outputCounter = 0;
     }
     input.getBuffer().position(nextPosition);
+  }
+
+  private void free(int startingPosition){
+    freeableOffsets[freeableIndex] = startingPosition;
+    freeableIndex++;
+    if(freeableIndex == {{{vectorSize}}}) {
+        dispatcher.free(input, freeableOffsets);
+        freeableIndex = 0;
+    }
   }
 
   @Override

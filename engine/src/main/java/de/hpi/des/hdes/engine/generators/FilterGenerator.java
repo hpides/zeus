@@ -24,12 +24,22 @@ public class FilterGenerator implements UnaryGeneratable {
 
     @Override
     public String generate(Pipeline pipeline) {
-        return generate(pipeline, false);
+        try {
+            FilterData data = new FilterData(pipeline, types, filter, "free", "input");
+            Mustache template = MustacheFactorySingleton.getInstance().compile("Filter.java.mustache");
+            template.execute(writer, data).flush();
+            return writer.toString();
+        } catch (IOException e) {
+            log.error(e.toString());
+        }
+        return "";
     }
 
     public String generate(Pipeline pipeline, boolean isRight) {
+        String inputName = isRight ? "rightInput" : "leftInput";
+        String freeFunction = isRight ? "freeRight" : "freeLeft";
         try {
-            FilterData data = new FilterData(pipeline, types, filter, isRight);
+            FilterData data = new FilterData(pipeline, types, filter, isRight, freeFunction, inputName);
             Mustache template = MustacheFactorySingleton.getInstance().compile("Filter.java.mustache");
             template.execute(writer, data).flush();
             return writer.toString();

@@ -1,4 +1,6 @@
 {{interfaceName}} {{interfaceName}}filter = ({{{signature}}}) -> {{{condition}}};
 if(!{{interfaceName}}filter.apply({{{application}}})){
+    {{{freeFunction}}}(startingPosition);
+    {{{inputName}}}.getBuffer().position(startingPosition+8+{{tupleLength}}+1);
     return;
 }

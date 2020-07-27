@@ -79,7 +79,8 @@ public class LocalGenerator extends PipelineVisitor {
 
         for (Node node : Lists.reverse(joinPipeline.getLeftNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                leftImplementation = ((UnaryGenerationNode) node).getOperator().generate(joinPipeline);
+                leftImplementation = leftImplementation.concat(
+                        ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator()).generate(joinPipeline, false));
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
@@ -87,8 +88,8 @@ public class LocalGenerator extends PipelineVisitor {
 
         for (Node node : Lists.reverse(joinPipeline.getRightNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                leftImplementation = ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator())
-                        .generate(joinPipeline, true);
+                rightImplementation = rightImplementation.concat(
+                        ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator()).generate(joinPipeline, true));
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
@@ -121,7 +122,8 @@ public class LocalGenerator extends PipelineVisitor {
 
         for (Node node : Lists.reverse(ajoinPipeline.getLeftNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                leftImplementation = ((UnaryGenerationNode) node).getOperator().generate(ajoinPipeline);
+                leftImplementation = leftImplementation.concat(
+                        ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator()).generate(ajoinPipeline, false));
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
@@ -129,8 +131,8 @@ public class LocalGenerator extends PipelineVisitor {
 
         for (Node node : Lists.reverse(ajoinPipeline.getRightNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                leftImplementation = ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator())
-                        .generate(ajoinPipeline, true);
+                rightImplementation = rightImplementation.concat(
+                        ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator()).generate(ajoinPipeline, true));
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }
@@ -199,7 +201,8 @@ public class LocalGenerator extends PipelineVisitor {
                     new AggregationData(aggregationPipeline.getPipelineId(),
                             aggregationPipeline.getAggregationGenerationNode().getInputTypes(),
                             operator.getAggregateValueIndex(), variableName, operator.getAggregateFunction(),
-                            aggregationPipeline.getInterfaces(), aggregationPipeline.getVariables(), implementation, operator.getWindowLength()))
+                            aggregationPipeline.getInterfaces(), aggregationPipeline.getVariables(), implementation,
+                            operator.getWindowLength()))
                     .flush();
             implementation = writer.toString();
             Files.writeString(

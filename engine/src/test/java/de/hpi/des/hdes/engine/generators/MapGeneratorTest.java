@@ -80,6 +80,8 @@ public class MapGeneratorTest {
     CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, "generatorHost",
         1);
     builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, "generatorHost", 2)
+        .filter(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT },
+            "(v1, _, _, _) -> v1 > 100")
         .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
             new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
                 .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()"))
