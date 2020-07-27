@@ -151,8 +151,8 @@ public abstract class Pipeline {
                             .concat(".getBuffer().get(output, initialOutputOffset+")
                             .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
                             .concat(");\n");
-                    implementation = implementation.concat("outputBuffer.position(outputBuffer.position()+")
-                            .concat(Integer.toString(copyLength)).concat(");\n");
+                    implementation = implementation.concat("outputBuffer.position(initialOutputOffset+")
+                            .concat(Integer.toString(arrayOffset + copyLength)).concat(");\n");
                     copyLength = 0;
                 }
                 implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())

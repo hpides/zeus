@@ -1,5 +1,4 @@
 {{#fromBuffer}}
-  {{{inputName}}}.reset();
-  {{{inputName}}}.getBuffer().position({{{inputName}}}.getBuffer().position() + {{{index}}});
+  {{{inputName}}}.getBuffer().position(startingPosition + {{{index}}});
 {{/fromBuffer}}
 {{{type.lowercaseName}}} {{{varName}}}{{#fromBuffer}} = {{{inputName}}}.getBuffer().get{{{type.uppercaseName}}}(){{/fromBuffer}};

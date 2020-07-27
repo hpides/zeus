@@ -26,18 +26,19 @@ public class {{{className}}} implements Runnable, Stoppable {
   }
 
   public void readEvent(){
-    input.mark();
-    int nextPosition = input.getBuffer().position() + {{inputEventLength}};
+    int startingPosition = input.getBuffer().position();
+    int nextPosition = startingPosition + {{inputEventLength}};
     int initialOutputOffset = outputCounter * {{{outputEventLength}}};
+    outputBuffer.position(initialOutputOffset);
     {{#variables}}
     {{> VariableDefiniton.java.mustache}}
     {{/variables}}
-    input.reset();
+    input.getBuffer().position(startingPosition);
     input.getBuffer().get(output, initialOutputOffset, 8);
-    outputBuffer.position(outputBuffer.position+8);
+    outputBuffer.position(initialOutputOffset+8);
     {{{implementation}}}
     input.getBuffer().get(output, 8+{{inputEventLength}}, 1);
-    outputBuffer.position(outputBuffer.position+1);
+    outputBuffer.position(initialOutputOffset+{{inputEventLength}}+1);
     outputCounter++;
     freeableOffsets[freeableIndex] = nextPosition - {{inputEventLength}};
     freeableIndex++;
