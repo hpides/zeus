@@ -120,7 +120,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     public void run() {
         while (!Thread.interrupted() && !shutdownFlag) {
             if (input.getBuffer().position() == input.getBuffer().capacity()) {
-                dispatcher.resetReadLimit(input);
+                dispatcher.resetReadLimit("{{pipelineId}}", input);
             }
             for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputEventLength}}})); remainingBytes > 0; remainingBytes -= ({{{inputEventLength}}})) {
                 readEvent();
