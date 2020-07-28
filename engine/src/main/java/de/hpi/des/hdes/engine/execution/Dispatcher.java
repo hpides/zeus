@@ -28,10 +28,6 @@ public class Dispatcher {
     private final Map<String, BufferWrapper> writeBuffers = new HashMap<>();
     private final Map<ReadBuffer, BufferWrapper> readBufferToBufferWrapper = new HashMap<>();
 
-    public Dispatcher(final List<Pipeline> pipelines) {
-        prepareBufferWrapper(pipelines);
-    }
-
     private void prepareBufferWrapper(final List<Pipeline> pipelines) {
         for (final Pipeline pipeline : pipelines) {
             if (pipeline instanceof SinkPipeline) {
@@ -109,7 +105,6 @@ public class Dispatcher {
             for (int count = 0; count < bytes.length / bufferWrapper.getTupleSize(); count++, index++) {
                 bitmask[index] = bufferWrapper.getNumberActiveReader();
             }
-            bufferWrapper.releaseAtomic();
             int position = writeBuffer.put(bytes).position();
             for (ReadBuffer readBuffer : bufferWrapper.getChildPipelineToReadBuffer().values()) {
                 int old_limit = readBuffer.limit();
@@ -118,8 +113,9 @@ public class Dispatcher {
                 }
             }
             if (position == writeBuffer.capacity()) {
-                bufferWrapper.resetWriteLimt();
+                bufferWrapper.resetWriteLimit();
             }
+            bufferWrapper.releaseAtomic();
             return true;
         }
         return false;

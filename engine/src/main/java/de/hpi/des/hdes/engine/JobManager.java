@@ -12,42 +12,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JobManager {
 
-  private final Engine engine;
-  private final Timer timer;
+    private final Engine engine;
+    private final Timer timer;
 
-  public JobManager(Engine engine) {
-    this.engine = engine;
-    this.timer = new Timer("AddQueryTimer");
-  }
-
-  public void addQuery(final Query query) {
-    this.engine.addQuery(query);
-  }
-
-  public void deleteQuery(final Query query) {
-    this.engine.deleteQuery(query);
-  }
-
-  public void deleteQuery(final Query query, final long delay, final ChronoUnit timeUnit) {
-    final TimerTask addQueryTask = new DeleteQueryTimerTask(this.engine, query);
-    this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
-  }
-
-  public void addQuery(final Query query, final long delay, final ChronoUnit timeUnit) {
-    final TimerTask addQueryTask = new AddQueryTimerTask(this.engine, query);
-    this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
-  }
-
-  public void runEngine() {
-    if (!this.engine.isRunning()) {
-      this.engine.run();
-    } else {
-      log.info("Engine is already running.");
+    public JobManager(Engine engine) {
+        this.engine = engine;
+        this.timer = new Timer("AddQueryTimer");
     }
-  }
 
-  public void shutdown() {
-    this.engine.shutdown();
-    this.timer.cancel();
-  }
+    public void addQuery(final Query query) {
+        this.engine.addQuery(query);
+    }
+
+    public void deleteQuery(final Query query) {
+        this.engine.deleteQuery(query);
+    }
+
+    public void deleteQuery(final Query query, final long delay, final ChronoUnit timeUnit) {
+        final TimerTask addQueryTask = new DeleteQueryTimerTask(this.engine, query);
+        this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
+    }
+
+    public void addQuery(final Query query, final long delay, final ChronoUnit timeUnit) {
+        final TimerTask addQueryTask = new AddQueryTimerTask(this.engine, query);
+        this.timer.schedule(addQueryTask, TimeUnit.of(timeUnit).toMillis(delay));
+    }
+
+    public void shutdown() {
+        this.engine.shutdown();
+        this.timer.cancel();
+    }
 }

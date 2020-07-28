@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
-import de.hpi.des.hdes.engine.graph.vulcano.Topology;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import lombok.Getter;
@@ -23,7 +22,6 @@ public class PipelineTopology {
     private final List<Pipeline> pipelines = new ArrayList<>();
     private final Map<GenerationNode, Pipeline> nodeToPipeline = new HashMap<GenerationNode, Pipeline>();
     private final Map<String, Pipeline> pipelineIdToPipeline = new HashMap<String, Pipeline>();
-    private Dispatcher dispatcher;
 
     public static PipelineTopology pipelineTopologyOf(Query query) {
         PipelineTopology pipelineTopology = new PipelineTopology();
@@ -55,22 +53,8 @@ public class PipelineTopology {
                 pipelineIdToPipeline.put(pipeline.getPipelineId(), pipeline);
             }
         }
+        pipelines.addAll(newPipelines);
         return newPipelines;
-    }
-
-    public void loadPipelines(Dispatcher dispatcher) {
-        this.dispatcher = dispatcher;
-        pipelines.get(0).loadPipeline(dispatcher, Object.class);
-        for (Pipeline pipeline : pipelines.subList(1, pipelines.size())) {
-            if (!pipeline.isLoaded()) {
-                pipeline.loadPipeline(dispatcher, null);
-                pipeline.setLoaded(true);
-            }
-        }
-    }
-
-    public List<Pipeline> getRunnablePiplines() {
-        return this.pipelines;
     }
 
     public static String getChildProcessMethod(Pipeline parent, Pipeline child) {

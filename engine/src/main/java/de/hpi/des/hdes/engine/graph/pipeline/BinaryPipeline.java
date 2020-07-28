@@ -157,7 +157,7 @@ public abstract class BinaryPipeline extends Pipeline {
         int arrayOffset = 8;
         for (int i = 0; i < joinCurrentTypes.size(); i++) {
             if (joinCurrentTypes.get(i) == null) {
-                copyLength += inputTypes[i].getLength();
+                copyLength += joinInputTypes[i].getLength();
             } else {
                 MaterializationData var = joinVariables.get(joinCurrentTypes.get(i));
                 if (copyLength != 0) {
@@ -166,7 +166,7 @@ public abstract class BinaryPipeline extends Pipeline {
                             .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
                             .concat(");\n");
                     implementation = implementation.concat("outputBuffer.position(outputBuffer.position()+")
-                            .concat(Integer.toString(copyLength)).concat(");\n");
+                            .concat(Integer.toString(copyLength + arrayOffset)).concat(");\n");
                     copyLength = 0;
                 }
                 implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
@@ -176,7 +176,7 @@ public abstract class BinaryPipeline extends Pipeline {
         }
         if (copyLength != 0) {
             implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, initialOutputOffset+")
-                    .concat(Integer.toString(arrayOffset)).concat(", ")
+                    .concat(Integer.toString(arrayOffset + copyLength)).concat(", ")
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }

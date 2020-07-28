@@ -39,8 +39,6 @@ public abstract class Pipeline {
     protected Class pipelineKlass;
     @Setter
     protected Object pipelineObject;
-    @Setter
-    private boolean isLoaded = false;
     private final Set<String> queryIds = new HashSet<>();
     private String initialQueryId;
     private static URLClassLoader tempClassLoader;
@@ -162,7 +160,7 @@ public abstract class Pipeline {
         }
         if (copyLength != 0) {
             implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, initialOutputOffset+")
-                    .concat(Integer.toString(arrayOffset)).concat(", ")
+                    .concat(Integer.toString(arrayOffset + copyLength)).concat(", ")
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }
@@ -228,7 +226,6 @@ public abstract class Pipeline {
 
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
-        this.setLoaded(true);
         try {
             pipelineObject = pipelineKlass.getDeclaredConstructor(ReadBuffer.class, Dispatcher.class)
                     .newInstance(dispatcher.getReadByteBufferForPipeline((UnaryPipeline) this), dispatcher);

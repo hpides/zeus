@@ -270,12 +270,32 @@ public class MainNetworkEngine implements Runnable {
                                 "(_,_,_,_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+        VulcanoTopologyBuilder builder2 = new VulcanoTopologyBuilder();
+
+        CStream sourceOne2 = builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                generatorHost, basicPort1);
+        builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne2, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, 1000)
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
+                                .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()")
+                                .add(PrimitiveType.LONG, "(_,_,_,_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.LONG }, 10000);
 
         manager.addQuery(builder.buildAsQuery());
         // Running engine
-        manager.runEngine();
+
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        manager.addQuery(builder2.buildAsQuery());
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds - 10));
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -295,7 +315,6 @@ public class MainNetworkEngine implements Runnable {
 
         manager.addQuery(builder.buildAsQuery());
         // Running engine
-        manager.runEngine();
         try {
             Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
         } catch (InterruptedException e) {
@@ -333,22 +352,30 @@ public class MainNetworkEngine implements Runnable {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
-        CStream auctionSource = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2);
-        
-        CStream bidSource = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1);
-        
-        bidSource.ajoin(auctionSource, 
-            new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT },
-            new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT },
-            1, 0,
-            1000)
-            .filter(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, "(_,_,_,v1,_,_,_,v2) -> v1 > v2")
-            .maximum(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, 3, 1000) 
-            .toFile(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, 10000);
+        CStream auctionSource = builder.streamOfC(
+                new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT },
+                generatorHost, basicPort2);
+
+        CStream bidSource = builder.streamOfC(
+                new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT },
+                generatorHost, basicPort1);
+
+        bidSource.ajoin(auctionSource,
+                new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT },
+                new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, 1,
+                0, 1000)
+                .filter(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT }, "(_,_,_,v1,_,_,_,v2) -> v1 > v2")
+                .maximum(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT }, 3, 1000)
+                .toFile(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT }, 10000);
 
         manager.addQuery(builder.buildAsQuery());
         // Running engine
-        manager.runEngine();
         try {
             Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
         } catch (InterruptedException e) {
@@ -365,7 +392,8 @@ public class MainNetworkEngine implements Runnable {
             // Query Array
             ArrayDeque<Query> queries = new ArrayDeque<>();
             // Creating a JobManager
-            JobManager manager = new JobManager(new VulcanoEngine());
+            VulcanoEngine engine = new VulcanoEngine();
+            JobManager manager = new JobManager(engine);
             // Adding fixed queries
             for (int i = 0; i < fixedQueries; i++) {
                 Sink sink;
@@ -380,7 +408,7 @@ public class MainNetworkEngine implements Runnable {
                 queries.add(query);
             }
             // Running engine
-            manager.runEngine();
+            engine.run();
             if (batches == 0) {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
             }

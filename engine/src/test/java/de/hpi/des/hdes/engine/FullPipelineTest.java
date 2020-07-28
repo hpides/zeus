@@ -47,7 +47,6 @@ public class FullPipelineTest {
 
         JobManager manager = new JobManager(new CompiledEngine());
         manager.addQuery(builder.buildAsQuery());
-        manager.runEngine();
         long startTime = System.currentTimeMillis();
         boolean timeout = false;
         while (resultList.size() < 4) {

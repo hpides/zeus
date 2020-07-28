@@ -29,7 +29,8 @@ public class DispatcherTest {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         builder.streamOfC(new LinkedList<Tuple2<Integer, Boolean>>(), 3).filter(new PrimitiveType[] {}, "() -> true");
         final PipelineTopology topology = PipelineTopology.pipelineTopologyOf(builder.buildAsQuery());
-        final Dispatcher dispatcher = new Dispatcher(topology.getPipelines());
+        final Dispatcher dispatcher = new Dispatcher();
+        dispatcher.extend(topology.getPipelines());
 
         byte[] bytes = { 10, 11, 12 };
         ByteBufferIntSourcePipeline pipeline = (ByteBufferIntSourcePipeline) topology.getPipelines().get(1);

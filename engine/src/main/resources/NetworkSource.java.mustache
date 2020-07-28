@@ -53,11 +53,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                 try {
                     while (!this.dispatcher.write("{{{pipelineId}}}", objectInput)) {
                         if (exit) {
-                            System.out.println("Aborted writing to Join from pipeline {{{pipelineId}}}");
                             break;
                         }
-
-
                     }
                 } catch (IllegalStateException e) {
                     System.out.println("Dropped input buffer of " + objectInput.getClass());

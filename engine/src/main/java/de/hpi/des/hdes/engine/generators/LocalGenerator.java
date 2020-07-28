@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.io.StringWriter;
 import lombok.extern.slf4j.Slf4j;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
@@ -17,7 +18,6 @@ import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.io.DirectoryHelper;
 import de.hpi.des.hdes.engine.graph.pipeline.JoinPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
-import de.hpi.des.hdes.engine.graph.pipeline.PipelineTopology;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.AJoinPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.FileSinkPipeline;
@@ -31,8 +31,8 @@ import de.hpi.des.hdes.engine.graph.pipeline.AggregationPipeline;
 public class LocalGenerator extends PipelineVisitor {
     private final StringWriter writer = new StringWriter();
 
-    public void extend(final PipelineTopology pipelineTopology) {
-        for (Pipeline pipeline : pipelineTopology.getPipelines()) {
+    public void extend(final List<Pipeline> pipelines) {
+        for (Pipeline pipeline : pipelines) {
             pipeline.accept(this);
         }
     }

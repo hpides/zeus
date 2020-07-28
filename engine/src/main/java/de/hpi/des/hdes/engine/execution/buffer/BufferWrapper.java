@@ -85,12 +85,16 @@ public class BufferWrapper {
     }
 
     public void resetReadLimit(String pipelineID) {
+        while (!atomic.compareAndSet(false, true))
+            ;
         ReadBuffer readBuffer = childPipelineToReadBuffer.get(pipelineID);
         readBuffer.getBuffer().position(0);
+        readBuffer.mark();
         readBuffer.limit(writeBuffer.position());
+        atomic.set(false);
     }
 
-    public void resetWriteLimt() {
+    public void resetWriteLimit() {
         writeBuffer.position(0);
         if (limit != bitmask.length) {
             writeBuffer.limit(getLimitInBytes());

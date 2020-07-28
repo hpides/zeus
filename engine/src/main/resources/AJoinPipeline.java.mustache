@@ -123,6 +123,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(final long timestamp) {
+        int leftPosition = leftInput.getBuffer().position();
+        int rightPosition = rightInput.getBuffer().position();
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftBucket = leftWindowsToBuckets.remove(timestamp);
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightBucket = rightWindowsToBuckets.remove(timestamp);
         if(leftBucket == null && rightBucket != null) {
@@ -174,10 +176,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             }
         }
         
-        leftInput.reset();
-        leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
-        rightInput.reset();
-        rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
+        leftInput.getBuffer().position(leftPosition);
+        rightInput.getBuffer().position(rightPosition);
         }
     
 
@@ -185,9 +185,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         int initialOutputOffset = this.outputCounter * (8 + {{leftTupleLength}} + {{rightTupleLength}} + 1);
         outputBuffer.putLong(initialOutputOffset,Math.max(leftInput.getBuffer().getLong(leftOffset),rightInput.getBuffer().getLong(rightOffset)));
         leftInput.getBuffer().position(leftOffset);
-        leftInput.getBuffer().mark();
         rightInput.getBuffer().position(rightOffset);
-        rightInput.getBuffer().mark();
         int startingPosition = rightOffset;
         {{#rightVariables}}
         {{> VariableDefiniton.java.mustache}}

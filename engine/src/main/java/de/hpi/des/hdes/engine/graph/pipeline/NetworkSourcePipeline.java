@@ -34,7 +34,6 @@ public class NetworkSourcePipeline extends Pipeline {
     @Override
     public void loadPipeline(Dispatcher dispatcher, Class childKlass) {
         this.compileClass();
-        this.setLoaded(true);
         try {
             pipelineObject = (Runnable) pipelineKlass.getDeclaredConstructor(Dispatcher.class).newInstance(dispatcher);// dispatcher.getReadByteBufferForPipeline(this),
                                                                                                                        // dispatcher,
