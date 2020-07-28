@@ -8,8 +8,8 @@ import de.hpi.des.hdes.engine.graph.pipeline.JoinPipeline;
 
 public class JoinGenerationNode extends BinaryGenerationNode {
 
-    public JoinGenerationNode(PrimitiveType[] inputTypes, PrimitiveType[] outputTypes, BinaryGeneratable operator) {
-        super(inputTypes, outputTypes, operator);
+    public JoinGenerationNode(PrimitiveType[] inputTypes, PrimitiveType[] ajoinTypes, BinaryGeneratable operator) {
+        super(inputTypes, ajoinTypes, operator);
     }
 
     @Override

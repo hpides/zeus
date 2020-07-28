@@ -4,6 +4,7 @@ import de.hpi.des.hdes.engine.execution.Dispatcher;
 import java.util.stream.Stream;
 
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
+import de.hpi.des.hdes.engine.window.CWindow;
 import lombok.Getter;
 
 @Getter
@@ -12,7 +13,8 @@ public class JoinData {
     private final int leftTupleLength;
     private final int rightTupleLength;
     private final PrimitiveType type;
-    private final int windowLength;
+    private final long windowLength;
+    private final long windowSlide;
     private final InterfaceData[] interfaces;
     private final MaterializationData[] leftVariables;
     private final MaterializationData[] rightVariables;
@@ -25,7 +27,7 @@ public class JoinData {
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
 
     public JoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
-            final int leftKeyIndex, final int rightKeyIndex, final int windowLength, final InterfaceData[] interfaces,
+            final int leftKeyIndex, final int rightKeyIndex, final CWindow window, final InterfaceData[] interfaces,
             final MaterializationData[] leftVariables, final MaterializationData[] rightVariables,
             final String leftOperators, final String rightOperators, final String leftKey, final String rightKey,
             final String leftWriteout, final String rightWriteout) {
@@ -33,7 +35,8 @@ public class JoinData {
         this.type = rightTypes[rightKeyIndex];
         this.leftTupleLength = Stream.of(leftTypes).mapToInt(t -> t.getLength()).sum();
         this.rightTupleLength = Stream.of(rightTypes).mapToInt(t -> t.getLength()).sum();
-        this.windowLength = windowLength;
+        this.windowLength = window.getLength();
+        this.windowSlide = window.getSlide();
         this.interfaces = interfaces;
         this.leftVariables = leftVariables;
         this.rightVariables = rightVariables;

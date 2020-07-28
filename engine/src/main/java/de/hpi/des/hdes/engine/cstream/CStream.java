@@ -24,6 +24,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.operation.AggregateFunction;
+import de.hpi.des.hdes.engine.window.CWindow;
 
 public class CStream extends AbstractCStream {
 
@@ -112,7 +113,8 @@ public class CStream extends AbstractCStream {
      * @param filter the predicate
      * @return the filtered stream
      */
-    private CStream aggregate(AggregateFunction function, final PrimitiveType[] types, final int aggregateValueIndex, final int windowLength) {
+    private CStream aggregate(AggregateFunction function, final PrimitiveType[] types, final int aggregateValueIndex,
+            final int windowLength) {
         final AggregationGenerationNode child = new AggregationGenerationNode(types,
                 new PrimitiveType[] { types[aggregateValueIndex] },
                 new AggregateGenerator(function, aggregateValueIndex, windowLength));
@@ -136,9 +138,9 @@ public class CStream extends AbstractCStream {
      */
     public CStream join(final CStream rightStream, final PrimitiveType[] leftInputTypes,
             final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex,
-            final int windowLength) {
+            final CWindow window) {
         final JoinGenerationNode child = new JoinGenerationNode(leftInputTypes, rightInputTypes,
-                new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, windowLength));
+                new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, window));
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(rightStream.getNode(), child);
         return new CStream(this.builder, child);
@@ -160,9 +162,9 @@ public class CStream extends AbstractCStream {
      */
     public CStream ajoin(final CStream rightStream, final PrimitiveType[] leftInputTypes,
             final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex,
-            final int windowLength) {
+            final CWindow window) {
         final AJoinGenerationNode child = new AJoinGenerationNode(leftInputTypes, rightInputTypes,
-                new AJoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, windowLength));
+                new AJoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, window));
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(rightStream.getNode(), child);
         return new CStream(this.builder, child);

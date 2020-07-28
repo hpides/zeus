@@ -106,7 +106,7 @@ public class LocalGenerator extends PipelineVisitor {
             JoinGenerator operator = (JoinGenerator) joinPipeline.getBinaryNode().getOperator();
             template.execute(out,
                     new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
-                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
+                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindow(),
                             joinPipeline.getInterfaces(), joinPipeline.getVariables(), joinPipeline.getJoinVariables(),
                             leftImplementation, rightImplementation, leftVariableName, rightVariableName,
                             joinPipeline.getWriteout("leftInput", false), joinPipeline.getWriteout("rightInput", true)))
@@ -153,7 +153,7 @@ public class LocalGenerator extends PipelineVisitor {
             AJoinGenerator operator = (AJoinGenerator) ajoinPipeline.getBinaryNode().getOperator();
             template.execute(out,
                     new AJoinData(ajoinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
-                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindowLength(),
+                            operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindow(),
                             ajoinPipeline.getInterfaces(), ajoinPipeline.getVariables(),
                             ajoinPipeline.getJoinVariables(), leftImplementation, rightImplementation, leftVariableName,
                             rightVariableName, ajoinPipeline.getWriteout("leftInput", false),
