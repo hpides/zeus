@@ -182,8 +182,6 @@ public class MainNetworkDataGenerator implements Runnable {
                     this.timeInSeconds);
             bidSocket.setByteFlag(true);
             auctionSocket.setByteFlag(true);
-            bidSocket.setByteLength(29);
-            auctionSocket.setByteLength(33);
             bidSocket.setByteLength(33);
             auctionSocket.setByteLength(29);
             bidSocket.waitForConnection();
