@@ -99,9 +99,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void trigger(long eventTimestamp) {
-        this.outputCounter++;
+        int initialOutputOffset = this.outputCounter * (8 + {{leftTupleLength}} + {{rightTupleLength}} + 1);
         {{aggregationValueType.lowercaseName}} value = windowToState.remove(eventTimestamp);
-        outputBuffer.putLong(0, eventTimestamp).put{{aggregationValueType.uppercaseName}}(8, value).put(8 + {{aggregationValueType.length}}, (byte) 0);
+        outputBuffer.putLong(initialOutputOffset, eventTimestamp).put{{aggregationValueType.uppercaseName}}(initialOutputOffset + 8, value).put(initialOutputOffset + 8 + {{aggregationValueType.length}}, (byte) 0);
+        this.outputCounter++;
         if(this.outputCounter == {{{vectorSize}}}) {
             while (!dispatcher.write("{{pipelineId}}", output) && !shutdownFlag);
             this.outputCounter = 0;
