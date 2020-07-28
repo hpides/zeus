@@ -25,7 +25,8 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
         sync_time = subprocess.run(['cmd.exe', '/c', 'w32tm /resync /nowait'])
         print(sync_time)
 
-    path = os.path.normpath('benchmark/target/engine-jar-with-dependencies.jar')
+    path = os.path.normpath(
+        'benchmark/target/engine-jar-with-dependencies.jar')
     args = ['java', '-Xms10g', '-Xmx10g', '-jar', path,
             '-gh', gh,
             '-tis', tis,
@@ -47,8 +48,8 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
                         usage_in_gb = round(py.memory_info().rss / 10 ** 9, 2)
                         usage_cpu = py.cpu_percent()
                         monitor_file.write(f"{usage_cpu}, {usage_in_gb}\n")
-                        sleep(UPDATE_RATE)            
-            
+                        sleep(UPDATE_RATE)
+
     except subprocess.TimeoutExpired as e:
         print('timedout', e)
 
@@ -123,17 +124,16 @@ def run_flink(op):
 
 
 # Run Configs
-#run_add_remove('nfilter')
-#run_flink('1')
+# run_add_remove('nfilter')
+# run_flink('1')
 
-#run_add_remove('njoin')
-#run_add_remove('najoin')
-#run_add_remove('hotcat')
-#run_add_remove('maxpric')
+# run_add_remove('njoin')
+# run_add_remove('najoin')
+# run_add_remove('hotcat')
+# run_add_remove('maxpric')
 
 run_engine(0, 0, 0, TYPE, 1)
 
-#run_flink('2')
-#run_flink('4')
-#run_flink('5')
-
+# run_flink('2')
+# run_flink('4')
+# run_flink('5')

@@ -18,6 +18,8 @@ import org.opentest4j.TestAbortedException;
 import de.hpi.des.hdes.engine.cstream.CStream;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
+import de.hpi.des.hdes.engine.window.CWindow;
+import de.hpi.des.hdes.engine.window.Time;
 
 public class FullPipelineTest {
 
@@ -43,7 +45,8 @@ public class FullPipelineTest {
         CStream stream1 = builder.streamOfC(source1, 4);
         List<Tuple4<Long, Integer, Integer, Boolean>> resultList = new LinkedList<>();
         builder.streamOfC(source2, 4).ajoin(stream1, new PrimitiveType[] { PrimitiveType.INT },
-                new PrimitiveType[] { PrimitiveType.INT }, 0, 0, 5).toStaticList(resultList);
+                new PrimitiveType[] { PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.of(5)))
+                .toStaticList(resultList);
 
         JobManager manager = new JobManager(new CompiledEngine());
         manager.addQuery(builder.buildAsQuery());

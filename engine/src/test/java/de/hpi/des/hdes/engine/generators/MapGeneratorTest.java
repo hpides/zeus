@@ -10,6 +10,8 @@ import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.node.UnaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
+import de.hpi.des.hdes.engine.window.CWindow;
+import de.hpi.des.hdes.engine.window.Time;
 
 public class MapGeneratorTest {
   @Test
@@ -86,7 +88,7 @@ public class MapGeneratorTest {
             new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
                 .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()"))
         .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, 1000)
+            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.seconds(1)))
         .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
             PrimitiveType.LONG }, 1000);
 

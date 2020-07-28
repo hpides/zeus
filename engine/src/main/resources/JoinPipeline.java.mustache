@@ -30,9 +30,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private long latestTimestampLeft = 0;
     private long latestTimestampRight = 0;
     final private int[] leftFreeableOffsets = new int[{{{vectorSize}}}];
-    private int leftFreeableIndex = 0;
     final private int[] rightFreeableOffsets = new int[{{{vectorSize}}}];
+    private int leftFreeableIndex = 0;
     private int rightFreeableIndex = 0;
+    final private Int2IntMap leftOffsetsToWindowCount = new Int2IntOpenHashMap();
+    final private Int2IntMap rightOffsetsToWindowCount = new Int2IntOpenHashMap();
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
@@ -64,9 +66,15 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}}+1);
             return;
         }
-        final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
-        if (earliestOpenWindowJoin > windowStart) {
-            earliestOpenWindowJoin = windowStart;
+        LongList windowStarts = new LongArrayList();
+        for (long currentWindow = 0; currentWindow <= eventTimestamp; currentWindow += windowSlide) {
+            if (currentWindow > eventTimestamp - windowLength)
+                windowStarts.add(currentWindow);
+        }
+        leftOffsetsToWindowCount.put(startingPosition, windowStarts.size());
+        final long minWindow = windowStarts.getLong(0);
+        if (earliestOpenWindowJoin > minWindow) {
+            earliestOpenWindowJoin = minWindow;
         }
 
         {{#leftVariables}}
@@ -75,18 +83,21 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{{leftOperators}}}
 
-        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.computeIfAbsent(windowStart,
-                w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
-        IntList offsets = leftWindow.computeIfAbsent({{{leftKey}}}, w -> new IntArrayList());
-        offsets.add(startingPosition);
-        
-        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.getOrDefault(windowStart, null);
-        if(rightWindow != null && rightWindow.containsKey({{{leftKey}}})){
-            IntList rightOffsets = rightWindow.get({{{leftKey}}});
-            for (int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
-                writeOutput(startingPosition, rightOffsets.getInt(rightIndex));
+        for(long windowStart: windowStarts) {
+            {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.computeIfAbsent(windowStart,
+                    w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
+            IntList offsets = leftWindow.computeIfAbsent({{{leftKey}}}, w -> new IntArrayList());
+            offsets.add(startingPosition);
+            
+            {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.getOrDefault(windowStart, null);
+            if(rightWindow != null && rightWindow.containsKey({{{leftKey}}})){
+                IntList rightOffsets = rightWindow.get({{{leftKey}}});
+                for (int rightIndex = 0; rightIndex < rightOffsets.size(); rightIndex++) {
+                    writeOutput(startingPosition, rightOffsets.getInt(rightIndex));
+                }
             }
         }
+
         leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}});
         rightInput.reset();
         rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
@@ -109,9 +120,15 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}}+1);
             return;
         }
-        final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
-        if (earliestOpenWindowJoin > windowStart) {
-            earliestOpenWindowJoin = windowStart;
+        LongList windowStarts = new LongArrayList();
+        for (long currentWindow = 0; currentWindow <= eventTimestamp; currentWindow += windowSlide) {
+            if (currentWindow > eventTimestamp - windowLength)
+                windowStarts.add(currentWindow);
+        }
+        rightOffsetsToWindowCount.put(startingPosition, windowStarts.size());
+        final long minWindow = windowStarts.getLong(0);
+        if (earliestOpenWindowJoin > minWindow) {
+            earliestOpenWindowJoin = minWindow;
         }
 
         {{#rightVariables}}
@@ -120,25 +137,26 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{{rightOperators}}}
 
-        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.computeIfAbsent(windowStart,
-                w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
-        IntList offsets = rightWindow.computeIfAbsent({{{rightKey}}}, w -> new IntArrayList());
-        offsets.add(startingPosition);
-        
-        {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.getOrDefault(windowStart, null);
-        if(leftWindow != null && leftWindow.containsKey({{{rightKey}}})){
-            IntList leftOffsets = leftWindow.get({{{rightKey}}});
-            for (int leftIndex = 0; leftIndex < leftOffsets.size(); leftIndex++) {
-                writeOutput(leftOffsets.getInt(leftIndex), startingPosition);
+        for(long windowStart: windowStarts) {
+            {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.computeIfAbsent(windowStart,
+                    w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
+            IntList offsets = rightWindow.computeIfAbsent({{{rightKey}}}, w -> new IntArrayList());
+            offsets.add(startingPosition);
+            
+            {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.getOrDefault(windowStart, null);
+            if(leftWindow != null && leftWindow.containsKey({{{rightKey}}})){
+                IntList leftOffsets = leftWindow.get({{{rightKey}}});
+                for (int leftIndex = 0; leftIndex < leftOffsets.size(); leftIndex++) {
+                    writeOutput(leftOffsets.getInt(leftIndex), startingPosition);
+                }
             }
         }
-        
+
         leftInput.reset();
         leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
         rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}});
 
-        if (rightInput.getBuffer().get() == (byte) 1) {
-            
+        if (rightInput.getBuffer().get() == (byte) 1) {    
             latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
             for (; earliestOpenWindowJoin + windowLength <= latestTimestampLeft && earliestOpenWindowJoin
                     + windowLength <= latestTimestampRight; earliestOpenWindowJoin += windowSlide) {
@@ -193,20 +211,26 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void freeLeft(int offset) {
-        leftFreeableOffsets[leftFreeableIndex] = offset;
-        leftFreeableIndex++;
-        if(leftFreeableIndex == {{{vectorSize}}}) {
-            dispatcher.free(leftInput, leftFreeableOffsets);
-            leftFreeableIndex = 0;
+        int remainingWindows = leftOffsetsToWindowCount.get(offset);
+        if(--remainingWindows <= 0) {
+            leftFreeableOffsets[leftFreeableIndex] = offset;
+            leftFreeableIndex++;
+            if(leftFreeableIndex == {{{vectorSize}}}) {
+                dispatcher.free(leftInput, leftFreeableOffsets);
+                leftFreeableIndex = 0;
+            }
         }
     }
 
     private void freeRight(int offset) {
-        rightFreeableOffsets[rightFreeableIndex] = offset;
-        rightFreeableIndex++;
-        if(rightFreeableIndex == {{{vectorSize}}}) {
-            dispatcher.free(rightInput, rightFreeableOffsets);
-            rightFreeableIndex = 0;
+        int remainingWindows = rightOffsetsToWindowCount.get(offset);
+        if(--remainingWindows <= 0) {
+            rightFreeableOffsets[rightFreeableIndex] = offset;
+            rightFreeableIndex++;
+            if(rightFreeableIndex == {{{vectorSize}}}) {
+                dispatcher.free(rightInput, rightFreeableOffsets);
+                rightFreeableIndex = 0;
+            }
         }
     }
 

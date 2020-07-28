@@ -278,7 +278,7 @@ public class MainNetworkEngine implements Runnable {
         builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
                 .ajoin(sourceOne2, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
                         new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.tumblingWindow(Time.seconds(1)))
+                        CWindow.slidingWindow(Time.seconds(1), Time.of(500)))
                 .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
                                 .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()")
@@ -309,21 +309,24 @@ public class MainNetworkEngine implements Runnable {
     private void executeCompiledJoin() {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-
-        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1)
-                .average(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT }, 3, 1000)
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
+                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
+                        CWindow.slidingWindow(Time.seconds(1), Time.of(500)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_,_,_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG }, 10000);
-
         manager.addQuery(builder.buildAsQuery());
-        // Running engine
         try {
             Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
         manager.shutdown();
     }
 
