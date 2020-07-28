@@ -60,7 +60,14 @@ public class MainNetworkDataGenerator implements Runnable {
                 System.exit(-1);
             }
         } else if (this.benchmarkType.equals("new")) {
-            newBenchmarkTwoSources();
+            if (amountOfSources == 1) {
+                newBenchmarkOneSource();
+            } else if (amountOfSources == 2) {
+                newBenchmarkTwoSources();
+            } else {
+                log.error("THIS AMOUNT OF SOURCES IS NOT VALID; FIX amountOfSources-PARAMETER");
+                System.exit(-1);
+            }
         } else {
             log.info("Running with nexmark data");
             if (amountOfSources == 1) {
@@ -108,6 +115,36 @@ public class MainNetworkDataGenerator implements Runnable {
             long endTime = System.nanoTime();
             log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
             s1.writeFile();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void newBenchmarkOneSource() {
+        log.printf(Level.INFO, "Running with %,d EPS, %ds. In total %,d", eventsPerSecond, timeInSeconds,
+                eventsPerSecond * timeInSeconds);
+        final ExecutorService executor1 = Executors.newFixedThreadPool(1);
+        final var generator1 = new ByteGenerator(eventsPerSecond, timeInSeconds, executor1, 1);
+    
+        try {
+            AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();
+
+            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
+                    + "socket1.csv";
+
+
+            log.info("{} {}", basicPort1, basicPort2);
+            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds);
+            s1.setByteFlag(true);
+            s1.setByteLength(17);
+            s1.waitForConnection();
+            long startTime = System.nanoTime();
+            var done = generator1.generate(s1);
+            done.get();
+            long endTime = System.nanoTime();
+            s1.writeFile();
+            log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
+
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }

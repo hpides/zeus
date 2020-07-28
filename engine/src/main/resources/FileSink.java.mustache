@@ -53,6 +53,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             if (input.getBuffer().position() == input.getBuffer().capacity()) {
                 dispatcher.resetReadLimit("{{{pipelineId}}}", input);
             }
+
             for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputTupleLength}}})); remainingBytes > 0; remainingBytes -= ({{{inputTupleLength}}})) {
                 try {
                     initialPosition = buffer.position();

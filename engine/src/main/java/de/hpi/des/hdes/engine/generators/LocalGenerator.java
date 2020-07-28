@@ -43,7 +43,7 @@ public class LocalGenerator extends PipelineVisitor {
 
         for (Node node : Lists.reverse(unaryPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
-                implementation = ((UnaryGenerationNode) node).getOperator().generate(unaryPipeline);
+                implementation = implementation.concat(((UnaryGenerationNode) node).getOperator().generate(unaryPipeline));
             } else {
                 System.err.println(String.format("Node %s not implemented for code generation.", Node.class));
             }

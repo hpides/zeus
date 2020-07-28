@@ -35,12 +35,12 @@ public class {{{className}}} implements Runnable, Stoppable {
     {{/variables}}
     input.getBuffer().position(startingPosition);
     input.getBuffer().get(output, initialOutputOffset, 8);
-    outputBuffer.position(initialOutputOffset+8);
+    outputBuffer.position(outputBuffer.position()+8);
     {{{implementation}}}
     input.getBuffer().get(output, 8+{{inputEventLength}}, 1);
-    outputBuffer.position(initialOutputOffset+{{inputEventLength}}+1);
+    outputBuffer.position(outputBuffer.position()+1);
     outputCounter++;
-    free();
+    free(startingPosition);
     if(outputCounter == {{{vectorSize}}}) {
         while (!dispatcher.write("{{className}}", output) && !shutdownFlag); 
         outputCounter = 0;

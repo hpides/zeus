@@ -27,15 +27,11 @@ import java.util.function.Function;
 public class MainNetworkEngine implements Runnable {
 
     private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin", "hotcat",
-            "maxpric", "compiledajoin", "compiledjoin", "compiledmaxpric");
+            "maxpric", "compiledajoin", "compiledjoin", "compiledmaxpric", "compiledagg");
 
     // CLI Options
     @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "120")
     private int timeInSeconds;
-    @Option(names = { "--auctionSourcePort", "-asp" }, defaultValue = "5551")
-    private int auctionNetworkSocketPort;
-    @Option(names = { "--bidSourcePort", "-bsp" }, defaultValue = "5552")
-    private int bidNetworkSocketPort;
     @Option(names = { "--basicPort1", "-bsp1" }, defaultValue = "7001")
     private int basicPort1;
     @Option(names = { "--basicPort2", "-bsp2" }, defaultValue = "7002")
@@ -144,6 +140,10 @@ public class MainNetworkEngine implements Runnable {
             }
             case "compiledjoin": {
                 executeCompiledJoin();
+                break;
+            }
+            case "compiledagg": {
+                executeCompiledAggregation();
                 break;
             }
             default:
@@ -288,16 +288,33 @@ public class MainNetworkEngine implements Runnable {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
-        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
-        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, 1000)
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
-                                "(_,_,_,_) -> System.currentTimeMillis()"))
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1)
+                .average(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT }, 3, 1000) 
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+
+        manager.addQuery(builder.buildAsQuery());
+        // Running engine
+        manager.runEngine();
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        manager.shutdown();
+    }
+
+    private void executeCompiledAggregation() {
+        JobManager manager = new JobManager(new CompiledEngine());
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1)
+                .average(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 1, 1000) 
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT }).add(PrimitiveType.LONG,
+                            "(_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.LONG }, 1);
 
         manager.addQuery(builder.buildAsQuery());
         // Running engine
@@ -339,7 +356,7 @@ public class MainNetworkEngine implements Runnable {
             e.printStackTrace();
         }
 
-        manager.shutdown();  
+        manager.shutdown();
     }
 
     private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,

@@ -53,18 +53,18 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     private void readEvent() {
         input.mark();
+        int startingPosition = input.getBuffer().position();
         final long eventTimestamp = input.getBuffer().getLong();
         if (eventTimestamp < latestTimestamp) {
-            input.reset();
-            freeInput(input.getBuffer().position());
-            input.getBuffer().position(input.getBuffer().position()+8+{{tupleLength}}+1);
+            free(startingPosition);
+            input.getBuffer().position(startingPosition+8+{{tupleLength}}+1);
             return;
         }
         final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
         if (earliestOpenWindow > windowStart) {
             earliestOpenWindow = windowStart;
-        }
-        
+        }        
+
         {{#variables}}
         {{> VariableDefiniton.java.mustache}}
         {{/variables}}
@@ -85,6 +85,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         {{{#shouldCountPerWindow}}}
         this.windowToCount.put(windowStart, count + 1);
         {{{/shouldCountPerWindow}}}
+        input.getBuffer().position(startingPosition + 8 + {{tupleLength}});
 
         if (input.getBuffer().get() == (byte) 1) {
             latestTimestamp = Math.max(latestTimestamp, eventTimestamp);
@@ -93,8 +94,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                 trigger(earliestOpenWindow);
             }
         }
-        input.reset();
-        freeInput(input.getBuffer().position());
+
+        free(startingPosition);
     }
 
     private void trigger(long eventTimestamp) {
@@ -107,14 +108,14 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         }
     }
 
-    private void freeInput(int offset) {
-        freeableOffsets[freeableIndex] = offset;
+     private void free(int startingPosition){
+        freeableOffsets[freeableIndex] = startingPosition;
         freeableIndex++;
         if(freeableIndex == {{{vectorSize}}}) {
             dispatcher.free(input, freeableOffsets);
             freeableIndex = 0;
-        }
     }
+  }
 
     @Override
     public void run() {
