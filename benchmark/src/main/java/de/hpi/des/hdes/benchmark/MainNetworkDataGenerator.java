@@ -2,6 +2,8 @@ package de.hpi.des.hdes.benchmark;
 
 import de.hpi.des.hdes.benchmark.generator.ByteGenerator;
 import de.hpi.des.hdes.benchmark.generator.IntegerTupleGenerator;
+import de.hpi.des.hdes.benchmark.generator.NexmarkByteAuctionGenerator;
+import de.hpi.des.hdes.benchmark.generator.NexmarkByteBidGenerator;
 import de.hpi.des.hdes.benchmark.generator.NexmarkLightAuctionGenerator;
 import de.hpi.des.hdes.benchmark.generator.NexmarkLightBidGenerator;
 import de.hpi.des.hdes.benchmark.nexmark.NexmarkLightDataGenerator;
@@ -68,6 +70,8 @@ public class MainNetworkDataGenerator implements Runnable {
                 log.error("THIS AMOUNT OF SOURCES IS NOT VALID; FIX amountOfSources-PARAMETER");
                 System.exit(-1);
             }
+        } else if (this.benchmarkType.equals("nex")) {
+            newNexmarkTwoSources();
         } else {
             log.info("Running with nexmark data");
             if (amountOfSources == 1) {
@@ -184,6 +188,48 @@ public class MainNetworkDataGenerator implements Runnable {
             long endTime = System.nanoTime();
             s1.writeFile();
             s2.writeFile();
+            log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
+
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void newNexmarkTwoSources() {
+        log.printf(Level.INFO, "Running with %,d EPS, %ds. In total %,d", eventsPerSecond, timeInSeconds,
+                eventsPerSecond * timeInSeconds);
+        final ExecutorService executor1 = Executors.newFixedThreadPool(1);
+        final ExecutorService executor2 = Executors.newFixedThreadPool(1);
+        final NexmarkLightDataGenerator dataGenerator = new NexmarkLightDataGenerator(1337);
+        final var bidGenerator = new NexmarkByteBidGenerator(eventsPerSecond, timeInSeconds, executor1, dataGenerator);
+        final var auctionGenerator = new NexmarkByteAuctionGenerator(eventsPerSecond, timeInSeconds, executor2,
+                dataGenerator);
+        try {
+            AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();
+
+            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
+                    + "socket1.csv";
+            String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator
+                    + "socket2.csv";
+
+            log.info("{} {}", bidNetworkSocketPort, auctionNetworkSocketPort);
+            var bidSocket = new BlockingSocket<>(bidNetworkSocketPort, serializerInstance, socket1File,
+                    this.timeInSeconds);
+            var auctionSocket = new BlockingSocket<>(auctionNetworkSocketPort, serializerInstance, socket2File,
+                    this.timeInSeconds);
+            bidSocket.setByteFlag(true);
+            auctionSocket.setByteFlag(true);
+            bidSocket.setByteLength(33);
+            auctionSocket.setByteLength(29);
+            bidSocket.waitForConnection();
+            auctionSocket.waitForConnection();
+            long startTime = System.nanoTime();
+            var bidDone = bidGenerator.generate(bidSocket);
+            var auctionDone = auctionGenerator.generate(auctionSocket);
+            CompletableFuture.allOf(auctionDone, bidDone).get();
+            long endTime = System.nanoTime();
+            bidSocket.writeFile();
+            auctionSocket.writeFile();
             log.info("Finished after {} seconds.", (endTime - startTime) / 1e9);
 
         } catch (InterruptedException | ExecutionException e) {

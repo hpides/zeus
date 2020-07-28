@@ -76,7 +76,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.computeIfAbsent(windowStart,
                 w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
-        IntList offsets = leftWindow.computeIfAbsent({{{leftKey}}}, w -> new {{type.uppercaseName}}ArrayList());
+        IntList offsets = leftWindow.computeIfAbsent({{{leftKey}}}, w -> new IntArrayList());
         offsets.add(startingPosition);
         
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.getOrDefault(windowStart, null);
@@ -120,7 +120,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> rightWindow = rightWindows.computeIfAbsent(windowStart,
                 w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
-        IntList offsets = rightWindow.computeIfAbsent({{{rightKey}}}, w -> new {{type.uppercaseName}}ArrayList());
+        IntList offsets = rightWindow.computeIfAbsent({{{rightKey}}}, w -> new IntArrayList());
         offsets.add(startingPosition);
         
         {{type.uppercaseName}}2ObjectOpenHashMap<IntList> leftWindow = leftWindows.getOrDefault(windowStart, null);

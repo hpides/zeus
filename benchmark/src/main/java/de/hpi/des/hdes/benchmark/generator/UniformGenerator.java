@@ -23,7 +23,6 @@ public abstract class UniformGenerator<E> implements Generator<E> {
   @Getter
   private final int benchmarkCheckpointInterval = 10000;
 
-
   protected abstract E generateEvent();
 
   public CompletableFuture<Boolean> generate(final BlockingOffer<E> blockingSource) {
@@ -67,11 +66,11 @@ public abstract class UniformGenerator<E> implements Generator<E> {
       // Send the events
       for (int i = 0; i < eventsToBeSent; i++) {
         try {
-          blockingSource.offer(this.generateEvent());
+          E event = this.generateEvent();
+          blockingSource.offer(event);
           totalSentEvents += 1;
         } catch (IllegalStateException e) {
-          log.info("Events remaining {} Events sent {}", totalEvents - totalSentEvents,
-              totalSentEvents);
+          log.info("Events remaining {} Events sent {}", totalEvents - totalSentEvents, totalSentEvents);
           this.shutdown();
           return false;
         }
@@ -83,10 +82,8 @@ public abstract class UniformGenerator<E> implements Generator<E> {
       }
     }
 
-    log.printf(Level.INFO, "Finished Events left %,d, Events sent %,d",
-        totalEvents - totalSentEvents,
-        totalSentEvents);
-    //task.purge();
+    log.printf(Level.INFO, "Finished Events left %,d, Events sent %,d", totalEvents - totalSentEvents, totalSentEvents);
+    // task.purge();
     this.shutdown();
     blockingSource.flush();
     return true;
