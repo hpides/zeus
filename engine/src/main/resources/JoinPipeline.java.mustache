@@ -67,7 +67,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             return;
         }
         LongList windowStarts = new LongArrayList();
-        for (long currentWindow = 0; currentWindow <= eventTimestamp; currentWindow += windowSlide) {
+        for (long currentWindow = eventTimestamp - windowLength - ((eventTimestamp - windowLength) % windowSlide); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
             if (currentWindow > eventTimestamp - windowLength)
                 windowStarts.add(currentWindow);
         }
@@ -121,7 +121,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             return;
         }
         LongList windowStarts = new LongArrayList();
-        for (long currentWindow = 0; currentWindow <= eventTimestamp; currentWindow += windowSlide) {
+        for (long currentWindow = eventTimestamp - windowLength - ((eventTimestamp - windowLength) % windowSlide); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
             if (currentWindow > eventTimestamp - windowLength)
                 windowStarts.add(currentWindow);
         }
