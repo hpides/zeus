@@ -1,5 +1,7 @@
 package de.hpi.des.hdes.engine.temp;
 
+import java.util.Arrays;
+
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import de.hpi.des.hdes.engine.execution.Stoppable;
@@ -63,10 +65,27 @@ public class {{{className}}} implements Runnable, Stoppable {
             if (input.getBuffer().position() == input.getBuffer().capacity()) {
                 dispatcher.resetReadLimit("{{{className}}}", input);
             }
-            for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputEventLength}}})); remainingBytes > 0; remainingBytes -= ({{{inputEventLength}}})) {
+            for (int remainingBytes=Math.min(input.remainingBytes(), {{{readVectorSize}}}*({{{inputEventLength}}})); remainingBytes > 0 && !shutdownFlag; remainingBytes -= ({{{inputEventLength}}})) {
                 readEvent();
             }
         }
+        if(dispatcher.deregisterPipelineAtParent("{{{className}}}", input)) {
+            int finalPosition = input.getBuffer().position();
+            int freezePosition = input.getFreezePosition();
+            while(finalPosition != freezePosition) {
+                if (finalPosition == input.getBuffer().capacity()) {
+                    finalPosition = 0;
+                }
+                free(finalPosition);
+                finalPosition += (8 + {{inputEventLength}} + 1);
+            }
+        }
+        if(freeableIndex != 0) {
+            dispatcher.free(input, Arrays.copyOfRange(freeableOffsets, 0, freeableIndex));
+        }
+        dispatcher.removeReadBuffer(input);
+        dispatcher.removeBufferWrapperForPipeline("{{{className}}}");
+        
     }
 
     @Override

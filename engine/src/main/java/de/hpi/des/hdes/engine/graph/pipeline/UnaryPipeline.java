@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.graph.PipelineVisitor;
 import lombok.Getter;
 

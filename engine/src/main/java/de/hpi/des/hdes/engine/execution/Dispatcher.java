@@ -128,4 +128,20 @@ public class Dispatcher {
     public void resetReadLimit(final String pipelineID, final ReadBuffer readBuffer) {
         readBufferToBufferWrapper.get(readBuffer).resetReadLimit(pipelineID);
     }
+
+    public void removeBufferWrapperForPipeline(final String pipelineID) {
+        BufferWrapper oldBufferWrapper = writeBuffers.remove(pipelineID);
+        for (ReadBuffer rb : oldBufferWrapper.getChildPipelineToReadBuffer().values()) {
+            readBufferToBufferWrapper.remove(rb);
+        }
+        oldBufferWrapper.delete();
+    }
+
+    public void removeReadBuffer(final ReadBuffer readBuffer) {
+        readBufferToBufferWrapper.remove(readBuffer);
+    }
+
+    public boolean deregisterPipelineAtParent(final String pipelineID, final ReadBuffer readBuffer) {
+        return readBufferToBufferWrapper.get(readBuffer).deregisterPipeline(pipelineID);
+    }
 }

@@ -1,8 +1,10 @@
 package de.hpi.des.hdes.engine.execution.buffer;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class ReadBuffer {
@@ -10,6 +12,8 @@ public class ReadBuffer {
     private ByteBuffer buffer;
     private int mark;
     private int limit = 0;
+    @Setter
+    private int freezePosition;
 
     public ReadBuffer(final ByteBuffer buffer) {
         this.buffer = buffer;

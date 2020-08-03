@@ -125,4 +125,19 @@ public class BufferWrapper {
     public void releaseAtomic() {
         atomic.set(false);
     }
+
+    public void delete() {
+        // TODO clean up memory for direct buffer
+    }
+
+    public boolean deregisterPipeline(final String childID) {
+        boolean cleanUp;
+        while (!atomic.compareAndSet(false, true))
+            ;
+        numberActiveReader--;
+        childPipelineToReadBuffer.remove(childID).setFreezePosition(writeBuffer.position());
+        cleanUp = numberActiveReader != 0;
+        atomic.set(false);
+        return cleanUp;
+    }
 }

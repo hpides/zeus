@@ -29,27 +29,26 @@ public class PipelineTopology {
         for (Node node : Lists.reverse(query.getTopology().getTopologicalOrdering())) {
             ((GenerationNode) node).accept(pipelineTopology);
         }
-        pipelineTopology.getPipelines().stream().forEach(pipeline -> {
-            pipeline.setInitialQueryId(query.getId().toString());
-            pipelineTopology.pipelineIdToPipeline.put(pipeline.getPipelineId(), pipeline);
-        });
+        pipelineTopology.getPipelines().stream()
+                .forEach(pipeline -> pipelineTopology.pipelineIdToPipeline.put(pipeline.getPipelineId(), pipeline));
 
         return pipelineTopology;
     }
 
-    public List<Pipeline> extend(PipelineTopology newPipelineTopology) {
+    public List<Pipeline> extend(final PipelineTopology newPipelineTopology, final Query query) {
         List<Pipeline> newPipelines = new LinkedList<>();
         boolean foundMatch = false;
         for (Pipeline pipeline : newPipelineTopology.getPipelines()) {
             if (pipelineIdToPipeline.containsKey(pipeline.getPipelineId())) {
                 Pipeline existingPipeline = this.pipelineIdToPipeline.get(pipeline.getPipelineId());
-                existingPipeline.addQueryId(pipeline.getInitialQueryId());
+                existingPipeline.addQueryId(query.getId().toString());
                 if (!foundMatch) {
                     pipeline.getChild().replaceParent(existingPipeline);
                     foundMatch = true;
                 }
             } else {
                 newPipelines.add(pipeline);
+                pipeline.addQueryId(query.getId().toString());
                 pipelineIdToPipeline.put(pipeline.getPipelineId(), pipeline);
             }
         }

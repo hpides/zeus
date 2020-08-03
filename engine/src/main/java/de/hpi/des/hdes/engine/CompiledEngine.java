@@ -21,7 +21,7 @@ public class CompiledEngine implements Engine {
     @Override
     public void addQuery(final Query query) {
         PipelineTopology newPipelineTopology = PipelineTopology.pipelineTopologyOf(query);
-        List<Pipeline> newPipelines = this.pipelineTopology.extend(newPipelineTopology);
+        List<Pipeline> newPipelines = this.pipelineTopology.extend(newPipelineTopology, query);
 
         generator.extend(newPipelines);
         dispatcher.extend(newPipelines);
@@ -42,8 +42,10 @@ public class CompiledEngine implements Engine {
     }
 
     @Override
-    public void deleteQuery(Query query) {
-        // TODO engine: what about Pipelines with shared operators?
+    public void deleteQuery(final Query query) {
+        log.info("Deleting query {}", query.getId());
+        pipelineTopology.getPipelines().stream()
+                .forEach(pipeline -> pipeline.stopQuery(query.getId().toString(), dispatcher));
     }
 
     @Override

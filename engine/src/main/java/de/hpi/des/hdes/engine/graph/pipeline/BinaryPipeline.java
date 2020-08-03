@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.BinaryGenerationNode;
 import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
 import lombok.Getter;

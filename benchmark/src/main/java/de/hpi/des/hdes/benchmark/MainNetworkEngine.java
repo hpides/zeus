@@ -272,22 +272,40 @@ public class MainNetworkEngine implements Runnable {
                                 "(_,_,_,_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG }, 10000);
-        VulcanoTopologyBuilder builder2 = new VulcanoTopologyBuilder();
+        Query q1 = builder.buildAsQuery();
 
+        VulcanoTopologyBuilder builder2 = new VulcanoTopologyBuilder();
         CStream sourceOne2 = builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
                 generatorHost, basicPort1);
         builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
                 .ajoin(sourceOne2, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
                         new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.slidingWindow(Time.seconds(1), Time.of(500)))
+                        CWindow.tumblingWindow(Time.seconds(1)))
                 .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
                                 .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()")
                                 .add(PrimitiveType.LONG, "(_,_,_,_,_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.LONG }, 10000);
+        Query q2 = builder2.buildAsQuery();
 
-        manager.addQuery(builder.buildAsQuery());
+        VulcanoTopologyBuilder builder3 = new VulcanoTopologyBuilder();
+        CStream sourceOne3 = builder3.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                generatorHost, basicPort1);
+        builder3.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne3, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
+                        CWindow.tumblingWindow(Time.seconds(1)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
+                                .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()")
+                                .add(PrimitiveType.LONG, "(_,_,_,_,_) -> System.currentTimeMillis()")
+                                .add(PrimitiveType.LONG, "(_,_,_,_,_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.LONG }, 10000);
+        Query q3 = builder3.buildAsQuery();
+
+        manager.addQuery(q1);
         // Running engine
 
         try {
@@ -296,9 +314,23 @@ public class MainNetworkEngine implements Runnable {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        manager.addQuery(builder2.buildAsQuery());
+        manager.addQuery(q2);
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds - 10));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(20));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        manager.deleteQuery(q1);
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(20));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        manager.addQuery(q3);
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds - 60));
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -10,9 +10,10 @@ import java.nio.file.Paths;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
+import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
+import de.hpi.des.hdes.engine.execution.Stoppable;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
-import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.generators.templatedata.InterfaceData;
 import de.hpi.des.hdes.engine.generators.templatedata.MaterializationData;
@@ -40,7 +41,6 @@ public abstract class Pipeline {
     @Setter
     protected Object pipelineObject;
     private final Set<String> queryIds = new HashSet<>();
-    private String initialQueryId;
     private static URLClassLoader tempClassLoader;
     private final HashMap<String, InterfaceData> interfaces = new HashMap<>();
     protected final HashMap<String, MaterializationData> variables = new HashMap<>();
@@ -236,12 +236,16 @@ public abstract class Pipeline {
 
     public abstract void replaceParent(Pipeline newParentPipeline);
 
-    public void addQueryId(String queryId) {
+    public void addQueryId(final String queryId) {
         this.queryIds.add(queryId);
     }
 
-    public void setInitialQueryId(String queryId) {
-        this.queryIds.add(queryId);
-        this.initialQueryId = queryId;
+    public void stopQuery(final String queryId, Dispatcher dispatcher) {
+        queryIds.remove(queryId);
+        if (queryIds.isEmpty()) {
+
+            ((Stoppable) pipelineObject).shutdown();
+            // TODO remove files
+        }
     }
 }
