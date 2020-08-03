@@ -63,9 +63,8 @@ public class MainNetworkEngine implements Runnable {
         for (String s : args) {
             params.append(s).append(" ");
         }
-        String[] b = { "-gh", "127.0.0.1", "-tis", "100", "-nqs", "0", "-rqs", "0", "-bat", "0", "-t", "compiledagg", "-fq", "1" };
         log.info(params.toString());
-        new CommandLine(new MainNetworkEngine()).execute(b);
+        new CommandLine(new MainNetworkEngine()).execute(args);
     }
 
     @Override
