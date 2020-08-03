@@ -4,6 +4,7 @@ import java.util.stream.Stream;
 
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.operation.AggregateFunction;
+import de.hpi.des.hdes.engine.window.CWindow;
 import lombok.Getter;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 
@@ -20,11 +21,12 @@ public class AggregationData {
     private final String aggregationVariable;
     private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
-    private final int windowLength;
+    private final long windowLength;
+    private final long windowSlide;
 
     public AggregationData(final String pipelineId, final PrimitiveType[] types, final int aggregateValueIndex,
             final String aggregationVariable, final AggregateFunction aggregateFunction,
-            final InterfaceData[] interfaces, final MaterializationData[] variables, String operators, int windowLength) {
+            final InterfaceData[] interfaces, final MaterializationData[] variables, String operators, CWindow window) {
         this.pipelineId = pipelineId;
         this.tupleLength = Stream.of(types).mapToInt(t -> t.getLength()).sum();
         this.interfaces = interfaces;
@@ -34,6 +36,7 @@ public class AggregationData {
         this.shouldCountPerWindow = aggregateFunction.isShouldCountPerWindow();
         this.aggregationValueType = types[aggregateValueIndex];
         this.aggregationVariable = aggregationVariable;
-        this.windowLength = windowLength;
+        this.windowLength = window.getLength();
+        this.windowSlide = window.getSlide();
     }
 }

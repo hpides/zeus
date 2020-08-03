@@ -37,8 +37,8 @@ public class CStream extends AbstractCStream {
      *
      * @return the aggregated stream
      */
-    public CStream sum(final PrimitiveType[] types, final int aggregateValueIndex, final int windowLength) {
-        return this.aggregate(AggregateFunction.SUM, types, aggregateValueIndex, windowLength);
+    public CStream sum(final PrimitiveType[] types, final int aggregateValueIndex, final CWindow window) {
+        return this.aggregate(AggregateFunction.SUM, types, aggregateValueIndex, window);
     }
 
     /**
@@ -46,8 +46,8 @@ public class CStream extends AbstractCStream {
      *
      * @return the aggregated stream
      */
-    public CStream average(final PrimitiveType[] types, final int aggregateValueIndex, final int windowLength) {
-        return this.aggregate(AggregateFunction.AVERAGE, types, aggregateValueIndex, windowLength);
+    public CStream average(final PrimitiveType[] types, final int aggregateValueIndex, final CWindow window) {
+        return this.aggregate(AggregateFunction.AVERAGE, types, aggregateValueIndex, window);
     }
 
     /**
@@ -55,8 +55,8 @@ public class CStream extends AbstractCStream {
      *
      * @return the aggregated stream
      */
-    public CStream minimum(final PrimitiveType[] types, final int aggregateValueIndex, final int windowLength) {
-        return this.aggregate(AggregateFunction.MINIMUM, types, aggregateValueIndex, windowLength);
+    public CStream minimum(final PrimitiveType[] types, final int aggregateValueIndex, final CWindow window) {
+        return this.aggregate(AggregateFunction.MINIMUM, types, aggregateValueIndex, window);
     }
 
     /**
@@ -64,8 +64,8 @@ public class CStream extends AbstractCStream {
      *
      * @return the aggregated stream
      */
-    public CStream maximum(final PrimitiveType[] types, final int aggregateValueIndex, final int windowLength) {
-        return this.aggregate(AggregateFunction.MAXIMUM, types, aggregateValueIndex, windowLength);
+    public CStream maximum(final PrimitiveType[] types, final int aggregateValueIndex, final CWindow window) {
+        return this.aggregate(AggregateFunction.MAXIMUM, types, aggregateValueIndex, window);
     }
 
     /**
@@ -73,8 +73,8 @@ public class CStream extends AbstractCStream {
      *
      * @return the aggregated stream
      */
-    public CStream count(final PrimitiveType[] types, final int aggregateValueIndex, final int windowLength) {
-        return this.aggregate(AggregateFunction.COUNT, types, aggregateValueIndex, windowLength);
+    public CStream count(final PrimitiveType[] types, final int aggregateValueIndex, final CWindow window) {
+        return this.aggregate(AggregateFunction.COUNT, types, aggregateValueIndex, window);
     }
 
     /**
@@ -114,10 +114,10 @@ public class CStream extends AbstractCStream {
      * @return the filtered stream
      */
     private CStream aggregate(AggregateFunction function, final PrimitiveType[] types, final int aggregateValueIndex,
-            final int windowLength) {
+            final CWindow window) {
         final AggregationGenerationNode child = new AggregationGenerationNode(types,
                 new PrimitiveType[] { types[aggregateValueIndex] },
-                new AggregateGenerator(function, aggregateValueIndex, windowLength));
+                new AggregateGenerator(function, aggregateValueIndex, window));
         this.builder.addGraphNode(this.node, child);
         return new CStream(this.builder, child);
     }

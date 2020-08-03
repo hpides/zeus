@@ -203,7 +203,7 @@ public class LocalGenerator extends PipelineVisitor {
                             aggregationPipeline.getAggregationGenerationNode().getInputTypes(),
                             operator.getAggregateValueIndex(), variableName, operator.getAggregateFunction(),
                             aggregationPipeline.getInterfaces(), aggregationPipeline.getVariables(), implementation,
-                            operator.getWindowLength()))
+                            operator.getWindow()))
                     .flush();
             implementation = writer.toString();
             Files.writeString(

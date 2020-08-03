@@ -10,8 +10,8 @@ if compileJava:
 eps = 4_000_000
 tis = 310  # should be ~10 more than the engine
 t = 'new'  # type
-ams = 2
-nr_single_source = 0  # number of queries that need single source
+ams = 1
+nr_single_source = 1  # number of queries that need single source
 count = 0
 
 if os.name == 'nt':
@@ -21,11 +21,11 @@ count += 1
 if count > nr_single_source:  # check other file
     ams = 2
 args = prefix + ['java', '-jar', os.path.normpath(
-  'benchmark/target/generator-jar-with-dependencies.jar'),
-               '-eps', eps,
-               '-tis', tis,
-               '-t', t,
-               '-ams', ams]
+    'benchmark/target/generator-jar-with-dependencies.jar'),
+    '-eps', eps,
+    '-tis', tis,
+    '-t', t,
+    '-ams', ams]
 try:
     c = subprocess.run([str(arg) for arg in args], cwd='../')
     print(c)

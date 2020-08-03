@@ -2,21 +2,20 @@ package de.hpi.des.hdes.engine.generators;
 
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.operation.AggregateFunction;
+import de.hpi.des.hdes.engine.window.CWindow;
 import lombok.Getter;
 
+@Getter
 public class AggregateGenerator implements Generatable {
 
-  @Getter
   private final AggregateFunction aggregateFunction;
-  @Getter
   private final int aggregateValueIndex;
-  @Getter
-  private final int windowLength;
+  private final CWindow window;
 
-  public AggregateGenerator(AggregateFunction aggregateFunction, final int aggregateValueIndex, final int windowLength) {
+  public AggregateGenerator(AggregateFunction aggregateFunction, final int aggregateValueIndex, final CWindow window) {
     this.aggregateFunction = aggregateFunction;
     this.aggregateValueIndex = aggregateValueIndex;
-    this.windowLength = windowLength;
+    this.window = window;
   }
 
   @Override

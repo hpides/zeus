@@ -10,7 +10,7 @@ compileJava = False
 
 tis = 300
 gh = '127.0.0.1'
-TYPE = 'compiledajoin'
+TYPE = 'compiledagg'
 
 MEASURE_UTILIZATION = True
 UPDATE_RATE = 1

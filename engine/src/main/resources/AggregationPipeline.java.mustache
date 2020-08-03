@@ -26,6 +26,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private long latestTimestamp = 0;
     final private ReadBuffer input;
     final private Dispatcher dispatcher;
+    final private Int2IntMap offsetsToWindowCount = new Int2IntOpenHashMap();
 
     private final byte[] output = new byte[({{{aggregationValueType.length}}} + 8 + 1) *{{{vectorSize}}}];
     private final ByteBuffer outputBuffer = ByteBuffer.wrap(output);
@@ -59,9 +60,15 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             input.getBuffer().position(startingPosition+8+{{tupleLength}}+1);
             return;
         }
-        final long windowStart = eventTimestamp - (eventTimestamp % windowLength);
-        if (earliestOpenWindow > windowStart) {
-            earliestOpenWindow = windowStart;
+        LongList windowStarts = new LongArrayList();
+        for (long currentWindow = eventTimestamp - windowLength - ((eventTimestamp - windowLength) % windowSlide); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
+            if (currentWindow > eventTimestamp - windowLength)
+                windowStarts.add(currentWindow);
+        }
+        offsetsToWindowCount.put(startingPosition, windowStarts.size());
+        final long minWindow = windowStarts.getLong(0);
+        if (earliestOpenWindow > minWindow) {
+            earliestOpenWindow = minWindow;
         }        
 
         {{#variables}}
@@ -70,20 +77,23 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         {{{operators}}}
 
-        final {{aggregationValueType.lowercaseName}} state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
+        for(long windowStart: windowStarts){
+            final {{aggregationValueType.lowercaseName}} state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
 
-        {{{#shouldCountPerWindow}}}
-        final int count = this.windowToCount.computeIfAbsent(windowStart, w -> 0);
-        {{{/shouldCountPerWindow}}}
+            {{{#shouldCountPerWindow}}}
+            final int count = this.windowToCount.computeIfAbsent(windowStart, w -> 0);
+            {{{/shouldCountPerWindow}}}
 
-        final {{aggregationValueType.lowercaseName}} current = {{{aggregationVariable}}};
-        final {{aggregationValueType.lowercaseName}} newState = {{{aggregateImplementation}}};
+            final {{aggregationValueType.lowercaseName}} current = {{{aggregationVariable}}};
+            final {{aggregationValueType.lowercaseName}} newState = {{{aggregateImplementation}}};
 
-        this.windowToState.put(windowStart, newState);
+            this.windowToState.put(windowStart, newState);
 
-        {{{#shouldCountPerWindow}}}
-        this.windowToCount.put(windowStart, count + 1);
-        {{{/shouldCountPerWindow}}}
+            {{{#shouldCountPerWindow}}}
+            this.windowToCount.put(windowStart, count + 1);
+            {{{/shouldCountPerWindow}}}
+        }
+
         input.getBuffer().position(startingPosition + 8 + {{tupleLength}});
 
         if (input.getBuffer().get() == (byte) 1) {
@@ -111,11 +121,14 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
      private void free(int startingPosition){
-        freeableOffsets[freeableIndex] = startingPosition;
-        freeableIndex++;
-        if(freeableIndex == {{{vectorSize}}}) {
-            dispatcher.free(input, freeableOffsets);
-            freeableIndex = 0;
+        int remainingWindows = offsetsToWindowCount.get(startingPosition);
+        if(--remainingWindows <= 0) {
+            freeableOffsets[freeableIndex] = startingPosition;
+            freeableIndex++;
+            if(freeableIndex == {{{vectorSize}}}) {
+                dispatcher.free(input, freeableOffsets);
+                freeableIndex = 0;
+        }
     }
   }
 

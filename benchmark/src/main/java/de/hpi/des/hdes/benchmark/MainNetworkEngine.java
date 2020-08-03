@@ -368,7 +368,7 @@ public class MainNetworkEngine implements Runnable {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
         builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1)
-                .count(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 1000) 
+                .count(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, CWindow.tumblingWindow(Time.seconds(1))) 
                 .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT }).add(PrimitiveType.LONG,
                             "(_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.LONG }, 1);
@@ -406,7 +406,7 @@ public class MainNetworkEngine implements Runnable {
                         PrimitiveType.INT }, "(_,_,_,v1,_,_,_,v2) -> v1 > v2")
                 .maximum(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT }, 3, 1000)
+                        PrimitiveType.INT }, 3, CWindow.tumblingWindow(Time.seconds(1)))
                 .toFile(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
                         PrimitiveType.INT }, 10000);

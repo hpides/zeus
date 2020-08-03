@@ -75,7 +75,7 @@ public class LocalGeneratorTest {
         public void sourceAverageStreamTest() {
                 VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
                 builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, "host", 8080)
-                                .average(new PrimitiveType[] { PrimitiveType.LONG }, 0, 1000)
+                                .average(new PrimitiveType[] { PrimitiveType.LONG }, 0, CWindow.tumblingWindow(Time.seconds(1)))
                                 .toFile(new PrimitiveType[] { PrimitiveType.LONG }, 1000);
                 LocalGenerator generator = new LocalGenerator();
                 PipelineTopology pt = PipelineTopology.pipelineTopologyOf(builder.buildAsQuery());
