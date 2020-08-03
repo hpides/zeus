@@ -129,7 +129,8 @@ public class MainNetworkDataGenerator implements Runnable {
                 eventsPerSecond * timeInSeconds);
         final ExecutorService executor1 = Executors.newFixedThreadPool(1);
         final var generator1 = new ByteGenerator(eventsPerSecond, timeInSeconds, executor1, 1);
-    
+        log.printf(Level.INFO, "Expecting %,d tupel", generator1.expectedAggregationSize(timeInSeconds, 1));
+
         try {
             AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();
 

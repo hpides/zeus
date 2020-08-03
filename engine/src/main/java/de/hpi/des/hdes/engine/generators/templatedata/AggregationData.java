@@ -20,8 +20,6 @@ public class AggregationData {
     private final String aggregationVariable;
     private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
-    private final int outputEventLength;
-    private final int inputEventLength;
     private final int windowLength;
 
     public AggregationData(final String pipelineId, final PrimitiveType[] types, final int aggregateValueIndex,
@@ -37,7 +35,5 @@ public class AggregationData {
         this.aggregationValueType = types[aggregateValueIndex];
         this.aggregationVariable = aggregationVariable;
         this.windowLength = windowLength;
-        this.outputEventLength = tupleLength + 8 + 1;
-        this.inputEventLength = tupleLength + 8 + 1;
     }
 }

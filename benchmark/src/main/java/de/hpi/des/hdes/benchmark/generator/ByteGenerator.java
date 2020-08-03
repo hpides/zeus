@@ -67,4 +67,7 @@ public class ByteGenerator extends UniformGenerator<byte[]> {
                                                                     // engine
     }
 
+    public long expectedAggregationSize(long totalTime, int windowTime) {
+        return (totalTime - 10) / windowTime;
+    }
 }
