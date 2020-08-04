@@ -105,7 +105,7 @@ public class LocalGenerator extends PipelineVisitor {
                     .get(DirectoryHelper.getTempDirectoryPath() + joinPipeline.getPipelineId() + ".java").toFile());
             JoinGenerator operator = (JoinGenerator) joinPipeline.getBinaryNode().getOperator();
             template.execute(out,
-                    new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getLeftTypes(),
+                    new JoinData(joinPipeline.getPipelineId(), operator.getLeftTypes(), operator.getRightTypes(),
                             operator.getKeyPositionLeft(), operator.getKeyPositionRight(), operator.getWindow(),
                             joinPipeline.getInterfaces(), joinPipeline.getVariables(), joinPipeline.getJoinVariables(),
                             leftImplementation, rightImplementation, leftVariableName, rightVariableName,
