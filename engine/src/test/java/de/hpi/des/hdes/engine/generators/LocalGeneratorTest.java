@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 public class LocalGeneratorTest {
 
-        // @Test
+        @Test
         public void sourceSinkStreamTest() {
                 VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
                 builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, "host", 8080)
@@ -23,7 +23,7 @@ public class LocalGeneratorTest {
                                 .gotGenerated();
         }
 
-        // @Test
+        @Test
         public void sourceFilterStreamTest() {
                 VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
                 builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, "host", 8080)
@@ -33,10 +33,10 @@ public class LocalGeneratorTest {
                 generator.extend(pt.getPipelines());
                 CodeAssert.assertThat(pt, builder).hasSinkNodes(0).hasSourceNodes(1).hasUnaryNodes(1).hasJoinNodes(0)
                                 .hasSourcePipelines(1).hasSinkPipelines(0).hasUnaryPipelines(1).hasJoinPipelines(0)
-                                .gotGenerated().hasVariable("v1", "input.getLong()");
+                                .gotGenerated().traverseAST().hasVariable("v1", "input.getLong()");
         }
 
-        // @Test
+        @Test
         public void sourceFilterSinkStreamTest() {
                 VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
                 builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, "host", 8080)
@@ -48,16 +48,16 @@ public class LocalGeneratorTest {
                 // Validates at topolgy of nodes
                 CodeAssert.assertThat(pt, builder).hasSinkNodes(1).hasSourceNodes(1).hasUnaryNodes(1).hasJoinNodes(0)
                                 .hasSourcePipelines(1).hasSinkPipelines(1).hasUnaryPipelines(1).hasJoinPipelines(0)
-                                .gotGenerated().hasVariable("v1", "input.getLong()");
+                                .gotGenerated().traverseAST().hasVariable("v1", "input.getLong()");
         }
 
-        // @Test
+        @Test
         public void sourceJoinStreamTest() {
                 VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
                 var stream = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, "host", 8080);
                 builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, "host", 8080)
                                 .join(stream, new PrimitiveType[] { PrimitiveType.LONG },
-                                                new PrimitiveType[] { PrimitiveType.LONG }, 1, 2,
+                                                new PrimitiveType[] { PrimitiveType.LONG }, 0, 0,
                                                 CWindow.tumblingWindow(Time.seconds(1)))
                                 .toFile(new PrimitiveType[] { PrimitiveType.LONG }, 1000);
                 LocalGenerator generator = new LocalGenerator();
@@ -82,7 +82,7 @@ public class LocalGeneratorTest {
                 generator.extend(pt.getPipelines());
         }
 
-        // @Test
+        @Test
         public void sourceAJoinStreamTest() {
                 VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
                 var stream = builder.streamOfC(new PrimitiveType[] { PrimitiveType.LONG }, "host", 8080);

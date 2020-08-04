@@ -231,6 +231,10 @@ public class CodeAssert extends StringAssert {
         return this;
     }
 
+    public CodeAssert traverseAST() {
+        return this.traverseAST("");
+    }
+
     public CodeAssert followedBy(String pattern) {
         if (matched == null)
             throw new AssertionError("Did not start AST traversal.");

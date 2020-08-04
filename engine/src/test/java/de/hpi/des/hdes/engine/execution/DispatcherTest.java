@@ -27,18 +27,18 @@ public class DispatcherTest {
     @Test
     void writeToBuffer() {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        builder.streamOfC(new LinkedList<Tuple2<Integer, Boolean>>(), 3).filter(new PrimitiveType[] {}, "() -> true");
+        builder.streamOfC(new LinkedList<Tuple2<Integer, Boolean>>(), 3).filter(new PrimitiveType[] {}, "() -> true").toFile(new PrimitiveType[] {}, 100);
         final PipelineTopology topology = PipelineTopology.pipelineTopologyOf(builder.buildAsQuery());
         final Dispatcher dispatcher = new Dispatcher();
         dispatcher.extend(topology.getPipelines());
 
         byte[] bytes = { 10, 11, 12 };
-        ByteBufferIntSourcePipeline pipeline = (ByteBufferIntSourcePipeline) topology.getPipelines().get(1);
-        builder.streamOfC(new LinkedList<Tuple2<Integer, Boolean>>(), 3).filter(new PrimitiveType[] {}, "() -> true");
+        ByteBufferIntSourcePipeline pipeline = (ByteBufferIntSourcePipeline) topology.getPipelines().get(2);
+        builder.streamOfC(new LinkedList<Tuple2<Integer, Boolean>>(), 3).filter(new PrimitiveType[] {}, "() -> true").toFile(new PrimitiveType[] {}, 100);
 
         dispatcher.write(pipeline.getPipelineId(), bytes);
 
-        UnaryPipeline unaryPipeline = (UnaryPipeline) topology.getPipelines().get(0);
+        UnaryPipeline unaryPipeline = (UnaryPipeline) topology.getPipelines().get(1);
         ReadBuffer readBuffer = dispatcher.getReadByteBufferForPipeline(unaryPipeline);
         byte[] result = new byte[3];
         readBuffer.getBuffer().get(result);

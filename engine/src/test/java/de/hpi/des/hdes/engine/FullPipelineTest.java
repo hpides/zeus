@@ -59,7 +59,7 @@ public class FullPipelineTest {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            if (System.currentTimeMillis() - startTime > 500) {
+            if (System.currentTimeMillis() - startTime > 5000) {
                 timeout = true;
                 break;
             }

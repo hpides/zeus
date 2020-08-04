@@ -73,25 +73,4 @@ public class MapGeneratorTest {
     assertThat(out).isEmpty();
     assertThat(l.getCurrentTypes()).containsExactly(null, "$0", "$1");
   }
-
-  @Test
-  void mapperTest() {
-    JobManager manager = new JobManager(new CompiledEngine());
-    VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-
-    CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, "generatorHost",
-        1);
-    builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, "generatorHost", 2)
-        .filter(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT },
-            "(v1, _, _, _) -> v1 > 100")
-        .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
-            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
-                .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()"))
-        .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.seconds(1)))
-        .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-            PrimitiveType.LONG }, 1000);
-
-    manager.addQuery(builder.buildAsQuery());
-  }
 }
