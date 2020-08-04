@@ -213,10 +213,10 @@ public class MainNetworkDataGenerator implements Runnable {
             String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator
                     + "socket2.csv";
 
-            log.info("{} {}", bidNetworkSocketPort, auctionNetworkSocketPort);
-            var bidSocket = new BlockingSocket<>(bidNetworkSocketPort, serializerInstance, socket1File,
+            log.info("{} {}", basicPort1, basicPort2);
+            var bidSocket = new BlockingSocket<>(basicPort1, serializerInstance, socket1File,
                     this.timeInSeconds);
-            var auctionSocket = new BlockingSocket<>(auctionNetworkSocketPort, serializerInstance, socket2File,
+            var auctionSocket = new BlockingSocket<>(basicPort2, serializerInstance, socket2File,
                     this.timeInSeconds);
             bidSocket.setByteFlag(true);
             auctionSocket.setByteFlag(true);

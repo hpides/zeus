@@ -74,6 +74,9 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = minWindow;
         }
 
+        
+
+
         {{#leftVariables}}
         {{> VariableDefiniton.java.mustache}}
         {{/leftVariables}}
@@ -85,8 +88,9 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                     w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
             IntList set = bucket.computeIfAbsent({{{leftKey}}}, w -> new IntArrayList());
             set.add(startingPosition);
-            leftInput.getBuffer().position(startingPosition + 8 + {{leftTupleLength}});
         }
+        
+        leftInput.getBuffer().position(startingPosition + 8 + {{leftTupleLength}});
         
         if (leftInput.getBuffer().get() == (byte) 1) {
             latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
@@ -117,6 +121,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             earliestOpenWindowJoin = minWindow;
         }
 
+
         {{#rightVariables}}
         {{> VariableDefiniton.java.mustache}}
         {{/rightVariables}}
@@ -128,8 +133,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                     w -> new {{type.uppercaseName}}2ObjectOpenHashMap<IntList>());
             IntList set = bucket.computeIfAbsent({{{rightKey}}}, w -> new IntArrayList());
             set.add(startingPosition);
-            rightInput.getBuffer().position(startingPosition + 8 + {{rightTupleLength}});
         }
+        rightInput.getBuffer().position(startingPosition + 8 + {{rightTupleLength}});
 
         if (rightInput.getBuffer().get() == (byte) 1) {
             latestTimestampRight = Math.max(latestTimestampRight, eventTimestamp);
@@ -196,7 +201,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         
         leftInput.getBuffer().position(leftPosition);
         rightInput.getBuffer().position(rightPosition);
-        }
+    }
     
 
     public void writeOutput(int leftOffset, int rightOffset) {
