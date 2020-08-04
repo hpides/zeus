@@ -18,6 +18,7 @@ public class AJoinData {
     private final long windowSlide;
     private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
+    private final int eventCount = Dispatcher.TUPLES_PER_VECTOR()*Dispatcher.NUMBER_OF_VECTORS();
     private final InterfaceData[] interfaces;
     private final MaterializationData[] leftVariables;
     private final MaterializationData[] rightVariables;

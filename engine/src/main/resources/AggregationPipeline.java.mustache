@@ -26,7 +26,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private long latestTimestamp = 0;
     final private ReadBuffer input;
     final private Dispatcher dispatcher;
-    final private Int2IntMap offsetsToWindowCount = new Int2IntOpenHashMap();
+    final private int[] offsetsToWindowCount = new int[{{{eventCount}}}];
 
     private final byte[] output = new byte[({{{aggregationValueType.length}}} + 8 + 1) *{{{vectorSize}}}];
     private final ByteBuffer outputBuffer = ByteBuffer.wrap(output);
@@ -65,7 +65,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             if (currentWindow > eventTimestamp - windowLength)
                 windowStarts.add(currentWindow);
         }
-        offsetsToWindowCount.put(startingPosition, windowStarts.size());
+        offsetsToWindowCount[startingPosition/(8+1{{tupleLength}})] = windowStarts.size();
         final long minWindow = windowStarts.getLong(0);
         if (earliestOpenWindow > minWindow) {
             earliestOpenWindow = minWindow;
@@ -121,8 +121,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
      private void free(int startingPosition){
-        int remainingWindows = offsetsToWindowCount.get(startingPosition);
-        if(--remainingWindows <= 0) {
+        int pos = startingPosition/(8+1+{{tupleLength}});
+        int remainingWindows = offsetsToWindowCount[pos]--;
+        offsetsToWindowCount[pos] = remainingWindows;
+        if(remainingWindows <= 0) {
             freeableOffsets[freeableIndex] = startingPosition;
             freeableIndex++;
             if(freeableIndex == {{{vectorSize}}}) {

@@ -25,6 +25,7 @@ public class JoinData {
     private final String writeOut;
     private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
+    private final int eventCount = Dispatcher.TUPLES_PER_VECTOR()*Dispatcher.NUMBER_OF_VECTORS();
 
     public JoinData(final String pipelineId, final PrimitiveType[] leftTypes, final PrimitiveType[] rightTypes,
             final int leftKeyIndex, final int rightKeyIndex, final CWindow window, final InterfaceData[] interfaces,

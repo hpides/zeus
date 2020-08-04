@@ -33,8 +33,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final private int[] rightFreeableOffsets = new int[{{{vectorSize}}}];
     private int leftFreeableIndex = 0;
     private int rightFreeableIndex = 0;
-    final private Int2IntMap leftOffsetsToWindowCount = new Int2IntOpenHashMap();
-    final private Int2IntMap rightOffsetsToWindowCount = new Int2IntOpenHashMap();
+    final private int[] leftOffsetsToWindowCount = new int[{{{eventCount}}}];
+    final private int[] rightOffsetsToWindowCount = new int[{{{eventCount}}}];
     final private ReadBuffer leftInput;
     final private ReadBuffer rightInput;
     final private Dispatcher dispatcher;
@@ -71,7 +71,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             if (currentWindow > eventTimestamp - windowLength)
                 windowStarts.add(currentWindow);
         }
-        leftOffsetsToWindowCount.put(startingPosition, windowStarts.size());
+        leftOffsetsToWindowCount[startingPosition/(8+1{{leftTupleLength}})] = windowStarts.size();
         final long minWindow = windowStarts.getLong(0);
         if (earliestOpenWindowJoin > minWindow) {
             earliestOpenWindowJoin = minWindow;
@@ -125,7 +125,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             if (currentWindow > eventTimestamp - windowLength)
                 windowStarts.add(currentWindow);
         }
-        rightOffsetsToWindowCount.put(startingPosition, windowStarts.size());
+        rightOffsetsToWindowCount[startingPosition/(8+1+{{rightTupleLength}})] = windowStarts.size();
         final long minWindow = windowStarts.getLong(0);
         if (earliestOpenWindowJoin > minWindow) {
             earliestOpenWindowJoin = minWindow;
@@ -211,8 +211,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void freeLeft(int offset) {
-        int remainingWindows = leftOffsetsToWindowCount.get(offset);
-        if(--remainingWindows <= 0) {
+        int pos = offset/(8+1+{{leftTupleLength}});
+        int remainingWindows = leftOffsetsToWindowCount[pos]--;
+        leftOffsetsToWindowCount[pos] = remainingWindows;
+        if(remainingWindows <= 0) {
             leftFreeableOffsets[leftFreeableIndex] = offset;
             leftFreeableIndex++;
             if(leftFreeableIndex == {{{vectorSize}}}) {
@@ -223,8 +225,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void freeRight(int offset) {
-        int remainingWindows = rightOffsetsToWindowCount.get(offset);
-        if(--remainingWindows <= 0) {
+        int pos = offset/(8+1+{{leftTupleLength}});
+        int remainingWindows = rightOffsetsToWindowCount[pos]--;
+        rightOffsetsToWindowCount[pos] = remainingWindows;
+        if(remainingWindows <= 0) {
             rightFreeableOffsets[rightFreeableIndex] = offset;
             rightFreeableIndex++;
             if(rightFreeableIndex == {{{vectorSize}}}) {

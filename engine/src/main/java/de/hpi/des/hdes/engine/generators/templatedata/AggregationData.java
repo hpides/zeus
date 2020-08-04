@@ -21,6 +21,7 @@ public class AggregationData {
     private final String aggregationVariable;
     private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
+    private final int eventCount = Dispatcher.TUPLES_PER_VECTOR()*Dispatcher.NUMBER_OF_VECTORS();
     private final long windowLength;
     private final long windowSlide;
 
