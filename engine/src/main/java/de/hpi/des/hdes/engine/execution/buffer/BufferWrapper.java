@@ -46,9 +46,13 @@ public class BufferWrapper {
     public void free(final int[] offsets) {
         while (!atomic.compareAndSet(false, true))
             ;
+        boolean resetWriteLimit = false;
         for (int offset : offsets) {
             int index = offset / tupleSize;
             bitmask[index] -= 1;
+            if (index == 0 && bitmask[index] == 0 && writeBuffer.position() == writeBuffer.capacity()) {
+                resetWriteLimit = true;
+            }
             int modLimit = limit;
             if (modLimit == bitmask.length) {
                 modLimit = 0;
@@ -78,24 +82,31 @@ public class BufferWrapper {
                 }
             }
         }
+        if (resetWriteLimit) {
+            resetWriteLimit();
+        }
         atomic.set(false);
     }
 
     public void resetReadLimit(String pipelineID) {
         while (!atomic.compareAndSet(false, true))
             ;
-        ReadBuffer readBuffer = childPipelineToReadBuffer.get(pipelineID);
-        readBuffer.getBuffer().position(0);
-        readBuffer.mark();
-        readBuffer.limit(writeBuffer.position());
+        // TODO: Handle edge case that would lead to a dead-lock here
+        if (writeBuffer.position() != writeBuffer.capacity()) {
+            ReadBuffer readBuffer = childPipelineToReadBuffer.get(pipelineID);
+            readBuffer.getBuffer().position(0);
+            readBuffer.mark();
+            readBuffer.limit(writeBuffer.position());
+        }
         atomic.set(false);
     }
 
     public void resetWriteLimit() {
-        writeBuffer.position(0);
         if (limit != bitmask.length) {
+            writeBuffer.position(0);
             writeBuffer.limit(getLimitInBytes());
-        } else {
+        } else if (bitmask[0] == 0) {
+            writeBuffer.position(0);
             writeBuffer.limit(writeBuffer.capacity());
         }
     }

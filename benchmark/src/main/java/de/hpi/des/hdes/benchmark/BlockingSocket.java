@@ -98,6 +98,7 @@ public class BlockingSocket<E> implements BlockingOffer<E> {
             }
         } catch (IOException e) {
             this.writeFile();
+            System.exit(1);
             throw new IllegalStateException("Could not offer new data, Engine is shut down");
         }
     }

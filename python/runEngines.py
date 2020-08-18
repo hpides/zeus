@@ -32,13 +32,13 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
     args = ['java', '-Xms10g', '-Xmx10g', '-jar', path,
             '-gh', config['gh'],
             '-tis', config['tis'],
+            '-bsp1', config['port1'],
+            '-bsp2', config['port2'],
             '-nqs', add,
             '-rqs', remove,
             '-bat', batches,
             '-t', op,
-            '-fq', initial,
-            '--basicPort1', config['port1'],
-            '--basicPort2', config['port2']]
+            '-fq', initial]
     args = [str(arg) for arg in args]
     try:
         with subprocess.Popen(args, cwd='../') as proc:

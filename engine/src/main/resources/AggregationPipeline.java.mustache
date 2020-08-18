@@ -62,8 +62,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             return;
         }
         LongList windowStarts = new LongArrayList();
-        for (long currentWindow = eventTimestamp - windowLength - ((eventTimestamp - windowLength) % windowSlide); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
-            if (currentWindow > eventTimestamp - windowLength)
+        for (long currentWindow = eventTimestamp - (eventTimestamp % windowLength); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
                 windowStarts.add(currentWindow);
         }
         offsetsToWindowCount[startingPosition/(8+1{{tupleLength}})] = windowStarts.size();
@@ -128,7 +127,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
      private void free(int startingPosition){
         int pos = startingPosition/(8+1+{{tupleLength}});
-        int remainingWindows = offsetsToWindowCount[pos]--;
+        int remainingWindows = offsetsToWindowCount[pos]-1;
         offsetsToWindowCount[pos] = remainingWindows;
         if(remainingWindows <= 0) {
             freeableOffsets[freeableIndex] = startingPosition;

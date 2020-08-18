@@ -73,12 +73,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             return;
         }
         LongList windowStarts = new LongArrayList();
-        for (long currentWindow = eventTimestamp - windowLength - ((eventTimestamp - windowLength) % windowSlide); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
+        for (long currentWindow = eventTimestamp - (eventTimestamp % windowLength); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
             long windowMaxTimestamp = windowToMaxTimestamp.computeIfAbsent(currentWindow, w -> eventTimestamp);
             if (eventTimestamp > windowMaxTimestamp) {
                 windowToMaxTimestamp.put(currentWindow, eventTimestamp);
             }
-            if (currentWindow > eventTimestamp - windowLength)
                 windowStarts.add(currentWindow);
         }
         leftOffsetsToWindowCount[startingPosition/(8+1{{leftTupleLength}})] = windowStarts.size();
@@ -124,12 +123,11 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             return;
         }
         LongList windowStarts = new LongArrayList();
-        for (long currentWindow = eventTimestamp - windowLength - ((eventTimestamp - windowLength) % windowSlide); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
+        for (long currentWindow = eventTimestamp - (eventTimestamp % windowLength); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
             long windowMaxTimestamp = windowToMaxTimestamp.computeIfAbsent(currentWindow, w -> eventTimestamp);
             if (eventTimestamp > windowMaxTimestamp) {
                 windowToMaxTimestamp.put(currentWindow, eventTimestamp);
             }
-            if (currentWindow > eventTimestamp - windowLength)
                 windowStarts.add(currentWindow);
         }
         rightOffsetsToWindowCount[startingPosition/(8+1+{{rightTupleLength}})] = windowStarts.size();
@@ -267,7 +265,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     private void freeLeft(int offset) {
         int pos = offset/(8+1+{{leftTupleLength}});
-        int remainingWindows = leftOffsetsToWindowCount[pos]--;
+        int remainingWindows = leftOffsetsToWindowCount[pos]-1;
         leftOffsetsToWindowCount[pos] = remainingWindows;
         if(remainingWindows <= 0) {
             leftFreeableOffsets[leftFreeableIndex] = offset;
@@ -281,7 +279,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
     private void freeRight(int offset) {
         int pos = offset/(8+1+{{rightTupleLength}});
-        int remainingWindows = rightOffsetsToWindowCount[pos]--;
+        int remainingWindows = rightOffsetsToWindowCount[pos]-1;
         rightOffsetsToWindowCount[pos] = remainingWindows;
         if(remainingWindows <= 0) {
             rightFreeableOffsets[rightFreeableIndex] = offset;
