@@ -39,7 +39,7 @@ public class Logger implements Runnable, Stoppable {
             log.info("Log file {} created", DirectoryHelper.getLogPath() + "ajoin_triggers_" + strDate + ".csv");
             aJoinTriggerLog = new BufferedWriter(
                     new FileWriter(DirectoryHelper.getLogPath() + "ajoin_triggers_" + strDate + ".csv"));
-            aJoinTriggerLog.write("startTime,diffTime,eventCount,window");
+            aJoinTriggerLog.write("maxEventTime,startTime,diffTime,eventCount,window");
             aJoinTriggerLog.newLine();
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -97,8 +97,9 @@ public class Logger implements Runnable, Stoppable {
             return;
         }
         try {
-            aJoinTriggerLog.write(Long.toString(data.getStartTime()) + "," + Long.toString(data.getDiffTime()) + ","
-                    + Integer.toString(data.getEventCount()) + "," + data.getWindow());
+            aJoinTriggerLog.write(Long.toString(data.getMaxEventTime()) + "," + Long.toString(data.getStartTime()) + ","
+                    + Long.toString(data.getDiffTime()) + "," + Integer.toString(data.getEventCount()) + ","
+                    + data.getWindow());
             aJoinTriggerLog.newLine();
         } catch (IOException e) {
             // TODO Auto-generated catch block

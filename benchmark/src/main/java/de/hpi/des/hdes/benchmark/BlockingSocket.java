@@ -31,6 +31,7 @@ public class BlockingSocket<E> implements BlockingOffer<E> {
     private int lastSecond = 0;
     private BufferedWriter measurements;
     private long engineRuntime;
+    private int eventsPerSecondCount;
     private volatile boolean wroteFile = false;
     private ServerSocket ss;
     @Setter
@@ -38,10 +39,12 @@ public class BlockingSocket<E> implements BlockingOffer<E> {
     @Setter
     private int byteLength;
 
-    BlockingSocket(int port, AbstractSerializer<E> serializer, String filePath, long engineRuntime) {
+    BlockingSocket(int port, AbstractSerializer<E> serializer, String filePath, long engineRuntime,
+            int eventsPerSecondCount) {
         this.serializer = serializer;
         this.engineRuntime = engineRuntime;
         this.eventsPerSecond = new int[(int) engineRuntime + 300];
+        this.eventsPerSecondCount = eventsPerSecondCount;
         Date date = Calendar.getInstance().getTime();
         DateFormat dateFormat = new SimpleDateFormat("hh-mm-ss");
         String strDate = dateFormat.format(date);
@@ -85,13 +88,15 @@ public class BlockingSocket<E> implements BlockingOffer<E> {
     @Override
     public void offer(E event) {
         try {
-            if (byteFlag) {
-                this.outputStream.write((byte[]) event, 0, byteLength);
-            } else {
-                this.outputWriter.write(this.serializer.serialize(event).concat("\n"));
-            }
             int currentSecond = (int) ((System.nanoTime() - this.startTime) / 1_000_000_000);
-            this.eventsPerSecond[currentSecond] += 1;
+            if (this.eventsPerSecond[currentSecond] < eventsPerSecondCount) {
+                if (byteFlag) {
+                    this.outputStream.write((byte[]) event, 0, byteLength);
+                } else {
+                    this.outputWriter.write(this.serializer.serialize(event).concat("\n"));
+                }
+                this.eventsPerSecond[currentSecond] += 1;
+            }
             if (currentSecond > lastSecond) {
                 log.info(this.eventsPerSecond[lastSecond] + " events for second " + lastSecond);
                 this.lastSecond = currentSecond;

@@ -111,7 +111,8 @@ public class MainNetworkDataGenerator implements Runnable {
             AbstractSerializer<Tuple2<Integer, Long>> serializerInstance = getSerializer("basic");
             String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
                     + "socket1.csv";
-            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds);
+            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
+                    (int) eventsPerSecond);
             s1.waitForConnection();
             long startTime = System.nanoTime();
             var done = generator1.generate(s1);
@@ -138,7 +139,8 @@ public class MainNetworkDataGenerator implements Runnable {
                     + "socket1.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
-            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds);
+            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
+                    (int) eventsPerSecond);
             s1.setByteFlag(true);
             s1.setByteLength(17);
             s1.waitForConnection();
@@ -173,8 +175,10 @@ public class MainNetworkDataGenerator implements Runnable {
                     + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
-            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds);
-            var s2 = new BlockingSocket<>(basicPort2, serializerInstance, socket2File, this.timeInSeconds);
+            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
+                    (int) eventsPerSecond);
+            var s2 = new BlockingSocket<>(basicPort2, serializerInstance, socket2File, this.timeInSeconds,
+                    (int) eventsPerSecond);
             s1.setByteFlag(true);
             s2.setByteFlag(true);
             s1.setByteLength(17);
@@ -214,9 +218,9 @@ public class MainNetworkDataGenerator implements Runnable {
 
             log.info("{} {}", basicPort1, basicPort2);
             var bidSocket = new BlockingSocket<>(bidNetworkSocketPort, serializerInstance, socket1File,
-                    this.timeInSeconds);
+                    this.timeInSeconds, (int) eventsPerSecond);
             var auctionSocket = new BlockingSocket<>(auctionNetworkSocketPort, serializerInstance, socket2File,
-                    this.timeInSeconds);
+                    this.timeInSeconds, (int) eventsPerSecond);
             bidSocket.setByteFlag(true);
             auctionSocket.setByteFlag(true);
             bidSocket.setByteLength(33);
@@ -255,8 +259,10 @@ public class MainNetworkDataGenerator implements Runnable {
                     + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
-            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds);
-            var s2 = new BlockingSocket<>(basicPort2, serializerInstance, socket2File, this.timeInSeconds);
+            var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
+                    (int) eventsPerSecond);
+            var s2 = new BlockingSocket<>(basicPort2, serializerInstance, socket2File, this.timeInSeconds,
+                    (int) eventsPerSecond);
             s1.waitForConnection();
             s2.waitForConnection();
             long startTime = System.nanoTime();
@@ -288,7 +294,7 @@ public class MainNetworkDataGenerator implements Runnable {
                     + "socket1.csv";
             log.info("{}", basicPort2);
             var auctionSocket = new BlockingSocket<>(basicPort2, auctionSerializerInstance, socket1File,
-                    this.timeInSeconds);
+                    this.timeInSeconds, (int) eventsPerSecond);
             auctionSocket.waitForConnection();
             long startTime = System.nanoTime();
             var done = auctionGenerator.generate(auctionSocket);
@@ -321,9 +327,10 @@ public class MainNetworkDataGenerator implements Runnable {
                     + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
-            var bidSocket = new BlockingSocket<>(basicPort1, bidSerializerInstance, socket1File, this.timeInSeconds);
+            var bidSocket = new BlockingSocket<>(basicPort1, bidSerializerInstance, socket1File, this.timeInSeconds,
+                    (int) eventsPerSecond);
             var auctionSocket = new BlockingSocket<>(basicPort2, auctionSerializerInstance, socket2File,
-                    this.timeInSeconds);
+                    this.timeInSeconds, (int) eventsPerSecond);
             bidSocket.waitForConnection();
             auctionSocket.waitForConnection();
             long startTime = System.nanoTime();

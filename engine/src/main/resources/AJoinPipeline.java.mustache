@@ -233,7 +233,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         rightInput.getBuffer().position(rightPosition);
         {{#loggingEnabled}}
             long endTimestamp = System.currentTimeMillis();
-            dispatcher.logAJoinTrigger(startTimestamp, endTimestamp - startTimestamp, outputCount, timestamp);
+            dispatcher.logAJoinTrigger(maxTimestamp, startTimestamp, endTimestamp - startTimestamp, outputCount, timestamp);
             outputCount = 0;
             {{/loggingEnabled}}
         }

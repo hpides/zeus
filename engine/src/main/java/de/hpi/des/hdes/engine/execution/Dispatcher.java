@@ -169,7 +169,8 @@ public class Dispatcher {
         logger.getAjoinReadQueue().add(new AJoinReadData(startTime, diffTime, eventCount, side));
     }
 
-    public void logAJoinTrigger(final long startTime, final long diffTime, final int eventCount, final long window) {
-        logger.getAjoinTriggerQueue().add(new AJoinTriggerData(startTime, diffTime, eventCount, window));
+    public void logAJoinTrigger(final long maxEventTime, final long startTime, final long diffTime,
+            final int eventCount, final long window) {
+        logger.getAjoinTriggerQueue().add(new AJoinTriggerData(maxEventTime, startTime, diffTime, eventCount, window));
     }
 }
