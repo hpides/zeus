@@ -31,7 +31,9 @@ args = prefix + ['java', '-jar', os.path.normpath(
     '-eps', config['eps'],
     '-tis', config['tis'] + 10,
     '-t', config['t'],
-    '-ams', config['ams']]
+    '-ams', config['ams'],
+            '--basicPort1', config['port1'],
+            '--basicPort2', config['port2']]
 try:
     c = subprocess.run([str(arg) for arg in args], cwd='../')
     print(c)

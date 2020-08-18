@@ -225,7 +225,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     private void freeRight(int offset) {
-        int pos = offset/(8+1+{{leftTupleLength}});
+        int pos = offset/(8+1+{{rightTupleLength}});
         int remainingWindows = rightOffsetsToWindowCount[pos]--;
         rightOffsetsToWindowCount[pos] = remainingWindows;
         if(remainingWindows <= 0) {

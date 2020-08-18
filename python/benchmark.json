@@ -9,5 +9,7 @@
   "t": "new",
   "ams": 2,
   "nr_single_source": 1,
-  "count": 0
+  "count": 0,
+  "port1": 7003,
+  "port2": 7004
 }

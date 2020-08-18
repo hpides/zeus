@@ -36,7 +36,9 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
             '-rqs', remove,
             '-bat', batches,
             '-t', op,
-            '-fq', initial]
+            '-fq', initial,
+            '--basicPort1', config['port1'],
+            '--basicPort2', config['port2']]
     args = [str(arg) for arg in args]
     try:
         with subprocess.Popen(args, cwd='../') as proc:
