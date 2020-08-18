@@ -46,13 +46,9 @@ public class BufferWrapper {
     public void free(final int[] offsets) {
         while (!atomic.compareAndSet(false, true))
             ;
-        boolean resetWriteLimit = false;
         for (int offset : offsets) {
             int index = offset / tupleSize;
             bitmask[index] -= 1;
-            if (index == 0 && bitmask[index] == 0 && writeBuffer.position() == writeBuffer.capacity()) {
-                resetWriteLimit = true;
-            }
             int modLimit = limit;
             if (modLimit == bitmask.length) {
                 modLimit = 0;
@@ -82,9 +78,6 @@ public class BufferWrapper {
                 }
             }
         }
-        if (resetWriteLimit) {
-            resetWriteLimit();
-        }
         atomic.set(false);
     }
 
@@ -111,7 +104,7 @@ public class BufferWrapper {
         }
     }
 
-    private int getLimitInBytes() {
+    public int getLimitInBytes() {
         return limit * tupleSize;
     }
 

@@ -110,9 +110,9 @@ public class Dispatcher {
 
     public boolean write(final String pipeline, final byte[] bytes) {
         final BufferWrapper bufferWrapper = writeBuffers.get(pipeline);
-        if (bufferWrapper.hasRemaining(bytes.length)) {
 
-            final ByteBuffer writeBuffer = bufferWrapper.getWriteBuffer();
+        final ByteBuffer writeBuffer = bufferWrapper.getWriteBuffer();
+        if (bufferWrapper.hasRemaining(bytes.length)) {
 
             int index = writeBuffer.position() / bufferWrapper.getTupleSize();
             bufferWrapper.acquireAtomic();
@@ -132,6 +132,11 @@ public class Dispatcher {
             }
             bufferWrapper.releaseAtomic();
             return true;
+        } else if (writeBuffer.position() == writeBuffer.capacity()
+                && (bufferWrapper.getBitmask()[0] == 0 || bufferWrapper.getLimitInBytes() == writeBuffer.capacity())) {
+            bufferWrapper.acquireAtomic();
+            bufferWrapper.resetWriteLimit();
+            bufferWrapper.releaseAtomic();
         }
         return false;
     }
