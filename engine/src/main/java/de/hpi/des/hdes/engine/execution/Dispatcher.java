@@ -7,6 +7,8 @@ import java.util.Map;
 
 import de.hpi.des.hdes.engine.execution.buffer.BufferWrapper;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
+import de.hpi.des.hdes.engine.execution.logdata.AJoinReadData;
+import de.hpi.des.hdes.engine.execution.logdata.AJoinTriggerData;
 import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
@@ -19,16 +21,27 @@ public class Dispatcher {
     // TODO Should be saved per buffer during initialization
     @Accessors(fluent = true)
     @Getter
-    private static int NUMBER_OF_VECTORS = 10000;
+    private static int NUMBER_OF_VECTORS = 2000;
     @Accessors(fluent = true)
     @Getter
-    private static int TUPLES_PER_VECTOR = 900;
+    private static int TUPLES_PER_VECTOR = 4500;
     @Accessors(fluent = true)
     @Getter
-    private static int TUPLES_PER_READ_VECTOR = 100;
+    private static int TUPLES_PER_READ_VECTOR = 500;
+    @Accessors(fluent = true)
+    @Getter
+    private static boolean LOGGING_ENABLED = true;
 
+    @Getter
+    private final Logger logger = new Logger();
     private final Map<String, BufferWrapper> writeBuffers = new HashMap<>();
     private final Map<ReadBuffer, BufferWrapper> readBufferToBufferWrapper = new HashMap<>();
+
+    public Dispatcher() {
+        if (LOGGING_ENABLED) {
+            new Thread((Runnable) logger).start();
+        }
+    }
 
     private void prepareBufferWrapper(final List<Pipeline> pipelines) {
         for (final Pipeline pipeline : pipelines) {
@@ -145,5 +158,13 @@ public class Dispatcher {
 
     public boolean deregisterPipelineAtParent(final String pipelineID, final ReadBuffer readBuffer) {
         return readBufferToBufferWrapper.get(readBuffer).deregisterPipeline(pipelineID);
+    }
+
+    public void logAJoinRead(final long startTime, final long diffTime, final int eventCount, final String side) {
+        logger.getAjoinReadQueue().add(new AJoinReadData(startTime, diffTime, eventCount, side));
+    }
+
+    public void logAJoinTrigger(final long startTime, final long diffTime, final int eventCount, final long window) {
+        logger.getAjoinTriggerQueue().add(new AJoinTriggerData(startTime, diffTime, eventCount, window));
     }
 }

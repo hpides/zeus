@@ -53,6 +53,7 @@ public class CompiledEngine implements Engine {
         for (Stoppable t : runningPiplines) {
             t.shutdown();
         }
+        dispatcher.getLogger().shutdown();
         runningPiplines.clear();
     }
 }

@@ -1,10 +1,9 @@
-package de.hpi.des.hdes.engine.pipeline.udf;
+package de.hpi.des.hdes.engine.graph.pipeline.udf;
 
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
 
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
-import de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple;
 
 public class TupleTest {
   @Test

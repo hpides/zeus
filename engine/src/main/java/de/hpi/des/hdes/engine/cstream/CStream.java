@@ -140,7 +140,8 @@ public class CStream extends AbstractCStream {
             final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex,
             final CWindow window) {
         final JoinGenerationNode child = new JoinGenerationNode(leftInputTypes, rightInputTypes,
-                new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, window));
+                new JoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, window),
+                (GenerationNode) rightStream.getNode());
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(rightStream.getNode(), child);
         return new CStream(this.builder, child);
@@ -164,7 +165,8 @@ public class CStream extends AbstractCStream {
             final PrimitiveType[] rightInputTypes, final int leftKeyIndex, final int rightKeyIndex,
             final CWindow window) {
         final AJoinGenerationNode child = new AJoinGenerationNode(leftInputTypes, rightInputTypes,
-                new AJoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, window));
+                new AJoinGenerator(leftInputTypes, rightInputTypes, leftKeyIndex, rightKeyIndex, window),
+                (GenerationNode) rightStream.getNode());
         this.builder.addGraphNode(this.node, child);
         this.builder.addGraphNode(rightStream.getNode(), child);
         return new CStream(this.builder, child);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import de.hpi.des.hdes.engine.graph.Node;
 import de.hpi.des.hdes.engine.graph.pipeline.node.BinaryGenerationNode;
@@ -17,9 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public abstract class BinaryPipeline extends Pipeline {
-    protected final List<GenerationNode> leftNodes;
     protected final List<GenerationNode> rightNodes;
-    protected GenerationNode binaryNode;
+    protected BinaryGenerationNode binaryNode;
     protected Pipeline leftParent;
     protected Pipeline rightParent;
     protected PrimitiveType[] joinInputTypes;
@@ -28,43 +28,58 @@ public abstract class BinaryPipeline extends Pipeline {
 
     protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
             BinaryGenerationNode binaryNode) {
-        super(leftNodes.size() == 0 ? binaryNode.getJoinInputTypes()
-                : leftNodes.get(leftNodes.size() - 1).getInputTypes());
-        this.joinInputTypes = rightNodes.size() == 0 ? binaryNode.getJoinInputTypes()
+        super(leftNodes.size() == 0 ? binaryNode.getRightInputTypes()
+                : leftNodes.get(leftNodes.size() - 1).getInputTypes(), leftNodes);
+        this.joinInputTypes = rightNodes.size() == 0 ? binaryNode.getRightInputTypes()
                 : rightNodes.get(rightNodes.size() - 1).getInputTypes();
         this.binaryNode = binaryNode;
-        this.leftNodes = leftNodes;
         this.rightNodes = rightNodes;
         for (int i = 0; i < joinInputTypes.length; i++)
             joinCurrentTypes.add(null);
     }
 
     protected BinaryPipeline(BinaryGenerationNode binaryNode) {
-        super(binaryNode.getInputTypes());
-        this.joinInputTypes = binaryNode.getJoinInputTypes();
+        super(binaryNode.getInputTypes(), new ArrayList<>());
+        this.joinInputTypes = binaryNode.getRightInputTypes();
         this.binaryNode = binaryNode;
-        this.leftNodes = new ArrayList<>();
         this.rightNodes = new ArrayList<>();
         for (int i = 0; i < joinInputTypes.length; i++)
             joinCurrentTypes.add(null);
     }
 
-    protected boolean isLeft(Node operatorNode) {
-        // TODO evaluate if a list search or hash map makes more sense
-        return leftNodes.contains(operatorNode);
+    public boolean isLeft(Node operatorNode) {
+        if (operatorNode.equals(this.binaryNode.getRightParent())) {
+            return false;
+        }
+        if (operatorNode.getParents().contains(operatorNode) || operatorNode.equals(this.binaryNode)) {
+            return true;
+        }
+        return !operatorNode.getChildren().stream().anyMatch(n -> !this.isLeft(n));
+    }
+
+    private boolean isLeft(Pipeline pipeline, GenerationNode childNode) {
+        if (childNode.equals(this.binaryNode)) {
+            if (pipeline instanceof BinaryPipeline) {
+                return !pipeline.getNodes().contains(((BinaryGenerationNode) childNode).getRightParent())
+                        || !((BinaryPipeline) pipeline).getNodes()
+                                .contains(((BinaryGenerationNode) childNode).getRightParent());
+            }
+            return !pipeline.getNodes().contains(((BinaryGenerationNode) childNode).getRightParent());
+        }
+        return nodes.contains(childNode);
     }
 
     public String getPipelineId() {
         return "c"
                 .concat(Integer.toString(
-                        Math.abs(leftNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())))
+                        Math.abs(nodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())))
                 .concat(Integer.toString(Math
                         .abs(rightNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())));
     }
 
     @Override
     public void addParent(Pipeline pipeline, GenerationNode childNode) {
-        if (this.isLeft(childNode) || (childNode.equals(binaryNode) && rightParent != null)) {
+        if (this.isLeft(pipeline, childNode)) {
             this.leftParent = pipeline;
         } else {
             this.rightParent = pipeline;
@@ -74,8 +89,8 @@ public abstract class BinaryPipeline extends Pipeline {
 
     @Override
     public void addOperator(GenerationNode operator, GenerationNode childNode) {
-        if ((this.isLeft(childNode) && !childNode.equals(binaryNode)) || leftNodes.size() == 0) {
-            this.leftNodes.add(operator);
+        if (this.isLeft(childNode)) {
+            this.nodes.add(operator);
             this.inputTypes = childNode.getInputTypes();
         } else {
             this.rightNodes.add(operator);
@@ -153,21 +168,24 @@ public abstract class BinaryPipeline extends Pipeline {
         if (!isRight) {
             return getWriteout(bufferName);
         } // TODO Optimize Timestamp and watermark copy
-        String implementation = "outputBuffer.position(initialOutputOffset+8);\n";
+        int leftTupleSize = Stream.of(getInputTypes()).mapToInt(t -> t.getLength()).sum();
+        String implementation = "outputBuffer.position(initialOutputOffset+8+ " + leftTupleSize + ");\n";
         int copyLength = 0;
-        int arrayOffset = 8;
+        int arrayOffset = 8 + Stream.of(getInputTypes()).mapToInt(t -> t.getLength()).sum();
         for (int i = 0; i < joinCurrentTypes.size(); i++) {
             if (joinCurrentTypes.get(i) == null) {
                 copyLength += joinInputTypes[i].getLength();
             } else {
                 MaterializationData var = joinVariables.get(joinCurrentTypes.get(i));
                 if (copyLength != 0) {
-                    implementation = implementation.concat(bufferName)
+                    implementation = implementation.concat(bufferName).concat(".getBuffer().position(rightOffset+")
+                            .concat(Integer.toString(arrayOffset - leftTupleSize)).concat(");\n").concat(bufferName)
                             .concat(".getBuffer().get(output, initialOutputOffset+")
                             .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
                             .concat(");\n");
                     implementation = implementation.concat("outputBuffer.position(outputBuffer.position()+")
                             .concat(Integer.toString(copyLength + arrayOffset)).concat(");\n");
+                    arrayOffset += copyLength;
                     copyLength = 0;
                 }
                 implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
@@ -176,9 +194,10 @@ public abstract class BinaryPipeline extends Pipeline {
             }
         }
         if (copyLength != 0) {
-            implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, initialOutputOffset+")
-                    .concat(Integer.toString(arrayOffset + copyLength)).concat(", ")
-                    .concat(Integer.toString(copyLength).concat(");\n"));
+            implementation = implementation.concat(bufferName).concat(".getBuffer().position(rightOffset+")
+                    .concat(Integer.toString(arrayOffset - leftTupleSize)).concat(");\n").concat(bufferName)
+                    .concat(".getBuffer().get(output, initialOutputOffset+").concat(Integer.toString(arrayOffset))
+                    .concat(", ").concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }
         return implementation;

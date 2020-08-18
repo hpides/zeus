@@ -1,9 +1,8 @@
-package de.hpi.des.hdes.engine.pipeline.udf;
+package de.hpi.des.hdes.engine.graph.pipeline.udf;
 
 import org.junit.jupiter.api.Test;
 
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
-import de.hpi.des.hdes.engine.graph.pipeline.udf.LambdaString;
 
 import static org.assertj.core.api.Assertions.*;
 

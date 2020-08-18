@@ -15,18 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AJoinPipeline extends BinaryPipeline {
 
-    protected AJoinPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
-            BinaryGenerationNode binaryNode) {
-        super(leftNodes, rightNodes, binaryNode);
-    }
-
     public AJoinPipeline(BinaryGenerationNode binaryNode) {
         super(binaryNode);
-    }
-
-    public static AJoinPipeline of(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
-            BinaryGenerationNode binaryNode) {
-        return new AJoinPipeline(leftNodes, rightNodes, binaryNode);
     }
 
     @Override

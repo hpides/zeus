@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DirectoryHelper {
     private static String packageRoot;
     private static String classPath;
+    private static String logPath;
 
     public static String getPackageRoot() {
         if (packageRoot == null) {
@@ -49,6 +50,15 @@ public class DirectoryHelper {
         }
 
         return classPath;
+    }
+
+    public static String getLogPath() {
+        if (logPath == null) {
+            logPath = System.getProperty("user.dir") + "/logs/";
+            log.info("Determined the packageRoot path through user.Dir. Setting it to: {}", packageRoot);
+        }
+
+        return logPath;
     }
 
 }

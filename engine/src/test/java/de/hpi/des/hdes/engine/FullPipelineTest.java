@@ -42,9 +42,9 @@ public class FullPipelineTest {
             }
         }
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
-        CStream stream1 = builder.streamOfC(source1, 4);
+        CStream stream1 = builder.streamOfC(source1);
         List<Tuple4<Long, Integer, Integer, Boolean>> resultList = new LinkedList<>();
-        builder.streamOfC(source2, 4).ajoin(stream1, new PrimitiveType[] { PrimitiveType.INT },
+        builder.streamOfC(source2).ajoin(stream1, new PrimitiveType[] { PrimitiveType.INT },
                 new PrimitiveType[] { PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.of(5)))
                 .toStaticList(resultList);
 

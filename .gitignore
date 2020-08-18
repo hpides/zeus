@@ -75,6 +75,7 @@ venv/
 #benchmark files
 output/
 hdes-data/
+logs/
 
 # Local History for Visual Studio Code
 .history/

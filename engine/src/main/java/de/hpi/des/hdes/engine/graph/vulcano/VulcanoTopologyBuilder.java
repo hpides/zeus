@@ -64,8 +64,8 @@ public class VulcanoTopologyBuilder {
      * @param source a source to read data from
      * @return a new a stream
      */
-    public CStream streamOfC(List<Tuple2<Integer, Boolean>> sourceList, final int outputTupleSize) {
-        final ByteBufferIntSourceNode sourceNode = new ByteBufferIntSourceNode(sourceList, outputTupleSize);
+    public CStream streamOfC(List<Tuple2<Integer, Boolean>> sourceList) {
+        final ByteBufferIntSourceNode sourceNode = new ByteBufferIntSourceNode(sourceList);
         this.nodes.add(sourceNode);
         return new CStream(this, sourceNode);
     }

@@ -37,7 +37,7 @@ public class MainNetworkDataGenerator implements Runnable {
     private int basicPort2;
     @Option(names = { "--serializer", "-seri" }, defaultValue = "custom")
     private String serializer;
-    @Option(names = { "--type", "-t" }, defaultValue = "basic")
+    @Option(names = { "--type", "-t" }, defaultValue = "nex")
     private String benchmarkType;
     @Option(names = { "--amountOfSources", "-ams" }, defaultValue = "2")
     private int amountOfSources;
@@ -137,7 +137,6 @@ public class MainNetworkDataGenerator implements Runnable {
             String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
                     + "socket1.csv";
 
-
             log.info("{} {}", basicPort1, basicPort2);
             var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds);
             s1.setByteFlag(true);
@@ -209,14 +208,14 @@ public class MainNetworkDataGenerator implements Runnable {
             AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();
 
             String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket1.csv";
+                    + "socketBid.csv";
             String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket2.csv";
+                    + "socketAuction.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
-            var bidSocket = new BlockingSocket<>(basicPort1, serializerInstance, socket1File,
+            var bidSocket = new BlockingSocket<>(bidNetworkSocketPort, serializerInstance, socket1File,
                     this.timeInSeconds);
-            var auctionSocket = new BlockingSocket<>(basicPort2, serializerInstance, socket2File,
+            var auctionSocket = new BlockingSocket<>(auctionNetworkSocketPort, serializerInstance, socket2File,
                     this.timeInSeconds);
             bidSocket.setByteFlag(true);
             auctionSocket.setByteFlag(true);

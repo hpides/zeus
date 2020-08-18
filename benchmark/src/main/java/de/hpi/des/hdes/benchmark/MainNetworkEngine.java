@@ -27,14 +27,15 @@ import java.util.function.Function;
 public class MainNetworkEngine implements Runnable {
 
     private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin", "hotcat",
-            "maxpric", "compiledajoin", "compiledjoin", "compiledmaxpric", "compiledagg");
+            "maxpric", "compiledajoin", "compiledjoin", "compiledmaxpric", "compiledagg", "report_ajoin",
+            "report_join");
 
     // CLI Options
     @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "100")
     private int timeInSeconds;
-    @Option(names = { "--basicPort1", "-bsp1" }, defaultValue = "7001")
+    @Option(names = { "--basicPort1", "-bsp1" }, defaultValue = "5551")
     private int basicPort1;
-    @Option(names = { "--basicPort2", "-bsp2" }, defaultValue = "7002")
+    @Option(names = { "--basicPort2", "-bsp2" }, defaultValue = "5552")
     private int basicPort2;
     @Option(names = { "--serializer", "-seri" }, defaultValue = "custom")
     private String serializer;
@@ -48,7 +49,7 @@ public class MainNetworkEngine implements Runnable {
     private int batches;
     @Option(names = { "--fixedQueries", "-fq" }, defaultValue = "1")
     private int fixedQueries;
-    @Option(names = { "--type", "-t" }, defaultValue = "compiledagg")
+    @Option(names = { "--type", "-t" }, defaultValue = "compiledmaxpric")
     private String benchmarkType;
     @Option(names = { "--networkBufferSize", "-nbs" }, defaultValue = "1000")
     private int bufferinK;
@@ -98,6 +99,12 @@ public class MainNetworkEngine implements Runnable {
             DirectoryHelper.setPackageRoot(packageRoot);
         }
         switch (benchmarkType) {
+            case "report_ajoin": {
+                reportBenchmarkAJoin();
+            }
+            case "report_join": {
+                reportBenchmarkJoin();
+            }
             case "bmap": {
                 basicAddDeleteMap();
                 break;
@@ -149,6 +156,65 @@ public class MainNetworkEngine implements Runnable {
             default:
                 log.warn("There was an error with benchmark {}", benchmarkType);
         }
+    }
+
+    private void reportBenchmarkJoin() {
+        JobManager manager = new JobManager(new CompiledEngine());
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
+                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
+                        CWindow.tumblingWindow(Time.seconds(5)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_,_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+
+        manager.addQuery(builder.buildAsQuery());
+        // running engine
+
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        manager.shutdown();
+    }
+
+    private void reportBenchmarkAJoin() {
+        JobManager manager = new JobManager(new CompiledEngine());
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        // Use tumbling windows (5 seconds)
+
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
+                        CWindow.tumblingWindow(Time.seconds(5)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_,_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+        Query q1 = builder.buildAsQuery();
+
+        manager.addQuery(q1);
+        // Running engine
+
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        manager.shutdown();
     }
 
     private void basicAddDeleteMap() {
@@ -259,6 +325,8 @@ public class MainNetworkEngine implements Runnable {
     private void executeCompiledAJoin() {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        // Use tumbling windows (5 seconds)
+        // Present results next week
 
         CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
                 generatorHost, basicPort1);
@@ -270,7 +338,7 @@ public class MainNetworkEngine implements Runnable {
                         PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
                                 "(_,_,_,_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+                        PrimitiveType.INT, PrimitiveType.LONG }, 1000);
         Query q1 = builder.buildAsQuery();
 
         VulcanoTopologyBuilder builder2 = new VulcanoTopologyBuilder();
@@ -308,28 +376,7 @@ public class MainNetworkEngine implements Runnable {
         // Running engine
 
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        manager.addQuery(q2);
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(20));
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        manager.deleteQuery(q1);
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(20));
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        manager.addQuery(q3);
-        try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds - 60));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -343,15 +390,16 @@ public class MainNetworkEngine implements Runnable {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
         CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-        generatorHost, basicPort1);
+                generatorHost, basicPort1);
         builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-        .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.seconds(1)))
-        .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
-                        "(_,_,_,_) -> System.currentTimeMillis()"))
-        .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
+                        CWindow.tumblingWindow(Time.seconds(1)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_,_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
+                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
 
         manager.addQuery(builder.buildAsQuery());
         try {
@@ -368,13 +416,14 @@ public class MainNetworkEngine implements Runnable {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
         builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1)
-                .count(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, CWindow.tumblingWindow(Time.seconds(1))) 
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT }).add(PrimitiveType.LONG,
-                            "(_) -> System.currentTimeMillis()"))
+                .count(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0,
+                        CWindow.tumblingWindow(Time.seconds(1)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT })
+                        .add(PrimitiveType.LONG, "(_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.LONG }, 1);
 
         manager.addQuery(builder.buildAsQuery());
-        
+
         try {
             Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
         } catch (InterruptedException e) {
@@ -391,25 +440,25 @@ public class MainNetworkEngine implements Runnable {
 
         CStream auctionSource = builder.streamOfC(
                 new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort2);
+                generatorHost, basicPort1);
 
         CStream bidSource = builder.streamOfC(
                 new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
+                generatorHost, basicPort2);
 
         bidSource.ajoin(auctionSource,
                 new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT },
                 new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }, 1,
-                0, CWindow.tumblingWindow(Time.seconds(1)))
+                0, CWindow.tumblingWindow(Time.seconds(5)))
                 .filter(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
                         PrimitiveType.INT }, "(_,_,_,v1,_,_,_,v2) -> v1 > v2")
                 .maximum(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
                         PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT }, 3, CWindow.tumblingWindow(Time.seconds(1)))
-                .toFile(new PrimitiveType[] { PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT }, 10000);
+                        PrimitiveType.INT }, 3, CWindow.tumblingWindow(Time.seconds(5)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT })
+                        .add(PrimitiveType.LONG, "(_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.LONG }, 1);
 
         manager.addQuery(builder.buildAsQuery());
         // Running engine

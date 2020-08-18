@@ -13,7 +13,7 @@ public class ByteBufferIntSourceNode extends GenerationNode {
 
     private final List<Tuple2<Integer, Boolean>> source;
 
-    public ByteBufferIntSourceNode(List<Tuple2<Integer, Boolean>> source, final int outputTupleSize) {
+    public ByteBufferIntSourceNode(List<Tuple2<Integer, Boolean>> source) {
         super(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
                 new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, null);
         this.source = source;

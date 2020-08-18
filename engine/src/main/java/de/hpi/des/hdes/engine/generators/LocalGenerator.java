@@ -78,7 +78,7 @@ public class LocalGenerator extends PipelineVisitor {
         String leftImplementation = "";
         String rightImplementation = "";
 
-        for (Node node : Lists.reverse(joinPipeline.getLeftNodes())) {
+        for (Node node : Lists.reverse(joinPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 leftImplementation = leftImplementation.concat(
                         ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator()).generate(joinPipeline, false));
@@ -121,7 +121,7 @@ public class LocalGenerator extends PipelineVisitor {
         String leftImplementation = "";
         String rightImplementation = "";
 
-        for (Node node : Lists.reverse(ajoinPipeline.getLeftNodes())) {
+        for (Node node : Lists.reverse(ajoinPipeline.getNodes())) {
             if (node instanceof UnaryGenerationNode) {
                 leftImplementation = leftImplementation.concat(
                         ((UnaryGeneratable) ((UnaryGenerationNode) node).getOperator()).generate(ajoinPipeline, false));
@@ -222,7 +222,7 @@ public class LocalGenerator extends PipelineVisitor {
             template.execute(writer,
                     new FileSinkData(fileSinkPipeline.getPipelineId(),
                             (fileSinkPipeline.getInputTupleLength() + 9) + "", fileSinkPipeline.getWriteEveryX() + "",
-                            Dispatcher.TUPLES_PER_VECTOR() + "", Dispatcher.TUPLES_PER_READ_VECTOR() + ""))
+                            1 + "", Dispatcher.TUPLES_PER_READ_VECTOR() + ""))
                     .flush();
             String implementation = writer.toString();
             Files.writeString(

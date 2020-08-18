@@ -8,8 +8,9 @@ import de.hpi.des.hdes.engine.generators.PrimitiveType;
 
 public class AJoinGenerationNode extends BinaryGenerationNode {
 
-    public AJoinGenerationNode(PrimitiveType[] inputTypes, PrimitiveType[] joinTypes, AJoinGenerator operator) {
-        super(inputTypes, joinTypes, operator);
+    public AJoinGenerationNode(final PrimitiveType[] inputTypes, final PrimitiveType[] joinTypes,
+            final AJoinGenerator operator, final GenerationNode rightParent) {
+        super(inputTypes, joinTypes, operator, rightParent);
     }
 
     @Override

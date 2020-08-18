@@ -2,7 +2,6 @@ package de.hpi.des.hdes.benchmark.generator;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
@@ -16,7 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ByteGenerator extends UniformGenerator<byte[]> {
 
-    private final Random random;
+    // Defines the size of the hash map during a join
+    private static int VALUE_RANGE = 99_900;
+    // JOIN_KEY_COUNT/(VALUE_RANGE + JOIN_KEY_COUNT) = desired selectivity
+    private static int JOIN_KEY_COUNT = 100;
+
     @Getter
     private final List<Integer> values;
     private int i = 0;
@@ -30,17 +33,18 @@ public class ByteGenerator extends UniformGenerator<byte[]> {
 
     public ByteGenerator(long eventsPerSecond, long timeInSeconds, ExecutorService executor, int seed) {
         super(eventsPerSecond, timeInSeconds, executor);
-        this.random = new Random(seed);
 
         values = IntStream.generate(new IntSupplier() {
-            int i = seed * 10_000;
+            int i = seed * VALUE_RANGE;
 
             @Override
             public int getAsInt() {
                 return this.i++;
             }
-        }).limit(10_000).boxed().collect(Collectors.toList());
-        values.add(1);
+        }).limit(VALUE_RANGE).boxed().collect(Collectors.toList());
+        for (int i = 1; i <= JOIN_KEY_COUNT; i++) {
+            values.add(i);
+        }
     }
 
     @Override
@@ -54,6 +58,7 @@ public class ByteGenerator extends UniformGenerator<byte[]> {
             time -= 500;
         }
         buffer.position(0);
+        // TODO: Make events larger and use different types for each side (e.g. nexmark)
         buffer.putLong(time).putInt(value).putInt(value * -1).put(watermark);
 
         return buffer.array();

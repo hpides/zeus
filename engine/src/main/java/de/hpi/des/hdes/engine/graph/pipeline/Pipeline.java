@@ -37,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public abstract class Pipeline {
 
+    @Getter
+    protected final List<GenerationNode> nodes;
     protected Class pipelineKlass;
     @Setter
     protected Object pipelineObject;
@@ -62,10 +64,19 @@ public abstract class Pipeline {
         return tempClassLoader;
     }
 
-    protected Pipeline(PrimitiveType[] types) {
+    protected Pipeline(PrimitiveType[] types, GenerationNode node) {
         this.inputTypes = types;
         for (int i = 0; i < inputTypes.length; i++)
             currentTypes.add(null);
+        this.nodes = new ArrayList<>();
+        this.nodes.add(node);
+    }
+
+    protected Pipeline(PrimitiveType[] types, List<GenerationNode> nodes) {
+        this.inputTypes = types;
+        for (int i = 0; i < inputTypes.length; i++)
+            currentTypes.add(null);
+        this.nodes = nodes;
     }
 
     abstract public String getPipelineId();
@@ -145,12 +156,14 @@ public abstract class Pipeline {
             } else {
                 MaterializationData var = variables.get(currentTypes.get(i));
                 if (copyLength != 0) {
-                    implementation = implementation.concat(bufferName)
+                    implementation = implementation.concat(bufferName).concat(".getBuffer().position(startingPosition+")
+                            .concat(Integer.toString(arrayOffset )).concat(");\n").concat(bufferName)
                             .concat(".getBuffer().get(output, initialOutputOffset+")
                             .concat(Integer.toString(arrayOffset)).concat(", ").concat(Integer.toString(copyLength))
                             .concat(");\n");
                     implementation = implementation.concat("outputBuffer.position(initialOutputOffset+")
                             .concat(Integer.toString(arrayOffset + copyLength)).concat(");\n");
+                    arrayOffset += copyLength;
                     copyLength = 0;
                 }
                 implementation = implementation.concat("outputBuffer.put").concat(var.getType().getUppercaseName())
@@ -159,8 +172,9 @@ public abstract class Pipeline {
             }
         }
         if (copyLength != 0) {
-            implementation = implementation.concat(bufferName).concat(".getBuffer().get(output, initialOutputOffset+")
-                    .concat(Integer.toString(arrayOffset + copyLength)).concat(", ")
+            implementation = implementation.concat(bufferName).concat(".getBuffer().position(startingPosition+")
+                    .concat(Integer.toString(arrayOffset )).concat(");\n").concat(bufferName).concat(".getBuffer().get(output, initialOutputOffset+")
+                    .concat(Integer.toString(arrayOffset)).concat(", ")
                     .concat(Integer.toString(copyLength).concat(");\n"));
             copyLength = 0;
         }

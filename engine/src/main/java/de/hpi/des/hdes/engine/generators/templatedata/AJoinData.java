@@ -8,7 +8,7 @@ import de.hpi.des.hdes.engine.window.CWindow;
 import lombok.Getter;
 
 @Getter
-public class AJoinData {
+public class AJoinData extends LoggableTemplateData {
     private final String pipelineId;
     // TODO: Source distinguish between input and output tuples
     private final int leftTupleLength;
@@ -18,7 +18,7 @@ public class AJoinData {
     private final long windowSlide;
     private final int vectorSize = Dispatcher.TUPLES_PER_VECTOR();
     private final int readVectorSize = Dispatcher.TUPLES_PER_READ_VECTOR();
-    private final int eventCount = Dispatcher.TUPLES_PER_VECTOR()*Dispatcher.NUMBER_OF_VECTORS();
+    private final int eventCount = Dispatcher.TUPLES_PER_VECTOR() * Dispatcher.NUMBER_OF_VECTORS();
     private final InterfaceData[] interfaces;
     private final MaterializationData[] leftVariables;
     private final MaterializationData[] rightVariables;

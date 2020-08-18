@@ -10,7 +10,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.node.GenerationNode;
 @Slf4j
 public abstract class SinkPipeline extends Pipeline {
     protected SinkPipeline(PrimitiveType[] types) {
-        super(types);
+        super(types, (GenerationNode) null);
     }
 
     @Getter

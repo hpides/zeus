@@ -20,7 +20,7 @@ public class ByteBufferIntSourcePipeline extends Pipeline {
     private final String pipelineId;
 
     public ByteBufferIntSourcePipeline(List<Tuple2<Integer, Boolean>> source) {
-        super(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT });
+        super(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, new ByteBufferIntSourceNode(source));
         this.source = source;
         pipelineId = "c".concat(UUID.randomUUID().toString().replace("-", ""));
     }

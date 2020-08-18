@@ -39,7 +39,7 @@ public class {{{className}}} implements Runnable, Stoppable {
     input.getBuffer().get(output, initialOutputOffset, 8);
     outputBuffer.position(outputBuffer.position()+8);
     {{{implementation}}}
-    input.getBuffer().get(output, 8+{{inputEventLength}}, 1);
+    input.getBuffer().get(output, {{outputEventLength}}-1, 1);
     outputBuffer.position(outputBuffer.position()+1);
     outputCounter++;
     free(startingPosition);
@@ -77,7 +77,7 @@ public class {{{className}}} implements Runnable, Stoppable {
                     finalPosition = 0;
                 }
                 free(finalPosition);
-                finalPosition += (8 + {{inputEventLength}} + 1);
+                finalPosition += ({{inputEventLength}});
             }
         }
         if(freeableIndex != 0) {

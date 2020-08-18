@@ -1,0 +1,13 @@
+{
+  "compile_java": false,
+  "tis": 200,
+  "gh": "127.0.0.1",
+  "type": "report_ajoin",
+  "measure_utilization": true,
+  "update_rate": 1,
+  "eps": 7000000,
+  "t": "new",
+  "ams": 2,
+  "nr_single_source": 1,
+  "count": 0
+}

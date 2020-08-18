@@ -1,24 +1,26 @@
 import os
 import subprocess
 from time import sleep
-
+import json
 import psutil
 from datetime import datetime
 
 prefix = ['cmd.exe', '/c'] if os.name == 'nt' else []
-compileJava = False
+with open('benchmark.json') as f:
+    config = json.load(f)
 
-tis = 300
-gh = '127.0.0.1'
-TYPE = 'compiledagg'
+# compileJava = False
 
-MEASURE_UTILIZATION = True
-UPDATE_RATE = 1
+# tis = 50
+# gh = '127.0.0.1'
+# TYPE = 'compiledmaxpric'
 
-if compileJava:
+# MEASURE_UTILIZATION = False
+# UPDATE_RATE = 1
+
+if config['compile_java']:
     c = subprocess.run(prefix + ['mvn', 'package', '-DskipTests'], cwd='../')
     print(c)
-
 
 def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
     if os.name == 'nt':
@@ -28,8 +30,8 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
     path = os.path.normpath(
         'benchmark/target/engine-jar-with-dependencies.jar')
     args = ['java', '-Xms10g', '-Xmx10g', '-jar', path,
-            '-gh', gh,
-            '-tis', tis,
+            '-gh', config['gh'],
+            '-tis', config['tis'],
             '-nqs', add,
             '-rqs', remove,
             '-bat', batches,
@@ -38,17 +40,17 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
     args = [str(arg) for arg in args]
     try:
         with subprocess.Popen(args, cwd='../') as proc:
-            if MEASURE_UTILIZATION:
+            if config['measure_utilization']:
                 py = psutil.Process(proc.pid)
                 timestamp = datetime.now()
-                save_path = f"../output/utilization_{TYPE}_{timestamp}.csv"
+                save_path = f"../output/utilization_{config['type']}_{timestamp}.csv"
                 with open(save_path, "a") as monitor_file:
                     monitor_file.write("cpu_usage, memory_usage\n")
                     while proc.poll() == None:
                         usage_in_gb = round(py.memory_info().rss / 10 ** 9, 2)
                         usage_cpu = py.cpu_percent()
                         monitor_file.write(f"{usage_cpu}, {usage_in_gb}\n")
-                        sleep(UPDATE_RATE)
+                        sleep(config['update_rate'])
 
     except subprocess.TimeoutExpired as e:
         print('timedout', e)
@@ -74,7 +76,7 @@ def run_engine_flink(op: str, initial: int):
     args = [str(arg) for arg in args]
     try:
         c = subprocess.run(args,
-                           cwd='../', timeout=tis + 1)
+                           cwd='../', timeout=config.tis + 1)
         print(c)
     except subprocess.TimeoutExpired as e:
         print('timedout', e)
@@ -132,7 +134,7 @@ def run_flink(op):
 # run_add_remove('hotcat')
 # run_add_remove('maxpric')
 
-run_engine(0, 0, 0, TYPE, 1)
+run_engine(0, 0, 0, config['type'], 1)
 
 # run_flink('2')
 # run_flink('4')

@@ -17,7 +17,7 @@ public class NetworkSourcePipeline extends Pipeline {
     private final NetworkSourceNode sourceNode;
 
     public NetworkSourcePipeline(NetworkSourceNode sourceNode) {
-        super(sourceNode.getOutputTypes());
+        super(sourceNode.getOutputTypes(), sourceNode);
         this.sourceNode = sourceNode;
     }
 

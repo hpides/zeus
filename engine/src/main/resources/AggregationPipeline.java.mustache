@@ -33,6 +33,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private int outputCounter = 0;
 
     final private Long2{{aggregationValueType.uppercaseName}}OpenHashMap windowToState = new Long2{{aggregationValueType.uppercaseName}}OpenHashMap();
+    final private Long2LongOpenHashMap windowToMaxTimestamp = new Long2LongOpenHashMap();
     
     private final int[] freeableOffsets = new int[{{{vectorSize}}}];
     private int freeableIndex = 0;
@@ -79,6 +80,10 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
 
         for(long windowStart: windowStarts){
             final {{aggregationValueType.lowercaseName}} state = this.windowToState.computeIfAbsent(windowStart, w -> 0);
+            long windowMaxTimestamp = windowToMaxTimestamp.computeIfAbsent(windowStart, w -> eventTimestamp);
+            if (eventTimestamp > windowMaxTimestamp) {
+                windowToMaxTimestamp.put(windowStart, eventTimestamp);
+            }
 
             {{{#shouldCountPerWindow}}}
             final int count = this.windowToCount.computeIfAbsent(windowStart, w -> 0);
@@ -110,7 +115,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     private void trigger(long eventTimestamp) {
         int initialOutputOffset = this.outputCounter * (8 + {{aggregationValueType.length}} + 1);
         {{aggregationValueType.lowercaseName}} value = windowToState.remove(eventTimestamp);
-        outputBuffer.putLong(initialOutputOffset, eventTimestamp)
+        long maxTimestamp = windowToMaxTimestamp.remove(eventTimestamp);
+        outputBuffer.putLong(initialOutputOffset, maxTimestamp)
             .put{{aggregationValueType.uppercaseName}}(initialOutputOffset + 8, value)
             .put(initialOutputOffset + 8 + {{aggregationValueType.length}}, (byte) 0);
         this.outputCounter++;

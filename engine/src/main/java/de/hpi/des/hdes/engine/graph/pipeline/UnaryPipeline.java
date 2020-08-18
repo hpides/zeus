@@ -15,19 +15,14 @@ import lombok.Getter;
 public class UnaryPipeline extends Pipeline {
 
     @Getter
-    private final List<GenerationNode> nodes;
-    @Getter
     private Pipeline parent;
 
     public UnaryPipeline(GenerationNode node) {
-        super(node.getInputTypes());
-        this.nodes = new ArrayList<>();
-        this.nodes.add(node);
+        super(node.getInputTypes(), node);
     }
 
     protected UnaryPipeline(List<GenerationNode> nodes) {
-        super(nodes.get(0).getInputTypes());
-        this.nodes = nodes;
+        super(nodes.get(0).getInputTypes(), nodes);
     }
 
     public static UnaryPipeline of(final List<GenerationNode> nodes) {
