@@ -19,7 +19,8 @@ public class FileSink<E> implements Sink<E> {
     int writtenTuples = 0;
 
     public FileSink(String name, int writeEveryXTuple) {
-        var filePath = System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_" + name + ".csv";
+        var filePath = System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_" + name
+                + ".csv";
         System.out.println(filePath.toString());
         this.writeEveryX = writeEveryXTuple;
         try {
@@ -30,7 +31,7 @@ public class FileSink<E> implements Sink<E> {
             File file = new File(filePath.replace(".csv", "_t") + strDate + ".csv");
             if (file.createNewFile()) {
                 this.out = new BufferedWriter(new FileWriter(file), 10_000_000);
-                this.out.write("eventTime,processingTime,ejectionTime\n");
+                this.out.write("eventCount,eventTime,processingTime,ejectionTime\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -40,9 +41,8 @@ public class FileSink<E> implements Sink<E> {
     @Override
     public void process(AData<E> in) {
         try {
-            if(this.writtenTuples % writeEveryX == 0) {
-                out.write(
-                    in.getValue().toString().replace(" ", "").replace("(", "").replace(")", ""));
+            if (this.writtenTuples % writeEveryX == 0) {
+                out.write(in.getValue().toString().replace(" ", "").replace("(", "").replace(")", ""));
                 out.newLine();
                 this.writtenTuples = 0;
             }
@@ -61,4 +61,3 @@ public class FileSink<E> implements Sink<E> {
         }
     }
 }
-

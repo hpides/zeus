@@ -234,8 +234,9 @@ public class MainNetworkEngine implements Runnable {
     private void basicAddDeleteAJoin() {
         var s1 = this.prepareIntSources(basicPort1);
         var s2 = this.prepareIntSources(basicPort2);
-        executeQuery((sink) -> Queries.makeAJoin0Measured(s1, s2, sink), new FileSinkFactory("basic_ajoin",
-                fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 10000), List.of(s1, s2));
+        executeQuery((sink) -> Queries.makeAJoin0Measured(s1, s2, sink),
+                new FileSinkFactory("basic_ajoin", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
+                List.of(s1, s2));
     }
 
     // ----- Nexmark Add Remove Query -----
