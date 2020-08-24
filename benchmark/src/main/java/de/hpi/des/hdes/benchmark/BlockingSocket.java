@@ -14,7 +14,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimerTask;
 
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
@@ -58,12 +57,6 @@ public class BlockingSocket<E> implements BlockingOffer<E> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        final var ttask = new TimerTask() {
-            @Override
-            public void run() {
-
-            }
-        };
 
     }
 
@@ -121,6 +114,12 @@ public class BlockingSocket<E> implements BlockingOffer<E> {
                 e2.printStackTrace();
             }
             log.info("Wrote file");
+        }
+        try {
+            ss.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 

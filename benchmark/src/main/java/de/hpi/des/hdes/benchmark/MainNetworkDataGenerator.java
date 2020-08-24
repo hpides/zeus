@@ -7,6 +7,8 @@ import de.hpi.des.hdes.benchmark.generator.NexmarkByteBidGenerator;
 import de.hpi.des.hdes.benchmark.generator.NexmarkLightAuctionGenerator;
 import de.hpi.des.hdes.benchmark.generator.NexmarkLightBidGenerator;
 import de.hpi.des.hdes.benchmark.nexmark.NexmarkLightDataGenerator;
+import de.hpi.des.hdes.engine.io.DirectoryHelper;
+
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -41,6 +43,8 @@ public class MainNetworkDataGenerator implements Runnable {
     private String benchmarkType;
     @Option(names = { "--amountOfSources", "-ams" }, defaultValue = "2")
     private int amountOfSources;
+    @Option(names = { "--outputPath" }, defaultValue = "")
+    private String outputPath;
 
     public static void main(final String[] args) {
         for (String s : args) {
@@ -51,6 +55,9 @@ public class MainNetworkDataGenerator implements Runnable {
 
     @Override
     public void run() {
+        if (!outputPath.equals("")) {
+            DirectoryHelper.setOutputPath(outputPath);
+        }
         if (this.benchmarkType.equals("basic")) {
             log.info("Running with basic data");
             if (amountOfSources == 1) {
@@ -83,7 +90,7 @@ public class MainNetworkDataGenerator implements Runnable {
                 System.exit(-1);
             }
         }
-
+        System.exit(0);
     }
 
     private AbstractSerializer getSerializer(String benchmarkType) {
@@ -109,8 +116,7 @@ public class MainNetworkDataGenerator implements Runnable {
 
         try {
             AbstractSerializer<Tuple2<Integer, Long>> serializerInstance = getSerializer("basic");
-            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket1.csv";
+            String socket1File = DirectoryHelper.getOutputPath() + "socket1.csv";
             var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
                     (int) eventsPerSecond);
             s1.waitForConnection();
@@ -135,8 +141,7 @@ public class MainNetworkDataGenerator implements Runnable {
         try {
             AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();
 
-            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket1.csv";
+            String socket1File = DirectoryHelper.getOutputPath() + "socket1.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
             var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
@@ -169,10 +174,8 @@ public class MainNetworkDataGenerator implements Runnable {
         try {
             AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();
 
-            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket1.csv";
-            String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket2.csv";
+            String socket1File = DirectoryHelper.getOutputPath() + "socket1.csv";
+            String socket2File = DirectoryHelper.getOutputPath() + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
             var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
@@ -211,10 +214,8 @@ public class MainNetworkDataGenerator implements Runnable {
         try {
             AbstractSerializer<byte[]> serializerInstance = new ByteSerializer();
 
-            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socketBid.csv";
-            String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socketAuction.csv";
+            String socket1File = DirectoryHelper.getOutputPath() + "socketBid.csv";
+            String socket2File = DirectoryHelper.getOutputPath() + "socketAuction.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
             var bidSocket = new BlockingSocket<>(bidNetworkSocketPort, serializerInstance, socket1File,
@@ -253,10 +254,8 @@ public class MainNetworkDataGenerator implements Runnable {
         try {
             AbstractSerializer<Tuple2<Integer, Long>> serializerInstance = getSerializer("basic");
 
-            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket1.csv";
-            String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket2.csv";
+            String socket1File = DirectoryHelper.getOutputPath() + "socket1.csv";
+            String socket2File = DirectoryHelper.getOutputPath() + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
             var s1 = new BlockingSocket<>(basicPort1, serializerInstance, socket1File, this.timeInSeconds,
@@ -290,8 +289,7 @@ public class MainNetworkDataGenerator implements Runnable {
         try {
             var auctionSerializerInstance = new NexmarkLightAuctionSerializer();
 
-            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket1.csv";
+            String socket1File = DirectoryHelper.getOutputPath() + "socket1.csv";
             log.info("{}", basicPort2);
             var auctionSocket = new BlockingSocket<>(basicPort2, auctionSerializerInstance, socket1File,
                     this.timeInSeconds, (int) eventsPerSecond);
@@ -321,10 +319,8 @@ public class MainNetworkDataGenerator implements Runnable {
             var bidSerializerInstance = new NexmarkLightBidSerializer();
             var auctionSerializerInstance = new NexmarkLightAuctionSerializer();
 
-            String socket1File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket1.csv";
-            String socket2File = System.getProperty("user.dir") + File.separator + "output" + File.separator
-                    + "socket2.csv";
+            String socket1File = DirectoryHelper.getOutputPath() + "socket1.csv";
+            String socket2File = DirectoryHelper.getOutputPath() + "socket2.csv";
 
             log.info("{} {}", basicPort1, basicPort2);
             var bidSocket = new BlockingSocket<>(basicPort1, bidSerializerInstance, socket1File, this.timeInSeconds,

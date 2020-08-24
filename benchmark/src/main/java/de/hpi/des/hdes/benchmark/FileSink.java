@@ -1,6 +1,7 @@
 package de.hpi.des.hdes.benchmark;
 
 import de.hpi.des.hdes.engine.AData;
+import de.hpi.des.hdes.engine.io.DirectoryHelper;
 import de.hpi.des.hdes.engine.operation.Sink;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,8 +20,7 @@ public class FileSink<E> implements Sink<E> {
     int writtenTuples = 0;
 
     public FileSink(String name, int writeEveryXTuple) {
-        var filePath = System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_" + name
-                + ".csv";
+        var filePath = DirectoryHelper.getOutputPath() + "sink_" + name + ".csv";
         System.out.println(filePath.toString());
         this.writeEveryX = writeEveryXTuple;
         try {

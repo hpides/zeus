@@ -13,6 +13,7 @@ import java.util.Date;
 import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.execution.Stoppable;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
+import de.hpi.des.hdes.engine.io.DirectoryHelper;
 
 public class {{{pipelineId}}} implements Runnable, Stoppable {
 
@@ -27,7 +28,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     public {{{pipelineId}}}(final ReadBuffer input, final Dispatcher dispatcher) {
         this.dispatcher = dispatcher;
         this.input = input;
-        var filePath = System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_"
+        var filePath = DirectoryHelper.getOutputPath() + "sink_"
                 + "{{{pipelineId}}}" + ".csv";
         System.out.println(filePath.toString());
         try {

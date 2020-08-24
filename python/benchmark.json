@@ -11,5 +11,7 @@
   "nr_single_source": 1,
   "count": 0,
   "port1": 7003,
-  "port2": 7004
+  "port2": 7004,
+  "numanode_engine": 2,
+  "numanode_generators": 1
 }

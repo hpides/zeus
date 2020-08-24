@@ -2,6 +2,7 @@ import os
 import subprocess
 from time import sleep
 import json
+import sys
 
 prefix = ['cmd.exe', '/c'] if os.name == 'nt' else []
 
@@ -20,20 +21,25 @@ if config['compile_java']:
 # nr_single_source = 1  # number of queries that need single source
 # count = 0
 
+os.makedirs(f"../output/{config['type']}/{sys.argv[1]}", exist_ok=True)
+outputPath = f"output/{config['type']}/{sys.argv[1]}"
+
 if os.name == 'nt':
     sync_time = subprocess.run(['cmd.exe', '/c', 'w32tm /resync /nowait'])
     print(sync_time)
 config['count'] += 1
 if config['count'] > config['nr_single_source']:  # check other file
     config['ams'] = 2
-args = prefix + ['java', '-jar', os.path.normpath(
-    'benchmark/target/generator-jar-with-dependencies.jar'),
-    '-eps', config['eps'],
-    '-tis', config['tis'] + 10,
+args = prefix + ['numactl', '--cpubind', config['numanode_generators'], '--membind', config['numanode_generators'],
+            'java', '-jar', os.path.normpath(
+            'benchmark/target/generator-jar-with-dependencies.jar'),
+            '-eps', config['eps'],
+            '-tis', config['tis'] + 10,
             '-bsp1', config['port1'],
             '-bsp2', config['port2'],
-    '-t', config['t'],
-    '-ams', config['ams']]
+            '-t', config['t'],
+            '-ams', config['ams'],
+            '--outputPath', outputPath]
 try:
     c = subprocess.run([str(arg) for arg in args], cwd='../')
     print(c)
