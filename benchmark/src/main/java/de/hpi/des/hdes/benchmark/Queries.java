@@ -226,8 +226,26 @@ public class Queries {
         var s1 = tp.streamOf(source1).map(Queries::prepare);
         var s2 = tp.streamOf(source2).map(Queries::prepare);
         var j1 = s1.window(TumblingWindow.ofEventTime(Time.seconds(5))).ajoin(s2, t1 -> t1.v1, t2 -> t2.v1, makeJoinF(),
-                "join0measured");
-        return j1.map(Queries::setEjectTimestamp).to(sink).buildAsQuery();
+                (e) -> System.nanoTime(), new WatermarkGenerator<>(0, 1), "join0measured");
+        return j1.map(Queries::setEjectTimestamp).window(TumblingWindow.ofEventTime(Time.seconds(5))).aggregate(
+                new Aggregator<Tuple3<Long, Long, Long>, Tuple4<Integer, Long, Long, Long>, Tuple4<Integer, Long, Long, Long>>() {
+                    @Override
+                    public Tuple4<Integer, Long, Long, Long> initialize() {
+                        return new Tuple4<Integer, Long, Long, Long>(0, 0L, 0L, 0L);
+                    }
+
+                    @Override
+                    public Tuple4<Integer, Long, Long, Long> add(Tuple4<Integer, Long, Long, Long> state,
+                            Tuple3<Long, Long, Long> input) {
+                        return new Tuple4<Integer, Long, Long, Long>(state.v1 + 1, Math.max(state.v2, input.v1),
+                                Math.max(state.v3, input.v2), Math.max(state.v4, input.v3));
+                    }
+
+                    @Override
+                    public Tuple4<Integer, Long, Long, Long> getResult(Tuple4<Integer, Long, Long, Long> state) {
+                        return state;
+                    }
+                }, new WatermarkGenerator<>(0, 1), (e) -> System.nanoTime()).to(sink).buildAsQuery();
     }
 
     // value, event time, processing time

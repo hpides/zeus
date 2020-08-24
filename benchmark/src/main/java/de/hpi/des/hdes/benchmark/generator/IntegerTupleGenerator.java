@@ -12,24 +12,28 @@ import org.jooq.lambda.tuple.Tuple2;
 
 public class IntegerTupleGenerator extends UniformGenerator<Tuple2<Integer, Long>> {
 
-    private final Random random;
+    // Defines the size of the hash map during a join
+    private static int VALUE_RANGE = 99_900;
+    // JOIN_KEY_COUNT/(VALUE_RANGE + JOIN_KEY_COUNT) = desired selectivity
+    private static int JOIN_KEY_COUNT = 100;
     @Getter
     private final List<Integer> values;
     private int i = 0;
 
     public IntegerTupleGenerator(long eventsPerSecond, long timeInSeconds, ExecutorService executor, int seed) {
         super(eventsPerSecond, timeInSeconds, executor);
-        this.random = new Random(seed);
 
         values = IntStream.generate(new IntSupplier() {
-            int i = seed * 10_000;
+            int i = seed * VALUE_RANGE;
 
             @Override
             public int getAsInt() {
                 return this.i++;
             }
-        }).limit(10_000).boxed().collect(Collectors.toList());
-        values.add(1);
+        }).limit(VALUE_RANGE).boxed().collect(Collectors.toList());
+        for (int i = 1; i <= JOIN_KEY_COUNT; i++) {
+            values.add(i);
+        }
     }
 
     public long expectedJoinSize(IntegerTupleGenerator other, long eps, long totalTime, int windowTime) {
