@@ -31,14 +31,14 @@ public class Logger implements Runnable, Stoppable {
         DateFormat dateFormat = new SimpleDateFormat("hh-mm-ss");
         String strDate = dateFormat.format(date);
         try {
-            log.info("Log file {} created", DirectoryHelper.getLogPath() + "ajoin_reads_" + strDate + ".csv");
+            log.info("Log file {} created", DirectoryHelper.getOutputPath() + "ajoin_reads_" + strDate + ".csv");
             aJoinReadLog = new BufferedWriter(
-                    new FileWriter(DirectoryHelper.getLogPath() + "ajoin_reads_" + strDate + ".csv"));
+                    new FileWriter(DirectoryHelper.getOutputPath() + "ajoin_reads_" + strDate + ".csv"));
             aJoinReadLog.write("startTime,diffTime,eventCount,side");
             aJoinReadLog.newLine();
-            log.info("Log file {} created", DirectoryHelper.getLogPath() + "ajoin_triggers_" + strDate + ".csv");
+            log.info("Log file {} created", DirectoryHelper.getOutputPath() + "ajoin_triggers_" + strDate + ".csv");
             aJoinTriggerLog = new BufferedWriter(
-                    new FileWriter(DirectoryHelper.getLogPath() + "ajoin_triggers_" + strDate + ".csv"));
+                    new FileWriter(DirectoryHelper.getOutputPath() + "ajoin_triggers_" + strDate + ".csv"));
             aJoinTriggerLog.write("maxEventTime,startTime,diffTime,eventCount,window");
             aJoinTriggerLog.newLine();
         } catch (IOException e) {
