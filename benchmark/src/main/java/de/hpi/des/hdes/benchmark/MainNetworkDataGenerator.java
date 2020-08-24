@@ -90,7 +90,7 @@ public class MainNetworkDataGenerator implements Runnable {
                 System.exit(-1);
             }
         }
-
+        System.exit(0);
     }
 
     private AbstractSerializer getSerializer(String benchmarkType) {

@@ -106,9 +106,11 @@ public class MainNetworkEngine implements Runnable {
         switch (benchmarkType) {
             case "report_ajoin": {
                 reportBenchmarkAJoin();
+                break;
             }
             case "report_join": {
                 reportBenchmarkJoin();
+                break;
             }
             case "bmap": {
                 basicAddDeleteMap();
@@ -161,6 +163,7 @@ public class MainNetworkEngine implements Runnable {
             default:
                 log.warn("There was an error with benchmark {}", benchmarkType);
         }
+        System.exit(0);
     }
 
     private void reportBenchmarkJoin() {
@@ -386,7 +389,7 @@ public class MainNetworkEngine implements Runnable {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
+        log.info("Shutting down engine");
         manager.shutdown();
     }
 

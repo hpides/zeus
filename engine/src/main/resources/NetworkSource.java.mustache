@@ -63,13 +63,16 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         } catch (IOException e) {
             System.out.println("Network Source was shutdown or crashed unexpectedly" + e);
         }
+        try {
+            objectSocket.close();
+        } catch (IOException e) {
+        }
 
     }
 
     @Override
     public void shutdown() {
         exit = true;
-
     }
 
 }

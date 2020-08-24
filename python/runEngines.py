@@ -64,9 +64,9 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
     except subprocess.TimeoutExpired as e:
         print('timedout', e)
 
+    sleep(10)
     print('—' * 80)
     print('\n')
-    sleep(11)
 
 
 def run_engine_flink(op: str, initial: int):
