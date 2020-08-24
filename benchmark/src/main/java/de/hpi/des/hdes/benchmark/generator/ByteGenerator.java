@@ -25,7 +25,7 @@ public class ByteGenerator extends UniformGenerator<byte[]> {
     private int i = 0;
     private long watermarkInterval = 100;
     private long lastWatermark = 0;
-    private ByteBuffer buffer = ByteBuffer.allocate(17);
+    private ByteBuffer buffer = ByteBuffer.allocate(13);
 
     public ByteGenerator(long eventsPerSecond, long timeInSeconds, ExecutorService executor) {
         this(eventsPerSecond, timeInSeconds, executor, 1);
@@ -59,7 +59,7 @@ public class ByteGenerator extends UniformGenerator<byte[]> {
         }
         buffer.position(0);
         // TODO: Make events larger and use different types for each side (e.g. nexmark)
-        buffer.putLong(time).putInt(value).putInt(value * -1).put(watermark);
+        buffer.putLong(time).putInt(value).put(watermark);
 
         return buffer.array();
     }

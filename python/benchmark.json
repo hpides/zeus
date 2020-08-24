@@ -1,6 +1,6 @@
 {
   "compile_java": false,
-  "tis": 300,
+  "tis": 310,
   "gh": "127.0.0.1",
   "type": "report_ajoin",
   "measure_utilization": true,
@@ -13,5 +13,7 @@
   "port1": 7003,
   "port2": 7004,
   "numanode_engine": 2,
-  "numanode_generators": 1
+  "numanode_generators": 3,
+  "numa_physical_cpu_engine": "18-20,23-24,27-28",
+  "numa_physical_cpu_generators": "21-22,25-26"
 }

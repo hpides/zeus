@@ -170,17 +170,14 @@ public class MainNetworkEngine implements Runnable {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
-        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
-        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.tumblingWindow(Time.seconds(5)))
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
-                                "(_,_,_,_) -> System.currentTimeMillis()"))
-                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT }, new PrimitiveType[] { PrimitiveType.INT },
+                        0, 0, CWindow.tumblingWindow(Time.seconds(5)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
 
         manager.addQuery(builder.buildAsQuery());
         // running engine
@@ -199,17 +196,14 @@ public class MainNetworkEngine implements Runnable {
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         // Use tumbling windows (5 seconds)
 
-        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
-        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-                .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.tumblingWindow(Time.seconds(5)))
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
-                                "(_,_,_,_) -> System.currentTimeMillis()"))
-                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT }, new PrimitiveType[] { PrimitiveType.INT },
+                        0, 0, CWindow.tumblingWindow(Time.seconds(5)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
         Query q1 = builder.buildAsQuery();
 
         manager.addQuery(q1);
@@ -336,48 +330,41 @@ public class MainNetworkEngine implements Runnable {
         // Use tumbling windows (5 seconds)
         // Present results next week
 
-        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
-        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-                .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.tumblingWindow(Time.seconds(1)))
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
-                                "(_,_,_,_) -> System.currentTimeMillis()"))
-                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG }, 1000);
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT }, new PrimitiveType[] { PrimitiveType.INT },
+                        0, 0, CWindow.tumblingWindow(Time.seconds(1)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 1000);
         Query q1 = builder.buildAsQuery();
 
         VulcanoTopologyBuilder builder2 = new VulcanoTopologyBuilder();
-        CStream sourceOne2 = builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
-        builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-                .ajoin(sourceOne2, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.tumblingWindow(Time.seconds(1)))
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
-                                .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()")
-                                .add(PrimitiveType.LONG, "(_,_,_,_,_) -> System.currentTimeMillis()"))
-                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.LONG }, 10000);
+        CStream sourceOne2 = builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1);
+        builder2.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne2, new PrimitiveType[] { PrimitiveType.INT }, new PrimitiveType[] { PrimitiveType.INT },
+                        0, 0, CWindow.tumblingWindow(Time.seconds(1)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT })
+                                .add(PrimitiveType.LONG, "(_,_) -> System.currentTimeMillis()")
+                                .add(PrimitiveType.LONG, "(_,_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG,
+                        PrimitiveType.LONG }, 10000);
         Query q2 = builder2.buildAsQuery();
 
         VulcanoTopologyBuilder builder3 = new VulcanoTopologyBuilder();
-        CStream sourceOne3 = builder3.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
-        builder3.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-                .ajoin(sourceOne3, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.tumblingWindow(Time.seconds(1)))
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT })
-                                .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()")
-                                .add(PrimitiveType.LONG, "(_,_,_,_,_) -> System.currentTimeMillis()")
-                                .add(PrimitiveType.LONG, "(_,_,_,_,_,_) -> System.currentTimeMillis()"))
-                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG, PrimitiveType.LONG, PrimitiveType.LONG }, 10000);
+        CStream sourceOne3 = builder3.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1);
+        builder3.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne3, new PrimitiveType[] { PrimitiveType.INT }, new PrimitiveType[] { PrimitiveType.INT },
+                        0, 0, CWindow.tumblingWindow(Time.seconds(1)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT })
+                                .add(PrimitiveType.LONG, "(_,_) -> System.currentTimeMillis()")
+                                .add(PrimitiveType.LONG, "(_,_,_) -> System.currentTimeMillis()")
+                                .add(PrimitiveType.LONG, "(_,_,_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG,
+                        PrimitiveType.LONG, PrimitiveType.LONG }, 10000);
         Query q3 = builder3.buildAsQuery();
 
         manager.addQuery(q1);
@@ -397,17 +384,14 @@ public class MainNetworkEngine implements Runnable {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
-        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                generatorHost, basicPort1);
-        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort2)
-                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT },
-                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0, 0,
-                        CWindow.tumblingWindow(Time.seconds(1)))
-                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
-                                "(_,_,_,_) -> System.currentTimeMillis()"))
-                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
-                        PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                .join(sourceOne, new PrimitiveType[] { PrimitiveType.INT }, new PrimitiveType[] { PrimitiveType.INT },
+                        0, 0, CWindow.tumblingWindow(Time.seconds(1)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
 
         manager.addQuery(builder.buildAsQuery());
         try {
@@ -423,9 +407,8 @@ public class MainNetworkEngine implements Runnable {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
 
-        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, generatorHost, basicPort1)
-                .count(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }, 0,
-                        CWindow.tumblingWindow(Time.seconds(1)))
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1)
+                .count(new PrimitiveType[] { PrimitiveType.INT }, 0, CWindow.tumblingWindow(Time.seconds(1)))
                 .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(new PrimitiveType[] { PrimitiveType.INT })
                         .add(PrimitiveType.LONG, "(_) -> System.currentTimeMillis()"))
                 .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.LONG }, 1);

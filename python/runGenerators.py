@@ -30,7 +30,7 @@ if os.name == 'nt':
 config['count'] += 1
 if config['count'] > config['nr_single_source']:  # check other file
     config['ams'] = 2
-args = prefix + ['numactl', '--cpubind', config['numanode_generators'], '--membind', config['numanode_generators'],
+args = prefix + ['numactl', '--physcpubind', config['numa_physical_cpu_generators'], '--interleave', config['numanode_generators'],
             'java', '-jar', os.path.normpath(
             'benchmark/target/generator-jar-with-dependencies.jar'),
             '-eps', config['eps'],

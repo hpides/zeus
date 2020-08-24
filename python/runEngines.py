@@ -34,7 +34,7 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
 
     path = os.path.normpath(
         'benchmark/target/engine-jar-with-dependencies.jar')
-    args = ['numactl', '--cpubind', config['numanode_engine'], '--membind', config['numanode_engine'],
+    args = ['numactl', '--physcpubind', config['numa_physical_cpu_engine'], '--interleave', config['numanode_engine'],
             'java', '-Xms10g', '-Xmx10g', '-jar', path,
             '-gh', config['gh'],
             '-tis', config['tis'],
