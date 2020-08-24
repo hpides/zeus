@@ -55,6 +55,8 @@ public class MainNetworkEngine implements Runnable {
     private int bufferinK;
     @Option(names = { "--packageRoot" }, defaultValue = "")
     private String packageRoot;
+    @Option(names = { "--outputPath" }, defaultValue = "")
+    private String outputPath;
 
     // Calculated values
     private int waitSecondsBetweenBatches = 0;
@@ -97,6 +99,9 @@ public class MainNetworkEngine implements Runnable {
         }
         if (!packageRoot.equals("")) {
             DirectoryHelper.setPackageRoot(packageRoot);
+        }
+        if (!outputPath.equals("")) {
+            DirectoryHelper.setOutputPath(outputPath);
         }
         switch (benchmarkType) {
             case "report_ajoin": {

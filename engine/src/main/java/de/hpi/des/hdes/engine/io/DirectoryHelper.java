@@ -9,6 +9,7 @@ public class DirectoryHelper {
     private static String packageRoot;
     private static String classPath;
     private static String logPath;
+    private static String outputPath;
 
     public static String getPackageRoot() {
         if (packageRoot == null) {
@@ -55,10 +56,27 @@ public class DirectoryHelper {
     public static String getLogPath() {
         if (logPath == null) {
             logPath = System.getProperty("user.dir") + "/logs/";
-            log.info("Determined the packageRoot path through user.Dir. Setting it to: {}", packageRoot);
+            log.info("Determined the logPath path through user.Dir. Setting it to: {}", logPath);
         }
 
         return logPath;
+    }
+
+    public static String getOutputPath() {
+        if (outputPath == null) {
+            outputPath = System.getProperty("user.dir") + "/output/";
+            log.info("Determined the logPath path through user.Dir. Setting it to: {}", outputPath);
+        }
+
+        return outputPath;
+    }
+
+    public static void setOutputPath(String newPath) {
+        if (outputPath != null) {
+            log.warn("Package outputPath is already set to '{}'. Overwriting it with: {}", outputPath,
+                    System.getProperty("user.dir") + "/" + newPath);
+        }
+        outputPath = System.getProperty("user.dir") + "/" + newPath;
     }
 
 }

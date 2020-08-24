@@ -4,6 +4,7 @@ from time import sleep
 import json
 import psutil
 from datetime import datetime
+import sys
 
 prefix = ['cmd.exe', '/c'] if os.name == 'nt' else []
 with open('benchmark.json') as f:
@@ -22,6 +23,10 @@ if config['compile_java']:
     c = subprocess.run(prefix + ['mvn', 'package', '-DskipTests'], cwd='../')
     print(c)
 
+os.makedirs(f"../output/{config['type']}/{sys.argv[1]}", exist_ok=True)
+outputPath = f"output/{config['type']}/{sys.argv[1]}"
+print(f"Output: {outputPath}")
+
 def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
     if os.name == 'nt':
         sync_time = subprocess.run(['cmd.exe', '/c', 'w32tm /resync /nowait'])
@@ -29,7 +34,8 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
 
     path = os.path.normpath(
         'benchmark/target/engine-jar-with-dependencies.jar')
-    args = ['java', '-Xms10g', '-Xmx10g', '-jar', path,
+    args = ['numactl', '--cpubind', config['numanode_engine'], '--membind', config['numanode_engine'],
+            'java', '-Xms10g', '-Xmx10g', '-jar', path,
             '-gh', config['gh'],
             '-tis', config['tis'],
             '-bsp1', config['port1'],
@@ -38,14 +44,15 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
             '-rqs', remove,
             '-bat', batches,
             '-t', op,
-            '-fq', initial]
+            '-fq', initial,
+            '--outputPath', outputPath]
     args = [str(arg) for arg in args]
     try:
         with subprocess.Popen(args, cwd='../') as proc:
             if config['measure_utilization']:
                 py = psutil.Process(proc.pid)
                 timestamp = datetime.now()
-                save_path = f"../output/utilization_{config['type']}_{timestamp}.csv"
+                save_path = f"../{outputPath}utilization_{config['type']}_{timestamp}.csv"
                 with open(save_path, "a") as monitor_file:
                     monitor_file.write("cpu_usage, memory_usage\n")
                     while proc.poll() == None:
