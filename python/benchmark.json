@@ -14,6 +14,6 @@
   "port2": 7004,
   "numanode_engine": 2,
   "numanode_generators": 3,
-  "numa_physical_cpu_engine": "18-20,23-24,27-28",
+  "numa_physical_cpu_engine": "18-20,23-24,27-28,32-33,54-56",
   "numa_physical_cpu_generators": "21-22,25-26"
 }

@@ -224,15 +224,12 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
                 freeRight(rightOffsets.getInt(i));
             }
         }
-
-        {{#loggingEnabled}}
-        System.out.println("Event time latency: " + (System.currentTimeMillis() - maxTimestamp));
-            {{/loggingEnabled}}
         
         leftInput.getBuffer().position(leftPosition);
         rightInput.getBuffer().position(rightPosition);
         {{#loggingEnabled}}
             long endTimestamp = System.currentTimeMillis();
+            System.out.println("Event time latency: " + (endTimestamp - maxTimestamp));
             dispatcher.logAJoinTrigger(maxTimestamp, startTimestamp, endTimestamp - startTimestamp, outputCount, timestamp);
             outputCount = 0;
             {{/loggingEnabled}}
