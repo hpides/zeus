@@ -73,19 +73,20 @@ def run_engine_flink(op: str, initial: int):
     if os.name == 'nt':
         sync_time = subprocess.run(['cmd.exe', '/c', 'w32tm /resync /nowait'])
         print(sync_time)
-    gh = '192.168.0.24'
 
     path = os.path.normpath(
         'flink-benchmark/target/flink-benchmark-1.0-SNAPSHOT.jar')
-    args = prefix + ['java', '-Xms10g', '-Xmx10g', '-jar', path,
-                     '-gh', gh,
-                     '-t', t,
+    args = prefix + ['numactl', '--physcpubind', config['numa_physical_cpu_engine'], '--interleave', config['numanode_engine'],
+                     'java', '-Xms10g', '-Xmx10g', '-jar', path,
+                     '-gh', config['gh'],
                      '-op', op,
+                     '-bsp1', config['port1'],
+                     '-bsp2', config['port2'],
                      '-fq', initial]
     args = [str(arg) for arg in args]
     try:
         c = subprocess.run(args,
-                           cwd='../', timeout=config.tis + 1)
+                           cwd='../', timeout=config['tis'] + 30)
         print(c)
     except subprocess.TimeoutExpired as e:
         print('timedout', e)
@@ -129,9 +130,9 @@ def run_add_remove(op: str):
 
 def run_flink(op):
     run_engine_flink(op, 1)
-    run_engine_flink(op, 10)
-    run_engine_flink(op, 20)
-    run_engine_flink(op, 30)
+    # run_engine_flink(op, 10)
+    # run_engine_flink(op, 20)
+    # run_engine_flink(op, 30)
 
 
 # Run Configs
