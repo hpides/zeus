@@ -41,6 +41,8 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     final byte[] output = new byte[(8 + {{{leftTupleLength}}} + {{{rightTupleLength}}} + 1)*{{{vectorSize}}}];
     final private ByteBuffer outputBuffer = ByteBuffer.wrap(output);
     private int outputCounter = 0;
+    private int leftCurrentReadPosition = 0;
+    private int rightCurrentReadPosition = 0;
     
     final private Long2ObjectOpenHashMap<{{type.uppercaseName}}2ObjectOpenHashMap<IntList>> leftWindows = new Long2ObjectOpenHashMap<>();
     final private Long2ObjectOpenHashMap<{{type.uppercaseName}}2ObjectOpenHashMap<IntList>> rightWindows = new Long2ObjectOpenHashMap<>();
@@ -58,19 +60,20 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     public void readEventLeft() {
-        leftInput.mark();
         final int startingPosition = leftInput.getBuffer().position();
+        leftCurrentReadPosition = startingPosition + 8+{{leftTupleLength}}+1;
         final long eventTimestamp = leftInput.getBuffer().getLong();
         if (eventTimestamp < latestTimestampLeft) {
+            System.out.println("WARNING: Left skipped offset and not properly freed: " + startingPosition);
             freeLeft(startingPosition);
-            leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}}+1);
+            leftInput.getBuffer().position(leftCurrentReadPosition);
             return;
         }
         LongList windowStarts = new LongArrayList();
         for (long currentWindow = eventTimestamp - (eventTimestamp % windowLength); currentWindow <= eventTimestamp; currentWindow += windowSlide) {
                 windowStarts.add(currentWindow);
         }
-        leftOffsetsToWindowCount[startingPosition/(8+1{{leftTupleLength}})] = windowStarts.size();
+        leftOffsetsToWindowCount[startingPosition/(8+{{leftTupleLength}}+1)] = windowStarts.size();
         final long minWindow = windowStarts.getLong(0);
         if (earliestOpenWindowJoin > minWindow) {
             earliestOpenWindowJoin = minWindow;
@@ -98,8 +101,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
         }
 
         leftInput.getBuffer().position(startingPosition+8+{{leftTupleLength}});
-        rightInput.reset();
-        rightInput.getBuffer().position(rightInput.getBuffer().position()+8+{{rightTupleLength}}+1);
+        rightInput.getBuffer().position(rightCurrentReadPosition);
 
         if (leftInput.getBuffer().get() == (byte) 1) {
             latestTimestampLeft = Math.max(latestTimestampLeft, eventTimestamp);
@@ -111,12 +113,13 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
     }
 
     public void readEventRight() {
-        rightInput.mark();
         final int startingPosition = rightInput.getBuffer().position();
+        rightCurrentReadPosition = startingPosition + 8+{{rightTupleLength}}+1;
         final long eventTimestamp = rightInput.getBuffer().getLong();
         if (eventTimestamp < latestTimestampRight) {
+            System.out.println("WARNING: Right skipped offset and not properly freed: " + startingPosition);
             freeRight(startingPosition);
-            rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}}+1);
+            rightInput.getBuffer().position(rightCurrentReadPosition);
             return;
         }
         LongList windowStarts = new LongArrayList();
@@ -150,8 +153,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             }
         }
 
-        leftInput.reset();
-        leftInput.getBuffer().position(leftInput.getBuffer().position()+8+{{leftTupleLength}}+1);
+        leftInput.getBuffer().position(leftCurrentReadPosition);
         rightInput.getBuffer().position(startingPosition+8+{{rightTupleLength}});
 
         if (rightInput.getBuffer().get() == (byte) 1) {    

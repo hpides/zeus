@@ -80,7 +80,7 @@ public class {{{pipelineId}}} implements Runnable, Stoppable {
             }
                 windowStarts.add(currentWindow);
         }
-        leftOffsetsToWindowCount[startingPosition/(8+1{{leftTupleLength}})] = windowStarts.size();
+        leftOffsetsToWindowCount[startingPosition/(8+1+{{leftTupleLength}})] = windowStarts.size();
         final long minWindow = windowStarts.getLong(0);
         if (earliestOpenWindowJoin > minWindow) {
             earliestOpenWindowJoin = minWindow;

@@ -30,7 +30,7 @@ public class Dispatcher {
     private static int TUPLES_PER_READ_VECTOR = 500;
     @Accessors(fluent = true)
     @Getter
-    private static boolean LOGGING_ENABLED = true;
+    private static boolean LOGGING_ENABLED = false;
 
     @Getter
     private final Logger logger = new Logger();
