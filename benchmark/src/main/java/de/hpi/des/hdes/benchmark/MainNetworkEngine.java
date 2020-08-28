@@ -5,6 +5,7 @@ import de.hpi.des.hdes.engine.JobManager;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.cstream.CStream;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.DirectoryHelper;
@@ -57,6 +58,8 @@ public class MainNetworkEngine implements Runnable {
     private String packageRoot;
     @Option(names = { "--outputPath" }, defaultValue = "")
     private String outputPath;
+    @Option(names = { "--logging" }, defaultValue = "false")
+    private boolean logging;
 
     // Calculated values
     private int waitSecondsBetweenBatches = 0;
@@ -96,6 +99,9 @@ public class MainNetworkEngine implements Runnable {
                         "Please do not remove any of the fixed queries. Choose at least the same amount of newQueries ofr deletedQueries");
                 System.exit(1);
             }
+        }
+        if (logging) {
+            Dispatcher.LOGGING_ENABLED(true);
         }
         if (!packageRoot.equals("")) {
             DirectoryHelper.setPackageRoot(packageRoot);

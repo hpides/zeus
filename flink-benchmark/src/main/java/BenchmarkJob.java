@@ -45,6 +45,8 @@ public class BenchmarkJob implements Runnable {
     private int fixedQueries;
     @Option(names = { "--operator", "-op" }, defaultValue = "map")
     private String operator;
+    @Option(names = { "--outputPath" }, defaultValue = "")
+    private String outputPath;
 
     public static void main(final String[] args) {
         for (String s : args) {
@@ -66,7 +68,7 @@ public class BenchmarkJob implements Runnable {
         DateFormat dateFormat = new SimpleDateFormat("hh-mm-ss");
         String strDate = dateFormat.format(date);
 
-        return System.getProperty("user.dir") + File.separator + "output" + File.separator + "sink_flink_" + id + "_"
+        return System.getProperty("user.dir") + File.separator + outputPath + "sink_flink_" + id + "_"
                 + name + "_f%" + this.fixedQueries + "%" + "_t" + strDate + ".csv";
     }
 
