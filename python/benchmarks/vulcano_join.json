@@ -4,7 +4,7 @@
   "gh": "127.0.0.1",
   "type": "bjoin",
   "measure_utilization": true,
-  "update_rate": 1,
+  "update_rate": 0.1,
   "eps": 1875000,
   "t": "basic",
   "ams": 2,

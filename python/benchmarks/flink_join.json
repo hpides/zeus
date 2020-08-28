@@ -4,7 +4,7 @@
   "gh": "127.0.0.1",
   "type": "flink",
   "measure_utilization": true,
-  "update_rate": 1,
+  "update_rate": 0.1,
   "eps": 1750000,
   "t": "basic",
   "ams": 2,
