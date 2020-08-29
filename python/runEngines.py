@@ -7,7 +7,8 @@ from datetime import datetime
 import sys
 
 prefix = ['cmd.exe', '/c'] if os.name == 'nt' else []
-with open('benchmark.json') as f:
+path = f"./benchmarks/{sys.argv[2]}.json"
+with open(path) as f:
     config = json.load(f)
 
 # compileJava = False
@@ -25,7 +26,6 @@ if config['compile_java']:
 
 os.makedirs(f"../output/{config['type']}/{sys.argv[1]}", exist_ok=True)
 outputPath = f"output/{config['type']}/{sys.argv[1]}"
-print(f"Output: {outputPath}")
 
 def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
     if os.name == 'nt':
@@ -34,8 +34,13 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
 
     path = os.path.normpath(
         'benchmark/target/engine-jar-with-dependencies.jar')
+    memoryMaxFlag = '-Xmx9g'
+    memoryMinFlag = '-Xms9g'
+    if config['t'] == 'basic':
+        memoryMaxFlag = '-Xmx12g'
+        memoryMinFlag = '-Xms12g'
     args = ['numactl', '--physcpubind', config['numa_physical_cpu_engine'], '--interleave', config['numanode_engine'],
-            'java', '-Xms10g', '-Xmx10g', '-jar', path,
+            'java', memoryMinFlag, memoryMaxFlag, '-jar', path,
             '-gh', config['gh'],
             '-tis', config['tis'],
             '-bsp1', config['port1'],
@@ -46,6 +51,9 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
             '-t', op,
             '-fq', initial,
             '--outputPath', outputPath]
+    
+    if 'logging' in config and config['logging']:
+        args.append('--logging')
     args = [str(arg) for arg in args]
     try:
         with subprocess.Popen(args, cwd='../') as proc:
@@ -77,12 +85,13 @@ def run_engine_flink(op: str, initial: int):
     path = os.path.normpath(
         'flink-benchmark/target/flink-benchmark-1.0-SNAPSHOT.jar')
     args = prefix + ['numactl', '--physcpubind', config['numa_physical_cpu_engine'], '--interleave', config['numanode_engine'],
-                     'java', '-Xms10g', '-Xmx10g', '-jar', path,
+                     'java', '-Xms12g', '-Xmx12g', '-jar', path,
                      '-gh', config['gh'],
                      '-op', op,
                      '-bsp1', config['port1'],
                      '-bsp2', config['port2'],
-                     '-fq', initial]
+                     '-fq', initial,
+                     '--outputPath', outputPath]
     args = [str(arg) for arg in args]
     try:
         c = subprocess.run(args,
@@ -137,15 +146,13 @@ def run_flink(op):
 
 # Run Configs
 # run_add_remove('nfilter')
-# run_flink('1')
 
 # run_add_remove('njoin')
 # run_add_remove('najoin')
 # run_add_remove('hotcat')
 # run_add_remove('maxpric')
 
-run_engine(0, 0, 0, config['type'], 1)
-
-# run_flink('2')
-# run_flink('4')
-# run_flink('5')
+if config['type'] == 'flink':
+    run_flink('join')
+else:
+    run_engine(0, 0, 0, config['type'], 1)

@@ -5,6 +5,7 @@ import de.hpi.des.hdes.engine.JobManager;
 import de.hpi.des.hdes.engine.Query;
 import de.hpi.des.hdes.engine.VulcanoEngine;
 import de.hpi.des.hdes.engine.cstream.CStream;
+import de.hpi.des.hdes.engine.execution.Dispatcher;
 import de.hpi.des.hdes.engine.generators.PrimitiveType;
 import de.hpi.des.hdes.engine.graph.vulcano.VulcanoTopologyBuilder;
 import de.hpi.des.hdes.engine.io.DirectoryHelper;
@@ -49,6 +50,8 @@ public class MainNetworkEngine implements Runnable {
     private String packageRoot;
     @Option(names = { "--outputPath" }, defaultValue = "")
     private String outputPath;
+    @Option(names = { "--logging" }, defaultValue = "false")
+    private boolean logging;
 
     public static void main(final String[] args) {
         StringBuilder params = new StringBuilder();
@@ -69,6 +72,9 @@ public class MainNetworkEngine implements Runnable {
         }
         if (timeInSeconds < 1) {
             timeInSeconds = 1;
+        }
+        if (logging) {
+            Dispatcher.LOGGING_ENABLED(true);
         }
         if (!packageRoot.equals("")) {
             DirectoryHelper.setPackageRoot(packageRoot);

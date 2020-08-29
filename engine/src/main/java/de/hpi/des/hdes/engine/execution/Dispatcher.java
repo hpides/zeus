@@ -14,6 +14,7 @@ import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.UnaryPipeline;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 public class Dispatcher {
@@ -29,8 +30,8 @@ public class Dispatcher {
     @Getter
     private static int TUPLES_PER_READ_VECTOR = 500;
     @Accessors(fluent = true)
-    @Getter
-    private static boolean LOGGING_ENABLED = true;
+    @Getter @Setter
+    private static boolean LOGGING_ENABLED = false;
 
     @Getter
     private final Logger logger = new Logger();

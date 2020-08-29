@@ -6,7 +6,8 @@ import sys
 
 prefix = ['cmd.exe', '/c'] if os.name == 'nt' else []
 
-with open('benchmark.json') as f:
+path = f"./benchmarks/{sys.argv[2]}.json"
+with open(path) as f:
     config = json.load(f)
 
 # compileJava = False
