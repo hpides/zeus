@@ -14,7 +14,6 @@ import de.hpi.des.hdes.engine.window.Time;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.lambda.tuple.Tuple;
 import org.jooq.lambda.tuple.Tuple2;
-import org.jooq.lambda.tuple.Tuple4;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -26,9 +25,8 @@ import java.util.function.Function;
 @Slf4j
 public class MainNetworkEngine implements Runnable {
 
-    private static final List<String> types = List.of("bmap", "bjoin", "bajoin", "nfilter", "njoin", "najoin", "hotcat",
-            "maxpric", "compiledajoin", "compiledjoin", "compiledmaxpric", "compiledagg", "report_ajoin",
-            "report_join");
+    private static final List<String> types = List.of("bjoin", "bajoin", "compiledajoin", "compiledjoin", "compiledagg",
+            "report_ajoin", "report_join", "report_parallel_ajoin");
 
     // CLI Options
     @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "100")
@@ -41,15 +39,9 @@ public class MainNetworkEngine implements Runnable {
     private String serializer;
     @Option(names = { "--generatorHost", "-gh" }, defaultValue = "172.0.0.1")
     private String generatorHost;
-    @Option(names = { "--newQueriesPerBatch", "-nqs" }, defaultValue = "0")
-    private int newQueriesPerBatch;
-    @Option(names = { "--removeQueriesPerBatch", "-rqs" }, defaultValue = "0")
-    private int removeQueriesPerBatch;
-    @Option(names = { "--batchesAmount", "-bat" }, defaultValue = "0")
-    private int batches;
-    @Option(names = { "--fixedQueries", "-fq" }, defaultValue = "1")
-    private int fixedQueries;
-    @Option(names = { "--type", "-t" }, defaultValue = "compiledmaxpric")
+    @Option(names = { "--numberParallelQueries", "-npq" }, defaultValue = "1")
+    private int numberParallelQueries;
+    @Option(names = { "--type", "-t" }, defaultValue = "report_join")
     private String benchmarkType;
     @Option(names = { "--networkBufferSize", "-nbs" }, defaultValue = "1000")
     private int bufferinK;
@@ -57,9 +49,6 @@ public class MainNetworkEngine implements Runnable {
     private String packageRoot;
     @Option(names = { "--outputPath" }, defaultValue = "")
     private String outputPath;
-
-    // Calculated values
-    private int waitSecondsBetweenBatches = 0;
 
     public static void main(final String[] args) {
         StringBuilder params = new StringBuilder();
@@ -78,24 +67,8 @@ public class MainNetworkEngine implements Runnable {
             log.info("You may use one of {}.", types.toString());
             System.exit(1);
         }
-        if (timeInSeconds < 1)
+        if (timeInSeconds < 1) {
             timeInSeconds = 1;
-        if (batches < 0)
-            batches = 0;
-        if (fixedQueries < 1)
-            fixedQueries = 1;
-        log.info("Running Benchmark {} with {} queries for {} seconds with {} batches.", benchmarkType, fixedQueries,
-                timeInSeconds, batches);
-        log.info("Connection to {}.", generatorHost);
-        if (batches > 0) {
-            waitSecondsBetweenBatches = (timeInSeconds / batches);
-            log.info("Adding {} queries per batch and removing {} queries per batch", newQueriesPerBatch,
-                    removeQueriesPerBatch);
-            if (newQueriesPerBatch < removeQueriesPerBatch) {
-                log.error(
-                        "Please do not remove any of the fixed queries. Choose at least the same amount of newQueries ofr deletedQueries");
-                System.exit(1);
-            }
         }
         if (!packageRoot.equals("")) {
             DirectoryHelper.setPackageRoot(packageRoot);
@@ -112,8 +85,8 @@ public class MainNetworkEngine implements Runnable {
                 reportBenchmarkJoin();
                 break;
             }
-            case "bmap": {
-                basicAddDeleteMap();
+            case "report_parallel_ajoin": {
+                reportParallelAJoin();
                 break;
             }
             case "bjoin": {
@@ -122,30 +95,6 @@ public class MainNetworkEngine implements Runnable {
             }
             case "bajoin": {
                 basicAddDeleteAJoin();
-                break;
-            }
-            case "nfilter": {
-                nexmarkLightAddRemoveQueryFilter();
-                break;
-            }
-            case "njoin": {
-                nexmarkLightAddRemoveQueryPlainJoin();
-                break;
-            }
-            case "najoin": {
-                nexmarkLightAddRemoveQueryAJoin();
-                break;
-            }
-            case "hotcat": {
-                nexmarkLightHottestCategory();
-                break;
-            }
-            case "maxpric": {
-                nexmarkLightHighestPricePerAuction();
-                break;
-            }
-            case "compiledmaxpric": {
-                compiledNexmarkMaxiumPriceForAuction();
                 break;
             }
             case "compiledajoin": {
@@ -219,64 +168,18 @@ public class MainNetworkEngine implements Runnable {
         manager.shutdown();
     }
 
-    private void basicAddDeleteMap() {
-        var s1 = this.prepareIntSources(basicPort1);
-        executeQuery((sink) -> Queries.makeQuery0Measured(s1, sink),
-                new FileSinkFactory("basic_map", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
-                List.of(s1));
-    }
-
     private void basicAddDeleteJoin() {
         var s1 = this.prepareIntSources(basicPort1);
         var s2 = this.prepareIntSources(basicPort2);
-        executeQuery((sink) -> Queries.makePlainJoin0Measured(s1, s2, sink), new FileSinkFactory("basic_join",
-                fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 10000), List.of(s1, s2));
+        executeQuery((sink) -> Queries.makePlainJoin0Measured(s1, s2, sink),
+                new FileSinkFactory("basic_join", 1, 0, 0, 0, 10000), List.of(s1, s2));
     }
 
     private void basicAddDeleteAJoin() {
         var s1 = this.prepareIntSources(basicPort1);
         var s2 = this.prepareIntSources(basicPort2);
         executeQuery((sink) -> Queries.makeAJoin0Measured(s1, s2, sink),
-                new FileSinkFactory("basic_ajoin", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1),
-                List.of(s1, s2));
-    }
-
-    // ----- Nexmark Add Remove Query -----
-    private void nexmarkLightAddRemoveQueryFilter() {
-        var s1 = this.prepareAuctionSource(basicPort2);
-        executeQuery((sink) -> Queries.makeNexmarkLightFilterMeasured(s1, sink), new FileSinkFactory("nexmark_filter",
-                fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1), List.of(s1));
-    }
-
-    private void nexmarkLightAddRemoveQueryPlainJoin() {
-        var s1 = this.prepareBidSource(basicPort1);
-        var s2 = this.prepareAuctionSource(basicPort2);
-        executeQuery((sink) -> Queries.makeNexmarkLightPlainJoinMeasured(s1, s2, sink), new FileSinkFactory(
-                "nexmark_join", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1), List.of(s1, s2));
-    }
-
-    private void nexmarkLightAddRemoveQueryAJoin() {
-        var s1 = this.prepareBidSource(basicPort1);
-        var s2 = this.prepareAuctionSource(basicPort2);
-        executeQuery((sink) -> Queries.makeNexmarkLightAJoinMeasured(s1, s2, sink), new FileSinkFactory("nexmark_ajoin",
-                fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1000), List.of(s1, s2));
-    }
-
-    // ----- Nextmark Semenatic Queries -----
-    private void nexmarkLightHottestCategory() {
-        var s1 = this.prepareBidSource(basicPort1);
-        var s2 = this.prepareAuctionSource(basicPort2);
-        executeQuery((sink) -> Queries.makeNexmarkHottestCategory(s1, s2, sink), new FileSinkFactory("nexmark_hotcat",
-                fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch, 1), List.of(s1, s2), 1);
-    }
-
-    private void nexmarkLightHighestPricePerAuction() {
-        var s1 = this.prepareBidSource(basicPort1);
-        var s2 = this.prepareAuctionSource(basicPort2);
-        executeQuery((sink) -> Queries.makeNexmarkMaxiumPriceForAuction(s1, s2, sink),
-                new FileSinkFactory("nexmark_maxpri", fixedQueries, batches, newQueriesPerBatch, removeQueriesPerBatch,
-                        1),
-                List.of(s1, s2), 1);
+                new FileSinkFactory("basic_ajoin", 1, 0, 0, 0, 10000), List.of(s1, s2));
     }
 
     private AbstractSerializer getSerializer(String dataType) {
@@ -302,27 +205,59 @@ public class MainNetworkEngine implements Runnable {
         return s1;
     }
 
-    private NetworkSource<Tuple2<Tuple4<Long, Long, Integer, Integer>, Long>> prepareBidSource(int port) {
-        var serializerInstance = new NexmarkLightBidDeSerializer();
-
-        var s1 = new NetworkSource<>(1000 * bufferinK, port, serializerInstance, generatorHost, this.serializer, null,
-                t5 -> TimeUnit.MILLISECONDS.toNanos(t5.v2));
-        new Thread(s1).start();
-        return s1;
-    }
-
-    private NetworkSource<Tuple2<Tuple4<Long, Integer, Integer, Integer>, Long>> prepareAuctionSource(int port) {
-        var serializerInstance = new NexmarkLightAuctionDeSerializer();
-
-        var s1 = new NetworkSource<>(1000 * bufferinK, port, serializerInstance, generatorHost, this.serializer, null,
-                t5 -> TimeUnit.MILLISECONDS.toNanos(t5.v2));
-        new Thread(s1).start();
-        return s1;
-    }
-
     private void executeQuery(Function<Sink<Tuple>, Query> makeQuery, FileSinkFactory factory,
             List<NetworkSource> sources) {
-        executeQuery(makeQuery, factory, sources, fixedQueries);
+        executeQuery(makeQuery, factory, sources, 1);
+    }
+
+    private void reportParallelAJoin() {
+        JobManager manager = new JobManager(new CompiledEngine());
+        VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
+        // Use tumbling windows (5 seconds)
+
+        CStream sourceOne = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort1);
+        builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                .ajoin(sourceOne, new PrimitiveType[] { PrimitiveType.INT }, new PrimitiveType[] { PrimitiveType.INT },
+                        0, 0, CWindow.tumblingWindow(Time.seconds(5)))
+                .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                        new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                "(_,_) -> System.currentTimeMillis()"))
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+        Query q1 = builder.buildAsQuery();
+
+        manager.addQuery(q1);
+        // Running engine
+
+        for (int i = 0; i < numberParallelQueries; i++) {
+            try {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            CStream tempSource = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost,
+                    basicPort1);
+            builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                    .ajoin(tempSource, new PrimitiveType[] { PrimitiveType.INT },
+                            new PrimitiveType[] { PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.seconds(5)))
+                    .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT })
+                                    .add(PrimitiveType.INT, "(_,_) -> " + i)
+                                    .add(PrimitiveType.LONG, "(_,_,_) -> System.currentTimeMillis()"))
+                    .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+            Query tempQuery = builder.buildAsQuery();
+
+            manager.addQuery(tempQuery);
+        }
+
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds - numberParallelQueries * 5));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        manager.shutdown();
     }
 
     private void executeCompiledAJoin() {
@@ -338,7 +273,7 @@ public class MainNetworkEngine implements Runnable {
                 .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
                         new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
                                 "(_,_) -> System.currentTimeMillis()"))
-                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 1000);
+                .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
         Query q1 = builder.buildAsQuery();
 
         VulcanoTopologyBuilder builder2 = new VulcanoTopologyBuilder();
@@ -473,42 +408,20 @@ public class MainNetworkEngine implements Runnable {
             VulcanoEngine engine = new VulcanoEngine();
             JobManager manager = new JobManager(engine);
             // Adding fixed queries
-            for (int i = 0; i < fixedQueries; i++) {
-                Sink sink;
-                // Create Sink
-                if (fileSinksAmount > factory.getSinkAmount()) {
-                    sink = factory.createFileSink(i);
-                } else {
-                    sink = new NoOpSink();
-                }
-                Query query = makeQuery.apply(sink);
-                manager.addQuery(query);
-                queries.add(query);
+            Sink sink;
+            // Create Sink
+            if (fileSinksAmount > factory.getSinkAmount()) {
+                sink = factory.createFileSink(0);
+            } else {
+                sink = new NoOpSink();
             }
+            Query query = makeQuery.apply(sink);
+            manager.addQuery(query);
+            queries.add(query);
             // Running engine
             engine.run();
-            if (batches == 0) {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
-            }
-            // Adding and removing batches of queries
-            for (int i = 0; i < batches; i++) {
-                // Adding queries per batch
-                for (int j = 0; j < newQueriesPerBatch; j++) {
-                    NoOpSink noop = new NoOpSink();
-                    Query q = makeQuery.apply(noop);
-                    queries.add(q);
-                    manager.addQuery(q);
-                }
-                // Waiting for specified time
-                Thread.sleep(TimeUnit.SECONDS.toMillis(waitSecondsBetweenBatches));
-                // Removing queries per batch
-                for (int j = 0; j < removeQueriesPerBatch; j++) {
-                    Query q = queries.pop();
-                    manager.deleteQuery(q);
-                }
-            }
-            // Waiting for specified time
-            Thread.sleep(TimeUnit.SECONDS.toMillis(waitSecondsBetweenBatches));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+
             // Shutting down manager
             manager.shutdown();
             // Stopping network sources
