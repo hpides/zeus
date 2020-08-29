@@ -36,7 +36,7 @@ def run_engine():
             '-tis', config['tis'],
             '-bsp1', config['port1'],
             '-bsp2', config['port2'],
-            '-npq', config['parallel_queries'],
+            '-nsq', config['shared_queries'],
             '-t', config['type'],
             '--outputPath', outputPath]
     

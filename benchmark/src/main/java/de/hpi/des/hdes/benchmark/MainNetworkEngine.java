@@ -27,7 +27,7 @@ import java.util.function.Function;
 public class MainNetworkEngine implements Runnable {
 
     private static final List<String> types = List.of("bjoin", "bajoin", "compiledajoin", "compiledjoin", "compiledagg",
-            "report_ajoin", "report_join", "report_parallel_ajoin");
+            "report_ajoin", "report_join", "report_shared_ajoin", "report_parallel_ajoin");
 
     // CLI Options
     @Option(names = { "--timeInSeconds", "-tis" }, defaultValue = "100")
@@ -40,8 +40,8 @@ public class MainNetworkEngine implements Runnable {
     private String serializer;
     @Option(names = { "--generatorHost", "-gh" }, defaultValue = "172.0.0.1")
     private String generatorHost;
-    @Option(names = { "--numberParallelQueries", "-npq" }, defaultValue = "1")
-    private int numberParallelQueries;
+    @Option(names = { "--numberSharedQueries", "-nsq" }, defaultValue = "1")
+    private int numberSharedQueries;
     @Option(names = { "--type", "-t" }, defaultValue = "report_join")
     private String benchmarkType;
     @Option(names = { "--networkBufferSize", "-nbs" }, defaultValue = "1000")
@@ -91,6 +91,10 @@ public class MainNetworkEngine implements Runnable {
                 reportBenchmarkJoin();
                 break;
             }
+            case "report_shared_ajoin": {
+                reportSharedAJoin();
+                break;
+            }
             case "report_parallel_ajoin": {
                 reportParallelAJoin();
                 break;
@@ -119,6 +123,36 @@ public class MainNetworkEngine implements Runnable {
                 log.warn("There was an error with benchmark {}", benchmarkType);
         }
         System.exit(0);
+    }
+
+    private void reportParallelAJoin() {
+        JobManager manager = new JobManager(new CompiledEngine());
+
+        for (int i = 0; i < numberSharedQueries; i++) {
+            VulcanoTopologyBuilder tempBuilder = new VulcanoTopologyBuilder();
+            CStream tempSource = tempBuilder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost,
+                    basicPort1);
+            tempBuilder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                    .ajoin(tempSource, new PrimitiveType[] { PrimitiveType.INT },
+                            new PrimitiveType[] { PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.seconds(5)))
+                    .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
+                            new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT }).add(PrimitiveType.LONG,
+                                    "(_,_) -> System.currentTimeMillis()"))
+                    .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
+            Query tempQuery = tempBuilder.buildAsQuery();
+
+            manager.addQuery(tempQuery);
+            log.info("Added query number {}", i + 1);
+        }
+
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        manager.shutdown();
     }
 
     private void reportBenchmarkJoin() {
@@ -216,7 +250,7 @@ public class MainNetworkEngine implements Runnable {
         executeQuery(makeQuery, factory, sources, 1);
     }
 
-    private void reportParallelAJoin() {
+    private void reportSharedAJoin() {
         JobManager manager = new JobManager(new CompiledEngine());
         VulcanoTopologyBuilder builder = new VulcanoTopologyBuilder();
         // Use tumbling windows (5 seconds)
@@ -234,30 +268,40 @@ public class MainNetworkEngine implements Runnable {
         manager.addQuery(q1);
         // Running engine
 
-        for (int i = 0; i < numberParallelQueries; i++) {
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(15));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        for (int i = 1; i < numberSharedQueries; i++) {
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            CStream tempSource = builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost,
+            VulcanoTopologyBuilder tempBuilder = new VulcanoTopologyBuilder();
+            CStream tempSource = tempBuilder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost,
                     basicPort1);
-            builder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+            tempBuilder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
                     .ajoin(tempSource, new PrimitiveType[] { PrimitiveType.INT },
                             new PrimitiveType[] { PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.seconds(5)))
                     .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
                             new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT })
                                     .add(PrimitiveType.INT, "(_,_) -> " + i)
                                     .add(PrimitiveType.LONG, "(_,_,_) -> System.currentTimeMillis()"))
-                    .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.LONG }, 10000);
-            Query tempQuery = builder.buildAsQuery();
+                    .toFile(new PrimitiveType[] { PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT,
+                            PrimitiveType.LONG }, 10000);
+            Query tempQuery = tempBuilder.buildAsQuery();
 
             manager.addQuery(tempQuery);
+            log.info("Added query number {}", i + 1);
         }
 
         try {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds - numberParallelQueries * 5));
+            Thread.sleep(TimeUnit.SECONDS.toMillis(timeInSeconds - numberSharedQueries * 10 - 15));
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

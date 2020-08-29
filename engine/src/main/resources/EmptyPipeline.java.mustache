@@ -61,6 +61,7 @@ public class {{{className}}} implements Runnable, Stoppable {
 
   @Override
     public void run() {
+        System.out.println("Started EmptyPipeline ({{{className}}}) on Thread " + Thread.currentThread().getId());
         while (!Thread.interrupted() && !shutdownFlag) {
             if (input.getBuffer().position() == input.getBuffer().capacity()) {
                 dispatcher.resetReadLimit("{{{className}}}", input);

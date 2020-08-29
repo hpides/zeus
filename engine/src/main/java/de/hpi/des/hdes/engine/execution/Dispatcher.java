@@ -9,6 +9,7 @@ import de.hpi.des.hdes.engine.execution.buffer.BufferWrapper;
 import de.hpi.des.hdes.engine.execution.buffer.ReadBuffer;
 import de.hpi.des.hdes.engine.execution.logdata.AJoinReadData;
 import de.hpi.des.hdes.engine.execution.logdata.AJoinTriggerData;
+import de.hpi.des.hdes.engine.graph.pipeline.AggregationPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.BinaryPipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.Pipeline;
 import de.hpi.des.hdes.engine.graph.pipeline.SinkPipeline;
@@ -30,7 +31,8 @@ public class Dispatcher {
     @Getter
     private static int TUPLES_PER_READ_VECTOR = 500;
     @Accessors(fluent = true)
-    @Getter @Setter
+    @Getter
+    @Setter
     private static boolean LOGGING_ENABLED = false;
 
     @Getter
@@ -50,8 +52,15 @@ public class Dispatcher {
                 continue;
             }
             int outputEventSize = 8 + pipeline.getOutputTupleLength() + 1;
+
+            double pipelineFactor = 0.2;
+
+            if (pipeline.getChild() instanceof BinaryPipeline || pipeline.getChild() instanceof AggregationPipeline) {
+                pipelineFactor = 1.0;
+            }
+
             final ByteBuffer buffer = ByteBuffer
-                    .allocateDirect(outputEventSize * NUMBER_OF_VECTORS * TUPLES_PER_VECTOR);
+                    .allocateDirect(((int) (pipelineFactor * NUMBER_OF_VECTORS)) * TUPLES_PER_VECTOR * outputEventSize);
             final ByteBuffer readBuffer = buffer.asReadOnlyBuffer();
             final BufferWrapper bufferWrapper = new BufferWrapper(pipeline.getPipelineId(), buffer,
                     pipeline.getChild().getPipelineId(), new ReadBuffer(readBuffer), buffer.limit() / outputEventSize,

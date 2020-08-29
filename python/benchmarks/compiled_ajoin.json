@@ -8,7 +8,7 @@
   "eps": 3000000,
   "t": "new",
   "ams": 2,
-  "parallel_queries": 1,
+  "shared_queries": 1,
   "port1": 7003,
   "port2": 7004,
   "numanode_engine": 2,

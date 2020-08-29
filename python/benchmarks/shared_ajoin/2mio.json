@@ -1,0 +1,20 @@
+{
+    "compile_java": false,
+    "tis": 310,
+    "gh": "127.0.0.1",
+    "type": "report_shared_ajoin",
+    "measure_utilization": true,
+    "update_rate": 0.1,
+    "eps": 2000000,
+    "t": "new",
+    "ams": 2,
+    "shared_queries": 18,
+    "port1": 7003,
+    "port2": 7004,
+    "numanode_engine": "2,3",
+    "numanode_generators": 0,
+    "numa_physical_cpu_engine": "18-35,54-71",
+    "numa_physical_cpu_generators": "0-2,5",
+    "logging": true
+  }
+  
