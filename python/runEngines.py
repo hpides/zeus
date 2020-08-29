@@ -11,15 +11,6 @@ path = f"./benchmarks/{sys.argv[2]}.json"
 with open(path) as f:
     config = json.load(f)
 
-# compileJava = False
-
-# tis = 50
-# gh = '127.0.0.1'
-# TYPE = 'compiledmaxpric'
-
-# MEASURE_UTILIZATION = False
-# UPDATE_RATE = 1
-
 if config['compile_java']:
     c = subprocess.run(prefix + ['mvn', 'package', '-DskipTests'], cwd='../')
     print(c)
@@ -27,7 +18,7 @@ if config['compile_java']:
 os.makedirs(f"../output/{config['type']}/{sys.argv[1]}", exist_ok=True)
 outputPath = f"output/{config['type']}/{sys.argv[1]}"
 
-def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
+def run_engine():
     if os.name == 'nt':
         sync_time = subprocess.run(['cmd.exe', '/c', 'w32tm /resync /nowait'])
         print(sync_time)
@@ -45,11 +36,8 @@ def run_engine(add: int, remove: int, batches: int, op: str, initial: int):
             '-tis', config['tis'],
             '-bsp1', config['port1'],
             '-bsp2', config['port2'],
-            '-nqs', add,
-            '-rqs', remove,
-            '-bat', batches,
-            '-t', op,
-            '-fq', initial,
+            '-npq', config['parallel_queries'],
+            '-t', config['type'],
             '--outputPath', outputPath]
     
     if 'logging' in config and config['logging']:
@@ -105,54 +93,7 @@ def run_engine_flink(op: str, initial: int):
     sleep(12)  # attention flink needs to sleep longer than the generator or
     # else it will crash
 
-
-def run_add_remove(op: str):
-    # Add/Remove
-    run_engine(2, 2, 12, op, 1)
-    run_engine(4, 4, 12, op, 1)
-    run_engine(8, 8, 12, op, 1)
-
-    # Additional high-workload tests
-    if op is not "2" and op is not "4" and op is not "5":
-        run_engine(10, 10, 12, op, 1)
-
-        run_engine(2, 2, 120, op, 1)
-        run_engine(4, 4, 120, op, 1)
-        run_engine(8, 8, 120, op, 1)
-        run_engine(10, 10, 120, op, 1)
-
-    # Fixed Queries
-    run_engine(0, 0, 0, op, 1)
-    run_engine(0, 0, 0, op, 10)
-    run_engine(0, 0, 0, op, 20)
-    run_engine(0, 0, 0, op, 30)
-
-    if op is "1":
-        run_engine(0, 0, 0, op, 100)
-
-    # Add over time
-    run_engine(1, 0, 12, op, 1)
-
-    # Remove over time
-    run_engine(0, 1, 12, op, 31)
-
-
-def run_flink(op):
-    run_engine_flink(op, 1)
-    # run_engine_flink(op, 10)
-    # run_engine_flink(op, 20)
-    # run_engine_flink(op, 30)
-
-
-# Run Configs
-# run_add_remove('nfilter')
-
-# run_add_remove('njoin')
-# run_add_remove('najoin')
-# run_add_remove('hotcat')
-# run_add_remove('maxpric')
-
 if config['type'] == 'flink':
-    run_flink('join')
+    run_engine_flink('join', 1)
 else:
-    run_engine(0, 0, 0, config['type'], 1)
+    run_engine()
