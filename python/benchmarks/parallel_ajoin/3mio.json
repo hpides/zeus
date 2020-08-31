@@ -14,7 +14,7 @@
     "numanode_engine": "2,3",
     "numanode_generators": 0,
     "numa_physical_cpu_engine": "18-35,54-71",
-    "numa_physical_cpu_generators": "0-2,5",
+    "numa_physical_cpu_generators": "0-2,5-6,9-10,14-15",
     "logging": true
   }
   

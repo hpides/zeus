@@ -3,6 +3,7 @@ package de.hpi.des.hdes.engine.graph.pipeline;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,6 +26,7 @@ public abstract class BinaryPipeline extends Pipeline {
     protected PrimitiveType[] joinInputTypes;
     private final HashMap<String, MaterializationData> joinVariables = new HashMap<>();
     private final ArrayList<String> joinCurrentTypes = new ArrayList<>();
+	private final String binaryPipelineId;
 
     protected BinaryPipeline(List<GenerationNode> leftNodes, List<GenerationNode> rightNodes,
             BinaryGenerationNode binaryNode) {
@@ -36,6 +38,7 @@ public abstract class BinaryPipeline extends Pipeline {
         this.rightNodes = rightNodes;
         for (int i = 0; i < joinInputTypes.length; i++)
             joinCurrentTypes.add(null);
+        this.binaryPipelineId = "c" + UUID.randomUUID().toString().replace("-", "");
     }
 
     protected BinaryPipeline(BinaryGenerationNode binaryNode) {
@@ -45,6 +48,7 @@ public abstract class BinaryPipeline extends Pipeline {
         this.rightNodes = new ArrayList<>();
         for (int i = 0; i < joinInputTypes.length; i++)
             joinCurrentTypes.add(null);
+        this.binaryPipelineId = "c" + UUID.randomUUID().toString().replace("-", "");
     }
 
     public boolean isLeft(Node operatorNode) {
@@ -70,11 +74,12 @@ public abstract class BinaryPipeline extends Pipeline {
     }
 
     public String getPipelineId() {
-        return "c"
-                .concat(Integer.toString(
-                        Math.abs(nodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())))
-                .concat(Integer.toString(Math
-                        .abs(rightNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())));
+        return this.binaryPipelineId;
+        // return "c"
+        //         .concat(Integer.toString(
+        //                 Math.abs(nodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())))
+        //         .concat(Integer.toString(Math
+        //                 .abs(rightNodes.stream().map(t -> t.getNodeId()).collect(Collectors.joining()).hashCode())));
     }
 
     @Override

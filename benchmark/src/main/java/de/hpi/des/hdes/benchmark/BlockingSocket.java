@@ -50,7 +50,7 @@ public class BlockingSocket<E> implements BlockingOffer<E> {
         try {
             log.info("Listening on port {}", port);
             ss = new ServerSocket(port);
-            File file = new File(filePath.replace(".csv", "_") + strDate + ".csv");
+            File file = new File(filePath.replace(".csv", "_") + strDate + "port" + port + ".csv");
             if (file.createNewFile()) {
                 this.measurements = new BufferedWriter(new FileWriter(file));
             }

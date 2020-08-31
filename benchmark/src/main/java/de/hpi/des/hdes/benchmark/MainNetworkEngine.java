@@ -131,8 +131,8 @@ public class MainNetworkEngine implements Runnable {
         for (int i = 0; i < numberSharedQueries; i++) {
             VulcanoTopologyBuilder tempBuilder = new VulcanoTopologyBuilder();
             CStream tempSource = tempBuilder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost,
-                    basicPort1);
-            tempBuilder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, basicPort2)
+                    (basicPort1 + i * 2));
+            tempBuilder.streamOfC(new PrimitiveType[] { PrimitiveType.INT }, generatorHost, (basicPort2 + i * 2))
                     .ajoin(tempSource, new PrimitiveType[] { PrimitiveType.INT },
                             new PrimitiveType[] { PrimitiveType.INT }, 0, 0, CWindow.tumblingWindow(Time.seconds(5)))
                     .map(new de.hpi.des.hdes.engine.graph.pipeline.udf.Tuple(
